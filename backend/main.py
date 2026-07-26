@@ -1,78 +1,62 @@
-import os
-import psycopg
-import time
 from fastapi import FastAPI, Response, status, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-from dotenv import load_dotenv
+from backend.models import Admin, AdminResponse, AdminUpdate
+from backend.database import db_engine
+from sqlmodel import Session, select
 
 app = FastAPI()
-load_dotenv()
 
-#db connection check
-database_url = os.getenv("DATABASE_URL")
-while True:
-    try:
-        database = psycopg.connect(str(database_url))
-        db = database.cursor()
-        break
-    except Exception as error:
-        print('connection failed', error)
-        time.sleep(2)
 
-#pydantic data validation schemas
-class Post(BaseModel):
-    title: str
-    content: str
-    ishuman: bool = True
-    species: Optional[str] = None
-
-class Admin(BaseModel):
-        first_name: str     
-        last_name: str
-        email_id: str
-
-#read posts
-@app.get("/posts")
+# read posts
+@app.get("/posts", response_model=list[AdminResponse])
 def get_posts():
-    db.execute("SELECT * FROM admin")
-    data = db.fetchall()
-    return{"data": data}
+    with Session(db_engine) as db_session:
+        return db_session.exec(select(Admin)).all()
 
-@app.get("/posts/{id}")
+
+@app.get("/posts/{id}", response_model=AdminResponse)
 def get_post(id: int):
-    db.execute(t"SELECT * FROM admin WHERE id={id}")
-    data = db.fetchone()
-    if not data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    return {"data": data}
+    with Session(db_engine) as db_session:
+        data = db_session.exec(select(Admin).where(Admin.id == id)).first()
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"post with id: {id} was not found",
+            )
+        return data
 
-#create posts
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+
+# create posts
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=AdminResponse)
 def create_post(admindata: Admin):
-    db.execute(
-        t"INSERT INTO admin (first_name, last_name, email_id) VALUES ({admindata.first_name}, {admindata.last_name}, {admindata.email_id})"
-        )
-    database.commit()
+    with Session(db_engine) as db_session:
+        admin = Admin(**admindata.model_dump())
+        db_session.add(admin)
+        db_session.commit()
+        db_session.refresh(admin)
+        return admin
 
-#delete posts
+
+# delete posts
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    db.execute(t"SELECT * FROM admin WHERE id={id}")
-    data = db.fetchone()
-    if not data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    db.execute(t"DELETE FROM admin WHERE id={id}")
-    database.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    with Session(db_engine) as db_session:
+        data = db_session.exec(select(Admin).where(Admin.id == id)).first()
+        if not data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        db_session.delete(data)
+        db_session.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-#update post
-@app.put("/posts/{id}")
-def update_post(id: int, admindata: Admin):
-    db.execute(t"SELECT * FROM admin WHERE id={id}")
-    data = db.fetchone()
-    if not data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    db.execute(t"UPDATE admin SET first_name={admindata.first_name}, last_name={admindata.last_name}, email_id={admindata.email_id} WHERE id={id}")
-    database.commit()
-    return {"message": "post updated successfully"}
+
+# update post
+@app.patch("/posts/{id}", response_model=AdminResponse)
+def update_post(id: int, admindata: AdminUpdate):
+    with Session(db_engine) as db_session:
+        data = db_session.exec(select(Admin).where(Admin.id == id)).first()
+        if not data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        data.sqlmodel_update(admindata.model_dump(exclude_unset=True))
+        db_session.add(data)
+        db_session.commit()
+        db_session.refresh(data)
+        return data
