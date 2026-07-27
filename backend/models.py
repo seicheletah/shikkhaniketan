@@ -1,15 +1,14 @@
 from sqlmodel import Field, SQLModel, func, Column, DateTime
-from datetime import datetime
+from datetime import datetime, date
 
 
-class AdminBase(SQLModel):
-    first_name: str
-    last_name: str
+# admin model
+class UserBase(SQLModel):
     email_id: str
-    admin_access: bool
+    role: str
 
 
-class Admin(AdminBase, table=True):
+class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
@@ -17,15 +16,50 @@ class Admin(AdminBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    admin_access: bool = False
+    hashed_password: str
 
 
-class AdminUpdate(SQLModel):
+class UserUpdate(SQLModel):
+    email_id: str | None = None
+    hashed_password: str | None = None
+
+
+class UserResponse(UserBase):
+    pass
+
+
+# student model
+class StudentBase(SQLModel):
+    first_name: str
+    last_name: str
+    phone_no: str = Field(max_length=16)
+    gender: str = Field(max_length=1)
+    date_of_birth: date
+    address: str
+    about: str
+    profile_photo: str
+
+
+class Student(StudentBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+
+
+class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    email_id: str | None = None
-    admin_access: bool | None = None
+    phone_no: int | None = None
+    gender: str | None = None
+    age: int | None = None
+    address: str | None = None
+    about: str | None = None
+    profile_photo: str | None = None
 
 
-class AdminResponse(AdminBase):
+class StudentResponse(StudentBase):
     pass
