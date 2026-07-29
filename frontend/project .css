@@ -1,0 +1,254 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #eef5fc 0%, #e3effa 100%);
+  min-height: 100vh;
+  color: #1e293b;
+  overflow-x: hidden;
+}
+
+/* --- NAVBAR --- */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 5%;
+  background-color: linear-gradient(135deg, #eef5fc 0%, #e3effa 100%);
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 10;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+/* Explore Dropdown Container */
+.dropdown {
+  position: relative;
+}
+
+.explore-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.explore-btn i {
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+/* Dropdown Content Box */
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 45px;
+  left: -20px;
+  background: #ffffff;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 24px 30px;
+  width: 520px;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  z-index: 100;
+}
+
+/* Hover-e Dropdown dekhanor jonno */
+.dropdown:hover .dropdown-menu {
+  display: grid;
+}
+
+.dropdown:hover .explore-btn i {
+  transform: rotate(180deg);
+}
+
+.menu-column h4 {
+  font-size: 16px;
+  color: #0f172a;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-column ul {
+  list-style: none;
+}
+
+.menu-column ul li {
+  margin-bottom: 12px;
+}
+
+.menu-column ul li a {
+  text-decoration: none;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 0.2s;
+}
+
+.menu-column ul li a:hover {
+  color: #0d9488;
+}
+
+.icon {
+  width: 20px;
+  text-align: center;
+}
+
+/* Search Bar */
+.search-box {
+  position: relative;
+  width: 320px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  border-radius: 25px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  font-size: 14px;
+  background: #f8fafc;
+  transition: all 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #0d9488;
+  background: #ffffff;
+}
+
+.search-box i {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+/* Auth Buttons */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.login-btn {
+  text-decoration: none;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.signup-btn {
+  text-decoration: none;
+  background-color: #0d9488;
+  color: #ffffff;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.3s;
+}
+
+.signup-btn:hover {
+  background-color: #0f766e;
+}
+
+/* --- HERO SECTION --- */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px 8%;
+  max-width: 1300px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+
+.hero-content {
+  max-width: 480px;
+}
+
+.hero-content h1 {
+  font-size: 58px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 20px;
+}
+
+.hero-content p {
+  font-size: 18px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+/* Hero Illustration Styling */
+.hero-image {
+  position: relative;
+  width: 50%;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 550px;
+  height: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding-top: 30px;
+  }
+
+  .hero-content {
+    margin-bottom: 40px;
+  }
+
+  .hero-content h1 {
+    font-size: 42px;
+  }
+
+  .hero-image {
+    width: 100%;
+  }
+
+  .dropdown-menu {
+    width: 320px;
+    grid-template-columns: 1fr;
+  }
+
+  .search-box {
+    display: none;
+  }
+}
