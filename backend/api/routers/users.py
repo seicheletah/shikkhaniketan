@@ -63,8 +63,17 @@ def update_user(
     data = db_session.get(User, id)
     if not data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if userdata.hashed_password:
+        userdata.hashed_password = get_password_hash(userdata.hashed_password)
     data.sqlmodel_update(userdata.model_dump(exclude_unset=True))
-    db_session.add(data)
-    db_session.commit()
-    db_session.refresh(data)
-    return data
+    try:
+        db_session.add(data)
+        db_session.commit()
+        db_session.refresh(data)
+        return data
+    except IntegrityError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="email address already exists.",
+        )
