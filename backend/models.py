@@ -1,14 +1,17 @@
 from sqlmodel import Field, SQLModel, func, Column, DateTime
+from pydantic import EmailStr
 from datetime import datetime, date
 
 
-# admin model
+# user base model
 class UserBase(SQLModel):
-    email_id: str
+    email_id: EmailStr
     role: str
 
 
+# user table model
 class User(UserBase, table=True):
+    email_id: EmailStr = Field(unique=True)
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
@@ -19,16 +22,28 @@ class User(UserBase, table=True):
     hashed_password: str
 
 
+# create user model with pydantic vlidation
+class UserCreate(UserBase):
+    hashed_password: str
+
+
+# update user model with pydantic vlidation
 class UserUpdate(SQLModel):
-    email_id: str | None = None
+    email_id: EmailStr | None = None
     hashed_password: str | None = None
 
 
+# user response model for response body
 class UserResponse(UserBase):
     pass
 
 
-# student model
+# for checking request data validation with pydantic
+class UserLogin(UserCreate):
+    pass
+
+
+# student base model
 class StudentBase(SQLModel):
     first_name: str
     last_name: str
@@ -40,6 +55,7 @@ class StudentBase(SQLModel):
     profile_photo: str
 
 
+# student table model
 class Student(StudentBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime | None = Field(
@@ -50,6 +66,7 @@ class Student(StudentBase, table=True):
     )
 
 
+# update student model with pydantic vlidation
 class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
@@ -61,5 +78,6 @@ class StudentUpdate(SQLModel):
     profile_photo: str | None = None
 
 
+# student response model for response body
 class StudentResponse(StudentBase):
     pass
