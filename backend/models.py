@@ -1,12 +1,33 @@
 from sqlmodel import Field, SQLModel, func, Column, DateTime
-from pydantic import EmailStr
+from pydantic import EmailStr, model_validator
 from datetime import datetime, date
+from enum import Enum
+
+
+# access token generation model
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+# token data valdation model
+class TokenData(SQLModel):
+    id: int | None = None
+    email_id: str | None = None
+    role: str | None = None
+
+
+# for user role selection pydantic validation
+class UserRole(str, Enum):
+    admin = "admin"
+    teacher = "teacher"
+    student = "student"
 
 
 # user base model
 class UserBase(SQLModel):
     email_id: EmailStr
-    role: str
+    role: UserRole
 
 
 # user table model
@@ -26,6 +47,13 @@ class User(UserBase, table=True):
 class UserCreate(UserBase):
     hashed_password: str
 
+    # custom pydantic model validation
+    @model_validator(mode="after")
+    def check_role(self):
+        if self.role == UserRole.admin:
+            raise ValueError("access denied")
+        return self
+
 
 # update user model with pydantic vlidation
 class UserUpdate(SQLModel):
@@ -35,7 +63,7 @@ class UserUpdate(SQLModel):
 
 # user response model for response body
 class UserResponse(UserBase):
-    pass
+    id: int
 
 
 # for checking request data validation with pydantic

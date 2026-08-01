@@ -1,13 +1,27 @@
+import jwt
+import os
+from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
-from backend.models import User
-from fastapi import HTTPException, status
+from backend.models import User, Token, TokenData
+from fastapi import HTTPException, status, Depends
+from datetime import timedelta, datetime, timezone
+from dotenv import load_dotenv
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Annotated
+from backend.core.database import SessionDep
+
+load_dotenv()
+
 
 # passwordhash instance
 password_hash = PasswordHash.recommended()
 
 # using dummy hash to preventing timing attacks
 DUMMY_HASH = password_hash.hash("dummypassword")
+
+# checks request header for token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 # create a hashed password
@@ -20,18 +34,83 @@ def verify_password(plain_password: str, hashed_password: str):
     return password_hash.verify(plain_password, hashed_password)
 
 
-# for authenticating user against db using JWT
-def authenticate_user(email_id: str, password: str, db_session: Session):
-    data = db_session.exec(select(User).where(User.email_id == email_id)).first()
+# create a JWT access token
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+        )
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(
+        to_encode, os.getenv("SECRET_KEY"), algorithm=os.getenv("ALGORITHM")
+    )
+    return encoded_jwt
+
+
+# verify a JWT access token
+def verify_access_token(token: str, credentials_exception) -> TokenData:
+    try:
+        payload = jwt.decode(
+            token,
+            os.getenv("SECRET_KEY"),
+            algorithms=[os.getenv("ALGORITHM", "HS256")],
+        )
+        id: int | None = payload.get("id")
+        email_id: str | None = payload.get("sub")
+        role: str | None = payload.get("role")
+        if not id or not email_id or not role:
+            raise credentials_exception
+        tokendata = TokenData(id=id, email_id=email_id, role=role)
+        return tokendata
+    except InvalidTokenError:
+        raise credentials_exception
+
+
+# for authorizing user accounts with JWT tokens
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)], db_session: SessionDep
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_access_token(token, credentials_exception)
+    user = db_session.get(User, token_data.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"user id not found"
+        )
+    else:
+        return user
+
+
+# for authenticating user accounts with password
+def authenticate_user(
+    logindata: OAuth2PasswordRequestForm, db_session: Session
+) -> Token:
+    data = db_session.exec(
+        select(User).where(User.email_id == logindata.username)
+    ).first()
     if not data:
-        verify_password(password, DUMMY_HASH)
+        verify_password(logindata.password, DUMMY_HASH)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"invalid credentials",
         )
-    if not verify_password(password, data.hashed_password):
+    if not verify_password(logindata.password, data.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"invalid credentials",
         )
-    return data
+    access_token = create_access_token(
+        data={"sub": logindata.username, "role": data.role, "id": data.id}
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+
+# for reducing code repetition
+LoginDep = Annotated[User, Depends(get_current_user)]

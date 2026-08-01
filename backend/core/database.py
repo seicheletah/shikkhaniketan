@@ -2,6 +2,8 @@ import os
 from sqlmodel import create_engine, SQLModel, Session
 import backend.models
 from dotenv import load_dotenv
+from typing import Annotated
+from fastapi import Depends
 
 load_dotenv()
 
@@ -14,6 +16,9 @@ def get_session():
     with Session(db_engine) as session:
         yield session
 
+
+# for reducing code repetition
+SessionDep = Annotated[Session, Depends(get_session)]
 
 try:
     SQLModel.metadata.create_all(db_engine)
