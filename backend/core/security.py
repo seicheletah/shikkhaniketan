@@ -88,6 +88,15 @@ def get_current_user(
         return user
 
 
+# for authorizing admin accounts with JWT tokens
+def get_current_admin(current_user: LoginDep) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
+        )
+    return current_user
+
+
 # for authenticating user accounts with password
 def authenticate_user(
     logindata: OAuth2PasswordRequestForm, db_session: Session
@@ -114,3 +123,6 @@ def authenticate_user(
 
 # for reducing code repetition
 LoginDep = Annotated[User, Depends(get_current_user)]
+
+# for reducing code repetition
+AdminDep = Annotated[User, Depends(get_current_admin)]

@@ -1,6 +1,6 @@
 from fastapi import Response, status, HTTPException, APIRouter
 from backend.core.database import SessionDep
-from backend.core.security import get_password_hash, LoginDep
+from backend.core.security import get_password_hash, LoginDep, AdminDep
 from backend.models import User, UserCreate, UserResponse, UserUpdate
 from sqlmodel import select
 from sqlalchemy.exc import IntegrityError
@@ -10,32 +10,20 @@ api_router = APIRouter(prefix="/users", tags=["Users"])
 
 # get users
 @api_router.get("/", response_model=list[UserResponse])
-def get_users(current_user: LoginDep, db_session: SessionDep):
-    if current_user.role == "admin":
-        return db_session.exec(select(User)).all()
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"access denied",
-        )
+def get_users(current_user: AdminDep, db_session: SessionDep):
+    return db_session.exec(select(User)).all()
 
 
 # get single user with id
 @api_router.get("/{id}", response_model=UserResponse)
-def get_user(id: int, db_session: SessionDep, current_user: LoginDep):
-    if current_user.role == "admin":
-        data = db_session.get(User, id)
-        if not data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"user id not found",
-            )
-        return data
-    else:
+def get_user(id: int, db_session: SessionDep, current_user: AdminDep):
+    data = db_session.get(User, id)
+    if not data:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"access denied",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"user id not found",
         )
+    return data
 
 
 # create user
