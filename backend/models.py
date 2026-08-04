@@ -1,14 +1,38 @@
 from sqlmodel import Field, SQLModel, func, Column, DateTime
+from pydantic import EmailStr, model_validator
 from datetime import datetime, date
+from enum import Enum
 
 
-# admin model
+# access token generation model
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+# token data valdation model
+class TokenData(SQLModel):
+    id: int | None = None
+    email_id: str | None = None
+    role: str | None = None
+
+
+# for user role selection pydantic validation
+class UserRole(str, Enum):
+    admin = "admin"
+    teacher = "teacher"
+    student = "student"
+
+
+# user base model
 class UserBase(SQLModel):
-    email_id: str
-    role: str
+    email_id: EmailStr
+    role: UserRole
 
 
+# user table model
 class User(UserBase, table=True):
+    email_id: EmailStr = Field(unique=True)
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
@@ -19,16 +43,35 @@ class User(UserBase, table=True):
     hashed_password: str
 
 
+# create user model with pydantic vlidation
+class UserCreate(UserBase):
+    hashed_password: str
+
+    # custom pydantic model validation
+    @model_validator(mode="after")
+    def check_role(self):
+        if self.role == UserRole.admin:
+            raise ValueError("access denied")
+        return self
+
+
+# update user model with pydantic vlidation
 class UserUpdate(SQLModel):
-    email_id: str | None = None
+    email_id: EmailStr | None = None
     hashed_password: str | None = None
 
 
+# user response model for response body
 class UserResponse(UserBase):
+    id: int
+
+
+# for checking request data validation with pydantic
+class UserLogin(UserCreate):
     pass
 
 
-# student model
+# student base model
 class StudentBase(SQLModel):
     first_name: str
     last_name: str
@@ -40,6 +83,7 @@ class StudentBase(SQLModel):
     profile_photo: str
 
 
+# student table model
 class Student(StudentBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime | None = Field(
@@ -50,6 +94,7 @@ class Student(StudentBase, table=True):
     )
 
 
+# update student model with pydantic vlidation
 class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
@@ -61,5 +106,6 @@ class StudentUpdate(SQLModel):
     profile_photo: str | None = None
 
 
+# student response model for response body
 class StudentResponse(StudentBase):
     pass
