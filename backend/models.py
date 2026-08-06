@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, func, Column, DateTime
+from sqlmodel import Field, SQLModel, func, Column, DateTime, Integer, ForeignKey
 from pydantic import EmailStr, model_validator
 from datetime import datetime, date
 from enum import Enum
@@ -75,8 +75,8 @@ class UserLogin(UserCreate):
 class StudentBase(SQLModel):
     first_name: str
     last_name: str
-    phone_no: str = Field(max_length=16)
-    gender: str = Field(max_length=1)
+    phone_no: str
+    gender: str
     date_of_birth: date
     address: str
     about: str
@@ -85,12 +85,18 @@ class StudentBase(SQLModel):
 
 # student table model
 class Student(StudentBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    phone_no: str = Field(primary_key=True, max_length=16)
+    gender: str = Field(max_length=1)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
+    )
+    user_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+        )
     )
 
 
@@ -98,9 +104,9 @@ class Student(StudentBase, table=True):
 class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    phone_no: int | None = None
+    phone_no: str| None = None
     gender: str | None = None
-    age: int | None = None
+    date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
     profile_photo: str | None = None
@@ -108,4 +114,4 @@ class StudentUpdate(SQLModel):
 
 # student response model for response body
 class StudentResponse(StudentBase):
-    pass
+    user_id: int
