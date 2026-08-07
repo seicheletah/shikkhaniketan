@@ -1,11 +1,54 @@
 from fastapi import status, HTTPException, APIRouter
 from backend.core.database import SessionDep
 from backend.core.security import LoginDep, AdminDep
-from backend.models import Student, StudentResponse, StudentUpdate
+from backend.models import Student, StudentResponse, StudentCreate, StudentUpdate
 from sqlmodel import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 
 api_router = APIRouter(prefix="/students", tags=["Students"])
+
+
+# create student
+@api_router.post(
+    "/", status_code=status.HTTP_201_CREATED, response_model=StudentResponse
+)
+def create_student(
+    userdata: StudentCreate, db_session: SessionDep, current_user: LoginDep
+):
+    if current_user.id is not None:
+        student = db_session.exec(
+            select(Student).where(Student.user_id == current_user.id)
+        ).first()
+        if student:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="student profile already exists",
+            )
+        phone_no = db_session.exec(
+            select(Student).where(Student.phone_no == userdata.phone_no)
+        ).first()
+        if phone_no:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="phone number already exists",
+            )
+        student = Student(user_id=current_user.id, **userdata.model_dump())
+        try:
+            db_session.add(student)
+            db_session.commit()
+            db_session.refresh(student)
+            return student
+        except SQLAlchemyError:
+            db_session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error has occurred",
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"invalid credentials",
+        )
 
 
 # get self
@@ -33,17 +76,26 @@ def update_self(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
+    if userdata.phone_no:
+        phone_no = db_session.exec(
+            select(Student).where(Student.phone_no == userdata.phone_no)
+        ).first()
+        if phone_no:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="phone number already exists",
+            )
     student.sqlmodel_update(userdata.model_dump(exclude_unset=True))
     try:
         db_session.add(student)
         db_session.commit()
         db_session.refresh(student)
         return student
-    except IntegrityError:
+    except SQLAlchemyError:
         db_session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="phone number already exists",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
         )
 
 
@@ -75,15 +127,24 @@ def update_student(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
+    if studentdata.phone_no:
+        phone_no = db_session.exec(
+            select(Student).where(Student.phone_no == studentdata.phone_no)
+        ).first()
+        if phone_no:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="phone number already exists",
+            )
     student.sqlmodel_update(studentdata.model_dump(exclude_unset=True))
     try:
         db_session.add(student)
         db_session.commit()
         db_session.refresh(student)
         return student
-    except IntegrityError:
+    except SQLAlchemyError:
         db_session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="phone number already exists",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
         )

@@ -1,4 +1,13 @@
-from sqlmodel import Field, SQLModel, func, Column, DateTime, Integer, ForeignKey
+from sqlmodel import (
+    Field,
+    SQLModel,
+    func,
+    Column,
+    DateTime,
+    Integer,
+    ForeignKey,
+    Relationship,
+)
 from pydantic import EmailStr, model_validator
 from datetime import datetime, date
 from enum import Enum
@@ -40,7 +49,9 @@ class User(UserBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    hashed_password: str
+    hashed_password: str = Field(unique=True)
+    student: Student = Relationship(back_populates="user")
+    teacher: Teacher = Relationship(back_populates="user")
 
 
 # create user model with pydantic vlidation
@@ -75,8 +86,8 @@ class UserLogin(UserCreate):
 class StudentBase(SQLModel):
     first_name: str
     last_name: str
-    phone_no: str
-    gender: str
+    phone_no: str = Field(primary_key=True, max_length=16)
+    gender: str = Field(max_length=1)
     date_of_birth: date
     address: str
     about: str
@@ -85,27 +96,34 @@ class StudentBase(SQLModel):
 
 # student table model
 class Student(StudentBase, table=True):
-    phone_no: str = Field(primary_key=True, max_length=16)
-    gender: str = Field(max_length=1)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    user_id: int = Field(
+    user_id: int | None = Field(
         sa_column=Column(
-            Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+            Integer,
+            ForeignKey("user.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
         )
     )
+    user: User = Relationship(back_populates="student")
+
+
+# create student model with pydantic vlidation
+class StudentCreate(StudentBase):
+    pass
 
 
 # update student model with pydantic vlidation
 class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    phone_no: str| None = None
-    gender: str | None = None
+    phone_no: str | None = Field(default=None, max_length=16)
+    gender: str | None = Field(default=None, max_length=1)
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
@@ -114,4 +132,57 @@ class StudentUpdate(SQLModel):
 
 # student response model for response body
 class StudentResponse(StudentBase):
-    user_id: int
+    user: UserResponse
+
+
+# teacher base model
+class TeacherBase(SQLModel):
+    first_name: str
+    last_name: str
+    phone_no: str = Field(primary_key=True, max_length=16)
+    gender: str = Field(max_length=1)
+    date_of_birth: date
+    address: str
+    about: str
+    profile_photo: str
+
+
+# teacher table model
+class Teacher(TeacherBase, table=True):
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    user_id: int = Field(
+        sa_column=Column(
+            Integer,
+            ForeignKey("user.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        )
+    )
+    user: User = Relationship(back_populates="teacher")
+
+
+# create student model with pydantic vlidation
+class TeacherCreate(TeacherBase):
+    pass
+
+
+# update teacher model with pydantic vlidation
+class TeacherUpdate(SQLModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    phone_no: str | None = Field(default=None, max_length=16)
+    gender: str | None = Field(default=None, max_length=1)
+    date_of_birth: date | None = None
+    address: str | None = None
+    about: str | None = None
+    profile_photo: str | None = None
+
+
+# teacher response model for response body
+class TeacherResponse(TeacherBase):
+    user: UserResponse
