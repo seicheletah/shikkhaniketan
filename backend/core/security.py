@@ -124,5 +124,4 @@ def authenticate_user(
 # for reducing code repetition
 LoginDep = Annotated[User, Depends(get_current_user)]
 
-# for reducing code repetition
 AdminDep = Annotated[User, Depends(get_current_admin)]
