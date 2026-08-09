@@ -5,6 +5,7 @@ from sqlmodel import (
     Column,
     DateTime,
     Integer,
+    String,
     ForeignKey,
     Relationship,
 )
@@ -74,6 +75,11 @@ class UserUpdate(SQLModel):
 
 # user response model for response body
 class UserResponse(UserBase):
+    id: int
+
+
+# user public response model for response body
+class UserPublicResponse(SQLModel):
     id: int
 
 
@@ -164,6 +170,7 @@ class Teacher(TeacherBase, table=True):
         )
     )
     user: User = Relationship(back_populates="teacher")
+    course: Course = Relationship(back_populates="teacher")
 
 
 # create student model with pydantic vlidation
@@ -186,3 +193,73 @@ class TeacherUpdate(SQLModel):
 # teacher response model for response body
 class TeacherResponse(TeacherBase):
     user: UserResponse
+
+
+# teacher public response model for response body
+class TeacherPublicResponse(SQLModel):
+    first_name: str
+    last_name: str
+    about: str
+    profile_photo: str
+    user: UserPublicResponse
+
+
+# course base model
+class CourseBase(SQLModel):
+    course_name: str
+    course_details: str
+    course_language: str
+    course_file_type: str
+    course_paid: bool
+    course_price: int = Field(ge=0, le=15000)
+    # remove thumbnail and file unique key if database becomes slow
+    course_thumbnail: str = Field(unique=True)
+    course_file: str = Field(unique=True)
+
+
+# course table model
+class Course(CourseBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    teacher_id: str = Field(
+        sa_column=Column(
+            String,
+            ForeignKey("teacher.phone_no", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
+    teacher: Teacher = Relationship(back_populates="course")
+
+
+# create course model with pydantic vlidation
+class CourseCreate(CourseBase):
+    pass
+
+
+# update course model with pydantic vlidation
+class CourseUpdate(SQLModel):
+    course_name: str | None = None
+    course_details: str | None = None
+    course_language: str | None = None
+    course_file_type: str | None = None
+    course_paid: bool | None = None
+    course_price: int | None = Field(default=None, ge=0, le=15000)
+    course_thumbnail: str | None = None
+    course_file: str | None = None
+
+
+# course response model for response body
+class CourseResponse(CourseBase):
+    id: int
+    teacher: TeacherResponse
+
+
+# course public response model for response body
+class CoursePublicResponse(CourseBase):
+    id: int
+    teacher: TeacherPublicResponse
