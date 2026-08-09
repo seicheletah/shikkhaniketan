@@ -98,6 +98,8 @@ def get_current_admin(current_user: LoginDep) -> User:
 
 
 # for authorizing teacher accounts with JWT tokens
+# needs refactoring to prevent code repetation
+# add checking teacher id exits or not
 def get_current_teacher(current_user: LoginDep) -> User:
     if current_user.role != "teacher":
         raise HTTPException(
@@ -107,6 +109,8 @@ def get_current_teacher(current_user: LoginDep) -> User:
 
 
 # for authorizing student accounts with JWT tokens
+# needs refactoring to prevent code repetation
+# add checking student id exits or not
 def get_current_student(current_user: LoginDep) -> User:
     if current_user.role != "student":
         raise HTTPException(

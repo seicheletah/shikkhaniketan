@@ -111,6 +111,13 @@ def update_self(
 # get all self courses
 @api_router.get("/me/courses", response_model=list[CourseResponse])
 def get_self_course(db_session: SessionDep, current_user: TeacherDep):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
     course = db_session.exec(
         select(Course).where(Course.teacher_id == current_user.teacher.phone_no)
     ).all()
@@ -136,6 +143,13 @@ def get_teacher_course(id: int, db_session: SessionDep, current_user: LoginDep):
 def update_self_course(
     id: int, coursedata: CourseUpdate, db_session: SessionDep, current_user: TeacherDep
 ):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
     course = db_session.exec(
         select(Course)
         .where(Course.teacher_id == current_user.teacher.phone_no)
@@ -181,6 +195,13 @@ def update_self_course(
 # delete self course
 @api_router.delete("/me/courses/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_self_course(id: int, db_session: SessionDep, current_user: TeacherDep):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
     course = db_session.exec(
         select(Course)
         .where(Course.teacher_id == current_user.teacher.phone_no)

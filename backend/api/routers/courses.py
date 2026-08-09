@@ -1,8 +1,15 @@
 from fastapi import status, HTTPException, APIRouter, Response
 from backend.core.database import SessionDep
 from backend.core.security import TeacherDep, AdminDep
-from backend.models import Course, CourseCreate, CourseResponse, CourseUpdate
-from sqlmodel import select
+from backend.models import (
+    Teacher,
+    Course,
+    CourseCreate,
+    CourseResponse,
+    CoursePublicResponse,
+    CourseUpdate,
+)
+from sqlmodel import select, col
 from sqlalchemy.exc import SQLAlchemyError
 
 api_router = APIRouter(prefix="/courses", tags=["Courses"])
@@ -15,6 +22,13 @@ api_router = APIRouter(prefix="/courses", tags=["Courses"])
 def create_course(
     coursedata: CourseCreate, db_session: SessionDep, current_user: TeacherDep
 ):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
     # remove thumbnail and file duplicate search logic if database becomes slow
     thumbnail = db_session.exec(
         select(Course).where(Course.course_thumbnail == coursedata.course_thumbnail)
@@ -46,15 +60,21 @@ def create_course(
         )
 
 
-# get all courses (admin access)
-@api_router.get("/", response_model=list[CourseResponse])
-def get_courses(current_user: AdminDep, db_session: SessionDep):
-    return db_session.exec(select(Course)).all()
+# search courses
+@api_router.get("/search", response_model=list[CoursePublicResponse])
+def search_courses(db_session: SessionDep, q: str, limit: int = 5, offset: int = 0):
+    course = db_session.exec(
+        select(Course)
+        .where(col(Course.course_name).ilike(f"%{q.strip()}%"))
+        .offset(offset)
+        .limit(limit)
+    ).all()
+    return course
 
 
-# get single course with id (admin access)
-@api_router.get("/{id}", response_model=CourseResponse)
-def get_course(id: int, db_session: SessionDep, current_user: AdminDep):
+# get single course with id
+@api_router.get("/{id}", response_model=CoursePublicResponse)
+def get_course(id: int, db_session: SessionDep):
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -62,6 +82,12 @@ def get_course(id: int, db_session: SessionDep, current_user: AdminDep):
             detail=f"course not found",
         )
     return course
+
+
+# get all courses (admin access)
+@api_router.get("/", response_model=list[CourseResponse])
+def get_courses(current_user: AdminDep, db_session: SessionDep):
+    return db_session.exec(select(Course)).all()
 
 
 # update course (admin access)
