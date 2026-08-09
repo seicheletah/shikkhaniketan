@@ -97,6 +97,24 @@ def get_current_admin(current_user: LoginDep) -> User:
     return current_user
 
 
+# for authorizing teacher accounts with JWT tokens
+def get_current_teacher(current_user: LoginDep) -> User:
+    if current_user.role != "teacher":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
+        )
+    return current_user
+
+
+# for authorizing student accounts with JWT tokens
+def get_current_student(current_user: LoginDep) -> User:
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
+        )
+    return current_user
+
+
 # for authenticating user accounts with password
 def authenticate_user(
     logindata: OAuth2PasswordRequestForm, db_session: Session
@@ -125,3 +143,7 @@ def authenticate_user(
 LoginDep = Annotated[User, Depends(get_current_user)]
 
 AdminDep = Annotated[User, Depends(get_current_admin)]
+
+TeacherDep = Annotated[User, Depends(get_current_teacher)]
+
+StudentDep = Annotated[User, Depends(get_current_student)]

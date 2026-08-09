@@ -1,7 +1,16 @@
-from fastapi import status, HTTPException, APIRouter
+from fastapi import status, HTTPException, APIRouter, Response
 from backend.core.database import SessionDep
-from backend.core.security import LoginDep, AdminDep
-from backend.models import Teacher, TeacherCreate, TeacherResponse, TeacherUpdate
+from backend.core.security import TeacherDep, AdminDep, LoginDep
+from backend.models import (
+    Teacher,
+    TeacherCreate,
+    TeacherResponse,
+    TeacherUpdate,
+    Course,
+    CourseResponse,
+    CoursePublicResponse,
+    CourseUpdate,
+)
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -13,7 +22,7 @@ api_router = APIRouter(prefix="/teachers", tags=["Teachers"])
     "/", status_code=status.HTTP_201_CREATED, response_model=TeacherResponse
 )
 def create_teacher(
-    userdata: TeacherCreate, db_session: SessionDep, current_user: LoginDep
+    userdata: TeacherCreate, db_session: SessionDep, current_user: TeacherDep
 ):
     if current_user.id is not None:
         teacher = db_session.exec(
@@ -53,7 +62,7 @@ def create_teacher(
 
 # get self
 @api_router.get("/me", response_model=TeacherResponse)
-def get_self(db_session: SessionDep, current_user: LoginDep):
+def get_self(db_session: SessionDep, current_user: TeacherDep):
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -67,7 +76,7 @@ def get_self(db_session: SessionDep, current_user: LoginDep):
 # update self
 @api_router.patch("/me", response_model=TeacherResponse)
 def update_self(
-    userdata: TeacherUpdate, db_session: SessionDep, current_user: LoginDep
+    userdata: TeacherUpdate, db_session: SessionDep, current_user: TeacherDep
 ):
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
@@ -97,6 +106,93 @@ def update_self(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
+
+
+# get all self courses
+@api_router.get("/me/courses", response_model=list[CourseResponse])
+def get_self_course(db_session: SessionDep, current_user: TeacherDep):
+    course = db_session.exec(
+        select(Course).where(Course.teacher_id == current_user.teacher.phone_no)
+    ).all()
+    return course
+
+
+# get all courses of specific teachers
+@api_router.get("/{id}/courses", response_model=list[CoursePublicResponse])
+def get_teacher_course(id: int, db_session: SessionDep, current_user: LoginDep):
+    teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
+    course = db_session.exec(
+        select(Course).where(Course.teacher_id == teacher.phone_no)
+    ).all()
+    return course
+
+
+# update self course
+@api_router.patch("/me/courses/{id}", response_model=CourseResponse)
+def update_self_course(
+    id: int, coursedata: CourseUpdate, db_session: SessionDep, current_user: TeacherDep
+):
+    course = db_session.exec(
+        select(Course)
+        .where(Course.teacher_id == current_user.teacher.phone_no)
+        .where(Course.id == id)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
+        )
+    # remove thumbnail and file duplicate search logic if database becomes slow
+    if coursedata.course_thumbnail:
+        thumbnail = db_session.exec(
+            select(Course).where(Course.course_thumbnail == coursedata.course_thumbnail)
+        ).first()
+        if thumbnail:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="thumbnail url already exists",
+            )
+    if coursedata.course_file:
+        file = db_session.exec(
+            select(Course).where(Course.course_file == coursedata.course_file)
+        ).first()
+        if file:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="file url already exists",
+            )
+    course.sqlmodel_update(coursedata.model_dump(exclude_unset=True))
+    try:
+        db_session.add(course)
+        db_session.commit()
+        db_session.refresh(course)
+        return course
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+
+
+# delete self course
+@api_router.delete("/me/courses/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_self_course(id: int, db_session: SessionDep, current_user: TeacherDep):
+    course = db_session.exec(
+        select(Course)
+        .where(Course.teacher_id == current_user.teacher.phone_no)
+        .where(Course.id == id)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
+        )
+    db_session.delete(course)
+    db_session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # get all teachers (admin access)

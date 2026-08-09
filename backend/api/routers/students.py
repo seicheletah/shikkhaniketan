@@ -1,6 +1,6 @@
 from fastapi import status, HTTPException, APIRouter
 from backend.core.database import SessionDep
-from backend.core.security import LoginDep, AdminDep
+from backend.core.security import AdminDep, StudentDep
 from backend.models import Student, StudentResponse, StudentCreate, StudentUpdate
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,7 +13,7 @@ api_router = APIRouter(prefix="/students", tags=["Students"])
     "/", status_code=status.HTTP_201_CREATED, response_model=StudentResponse
 )
 def create_student(
-    userdata: StudentCreate, db_session: SessionDep, current_user: LoginDep
+    userdata: StudentCreate, db_session: SessionDep, current_user: StudentDep
 ):
     if current_user.id is not None:
         student = db_session.exec(
@@ -53,7 +53,7 @@ def create_student(
 
 # get self
 @api_router.get("/me", response_model=StudentResponse)
-def get_self(db_session: SessionDep, current_user: LoginDep):
+def get_self(db_session: SessionDep, current_user: StudentDep):
     student = db_session.exec(
         select(Student).where(Student.user_id == current_user.id)
     ).first()
@@ -67,7 +67,7 @@ def get_self(db_session: SessionDep, current_user: LoginDep):
 # update self
 @api_router.patch("/me", response_model=StudentResponse)
 def update_self(
-    userdata: StudentUpdate, db_session: SessionDep, current_user: LoginDep
+    userdata: StudentUpdate, db_session: SessionDep, current_user: StudentDep
 ):
     student = db_session.exec(
         select(Student).where(Student.user_id == current_user.id)
