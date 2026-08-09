@@ -1,18 +1,14 @@
 import jwt
-import os
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
 from backend.models import User, Token, TokenData
 from fastapi import HTTPException, status, Depends
 from datetime import timedelta, datetime, timezone
-from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from backend.core.database import SessionDep
-
-load_dotenv()
-
+from backend.core.config import settings
 
 # passwordhash instance
 password_hash = PasswordHash.recommended()
@@ -41,11 +37,11 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(
-            minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, os.getenv("SECRET_KEY"), algorithm=os.getenv("ALGORITHM")
+        to_encode, settings.SECRET_KEY.get_secret_value(), algorithm=settings.ALGORITHM
     )
     return encoded_jwt
 
@@ -55,8 +51,8 @@ def verify_access_token(token: str, credentials_exception) -> TokenData:
     try:
         payload = jwt.decode(
             token,
-            os.getenv("SECRET_KEY"),
-            algorithms=[os.getenv("ALGORITHM", "HS256")],
+            settings.SECRET_KEY.get_secret_value(),
+            algorithms=[settings.ALGORITHM],
         )
         id: int | None = payload.get("id")
         email_id: str | None = payload.get("sub")
