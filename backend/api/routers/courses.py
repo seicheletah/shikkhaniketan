@@ -1,3 +1,5 @@
+
+import uuid
 from fastapi import status, HTTPException, APIRouter, Response
 from backend.core.database import SessionDep
 from backend.core.security import TeacherDep, AdminDep
@@ -74,7 +76,7 @@ def search_courses(db_session: SessionDep, q: str, limit: int = 5, offset: int =
 
 # get single course with id
 @api_router.get("/{id}", response_model=CoursePublicResponse)
-def get_course(id: int, db_session: SessionDep):
+def get_course(id: uuid.UUID, db_session: SessionDep):
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -93,7 +95,7 @@ def get_courses(current_user: AdminDep, db_session: SessionDep):
 # update course (admin access)
 @api_router.patch("/{id}", response_model=CourseResponse)
 def update_course(
-    id: int, coursedata: CourseUpdate, db_session: SessionDep, current_user: AdminDep
+    id: uuid.UUID, coursedata: CourseUpdate, db_session: SessionDep, current_user: AdminDep
 ):
     course = db_session.get(Course, id)
     if not course:
@@ -135,7 +137,7 @@ def update_course(
 
 # delete course (admin access)
 @api_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_course(id: int, db_session: SessionDep, current_user: AdminDep):
+def delete_course(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(

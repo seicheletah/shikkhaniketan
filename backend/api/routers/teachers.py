@@ -1,3 +1,4 @@
+import uuid
 from fastapi import status, HTTPException, APIRouter, Response
 from backend.core.database import SessionDep
 from backend.core.security import TeacherDep, AdminDep, LoginDep
@@ -126,7 +127,7 @@ def get_self_course(db_session: SessionDep, current_user: TeacherDep):
 
 # get all courses of specific teachers
 @api_router.get("/{id}/courses", response_model=list[CoursePublicResponse])
-def get_teacher_course(id: int, db_session: SessionDep, current_user: LoginDep):
+def get_teacher_course(id: uuid.UUID, db_session: SessionDep, current_user: LoginDep):
     teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
     if not teacher:
         raise HTTPException(
@@ -141,7 +142,7 @@ def get_teacher_course(id: int, db_session: SessionDep, current_user: LoginDep):
 # update self course
 @api_router.patch("/me/courses/{id}", response_model=CourseResponse)
 def update_self_course(
-    id: int, coursedata: CourseUpdate, db_session: SessionDep, current_user: TeacherDep
+    id: uuid.UUID, coursedata: CourseUpdate, db_session: SessionDep, current_user: TeacherDep
 ):
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
@@ -194,7 +195,7 @@ def update_self_course(
 
 # delete self course
 @api_router.delete("/me/courses/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_self_course(id: int, db_session: SessionDep, current_user: TeacherDep):
+def delete_self_course(id: uuid.UUID, db_session: SessionDep, current_user: TeacherDep):
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -224,7 +225,7 @@ def get_teachers(current_user: AdminDep, db_session: SessionDep):
 
 # get single teacher with id (admin access)
 @api_router.get("/{id}", response_model=TeacherResponse)
-def get_teacher(id: int, db_session: SessionDep, current_user: AdminDep):
+def get_teacher(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
     if not teacher:
         raise HTTPException(
@@ -237,7 +238,7 @@ def get_teacher(id: int, db_session: SessionDep, current_user: AdminDep):
 # update teacher (admin access)
 @api_router.patch("/{id}", response_model=TeacherResponse)
 def update_teacher(
-    id: int, teacherdata: TeacherUpdate, db_session: SessionDep, current_user: AdminDep
+    id: uuid.UUID, teacherdata: TeacherUpdate, db_session: SessionDep, current_user: AdminDep
 ):
     teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
     if not teacher:

@@ -1,11 +1,12 @@
+import uuid
 from sqlmodel import (
     Field,
     SQLModel,
     func,
     Column,
     DateTime,
-    Integer,
     String,
+    Uuid,
     ForeignKey,
     Relationship,
 )
@@ -22,7 +23,7 @@ class Token(SQLModel):
 
 # token data valdation model
 class TokenData(SQLModel):
-    id: int | None = None
+    id: uuid.UUID | None = None
     email_id: str | None = None
     role: str | None = None
 
@@ -37,13 +38,13 @@ class UserRole(str, Enum):
 # user base model
 class UserBase(SQLModel):
     email_id: EmailStr
-    role: UserRole
+    role: str
 
 
 # user table model
 class User(UserBase, table=True):
     email_id: EmailStr = Field(unique=True)
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -56,7 +57,9 @@ class User(UserBase, table=True):
 
 
 # create user model with pydantic vlidation
-class UserCreate(UserBase):
+class UserCreate(SQLModel):
+    email_id: EmailStr
+    role: UserRole
     hashed_password: str
 
     # custom pydantic model validation
@@ -75,12 +78,12 @@ class UserUpdate(SQLModel):
 
 # user response model for response body
 class UserResponse(UserBase):
-    id: int
+    id: uuid.UUID
 
 
 # user public response model for response body
 class UserPublicResponse(SQLModel):
-    id: int
+    id: uuid.UUID
 
 
 # for checking request data validation with pydantic
@@ -108,15 +111,16 @@ class Student(StudentBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    user_id: int | None = Field(
+    user_id: uuid.UUID | None = Field(
         sa_column=Column(
-            Integer,
+            Uuid,
             ForeignKey("user.id", ondelete="CASCADE"),
             nullable=False,
             unique=True,
         )
     )
     user: User = Relationship(back_populates="student")
+    purchase: Purchase = Relationship(back_populates="student")
 
 
 # create student model with pydantic vlidation
@@ -161,9 +165,9 @@ class Teacher(TeacherBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    user_id: int = Field(
+    user_id: uuid.UUID = Field(
         sa_column=Column(
-            Integer,
+            Uuid,
             ForeignKey("user.id", ondelete="CASCADE"),
             nullable=False,
             unique=True,
@@ -219,7 +223,7 @@ class CourseBase(SQLModel):
 
 # course table model
 class Course(CourseBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -234,6 +238,7 @@ class Course(CourseBase, table=True):
         )
     )
     teacher: Teacher = Relationship(back_populates="course")
+    purchase: Purchase = Relationship(back_populates="course")
 
 
 # create course model with pydantic vlidation
@@ -255,11 +260,65 @@ class CourseUpdate(SQLModel):
 
 # course response model for response body
 class CourseResponse(CourseBase):
-    id: int
+    id: uuid.UUID
     teacher: TeacherResponse
 
 
 # course public response model for response body
 class CoursePublicResponse(CourseBase):
-    id: int
+    id: uuid.UUID
     teacher: TeacherPublicResponse
+
+
+# payment status model
+class PaymentStatus(str, Enum):
+    pending = "pending"
+    completed = "completed"
+    failed = "failed"
+
+
+# payment base model
+class PurchaseBase(SQLModel):
+    amount: int
+    currency: str = Field(default="INR")
+    razorpay_order_id: str = Field(unique=True)
+    razorpay_payment_id: str | None = Field(default=None, unique=True)
+    razorpay_signature: str | None = Field(default=None)
+    status: str = Field(default=PaymentStatus.pending)
+
+
+# purchase table model
+class Purchase(PurchaseBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    student_id: str = Field(
+        sa_column=Column(
+            String,
+            ForeignKey("student.phone_no", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
+    course_id: uuid.UUID = Field(
+        sa_column=Column(
+            Uuid,
+            ForeignKey("course.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
+    student: Student = Relationship(back_populates="purchase")
+    course: Course = Relationship(back_populates="purchase")
+
+
+# create purchase model with pydantic vlidation
+class PurchaseCreate(SQLModel):
+    amount: int
+    currency: str
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+    status: PaymentStatus

@@ -1,3 +1,4 @@
+import uuid
 from fastapi import Response, status, HTTPException, APIRouter
 from backend.core.database import SessionDep
 from backend.core.security import get_password_hash, LoginDep, AdminDep
@@ -74,7 +75,7 @@ def get_users(current_user: AdminDep, db_session: SessionDep):
 
 # get single user with id (admin access)
 @api_router.get("/{id}", response_model=UserResponse)
-def get_user(id: int, db_session: SessionDep, current_user: AdminDep):
+def get_user(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     user = db_session.get(User, id)
     if not user:
         raise HTTPException(
@@ -86,7 +87,7 @@ def get_user(id: int, db_session: SessionDep, current_user: AdminDep):
 
 # delete user (admin access)
 @api_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(id: int, db_session: SessionDep, current_user: AdminDep):
+def delete_user(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     user = db_session.get(User, id)
     if not user:
         raise HTTPException(
@@ -100,7 +101,7 @@ def delete_user(id: int, db_session: SessionDep, current_user: AdminDep):
 # update user (admin access)
 @api_router.patch("/{id}", response_model=UserResponse)
 def update_user(
-    id: int, userdata: UserUpdate, db_session: SessionDep, current_user: AdminDep
+    id: uuid.UUID, userdata: UserUpdate, db_session: SessionDep, current_user: AdminDep
 ):
     user = db_session.get(User, id)
     if not user:

@@ -1,4 +1,5 @@
 import jwt
+import uuid
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
@@ -54,7 +55,7 @@ def verify_access_token(token: str, credentials_exception) -> TokenData:
             settings.SECRET_KEY.get_secret_value(),
             algorithms=[settings.ALGORITHM],
         )
-        id: int | None = payload.get("id")
+        id: uuid.UUID | None = payload.get("id")
         email_id: str | None = payload.get("sub")
         role: str | None = payload.get("role")
         if not id or not email_id or not role:
@@ -134,7 +135,7 @@ def authenticate_user(
             detail=f"invalid credentials",
         )
     access_token = create_access_token(
-        data={"sub": logindata.username, "role": data.role, "id": data.id}
+        data={"sub": logindata.username, "role": data.role, "id": str(data.id)}
     )
     return Token(access_token=access_token, token_type="bearer")
 
