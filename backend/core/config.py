@@ -9,5 +9,7 @@ class Settings(BaseSettings):
     SECRET_KEY: SecretStr
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    RAZORPAY_KEY_ID: str
+    RAZORPAY_KEY_SECRET: str
 
 settings = Settings() # type: ignore

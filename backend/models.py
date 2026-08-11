@@ -91,6 +91,26 @@ class UserLogin(UserCreate):
     pass
 
 
+# course enrollment validation model
+class Enrollment(SQLModel, table=True):
+    student_id: str = Field(
+        sa_column=Column(
+            String,
+            ForeignKey("student.phone_no", ondelete="CASCADE"),
+            primary_key=True,
+            nullable=False,
+        )
+    )
+    course_id: uuid.UUID = Field(
+        sa_column=Column(
+            Uuid,
+            ForeignKey("course.id", ondelete="CASCADE"),
+            primary_key=True,
+            nullable=False,
+        )
+    )
+
+
 # student base model
 class StudentBase(SQLModel):
     first_name: str
@@ -121,6 +141,7 @@ class Student(StudentBase, table=True):
     )
     user: User = Relationship(back_populates="student")
     purchase: Purchase = Relationship(back_populates="student")
+    course: list[Course] = Relationship(back_populates="student", link_model=Enrollment)
 
 
 # create student model with pydantic vlidation
@@ -174,7 +195,7 @@ class Teacher(TeacherBase, table=True):
         )
     )
     user: User = Relationship(back_populates="teacher")
-    course: Course = Relationship(back_populates="teacher")
+    course: list[Course] = Relationship(back_populates="teacher")
 
 
 # create student model with pydantic vlidation
@@ -239,6 +260,9 @@ class Course(CourseBase, table=True):
     )
     teacher: Teacher = Relationship(back_populates="course")
     purchase: Purchase = Relationship(back_populates="course")
+    student: list[Student] = Relationship(
+        back_populates="course", link_model=Enrollment
+    )
 
 
 # create course model with pydantic vlidation
@@ -270,32 +294,23 @@ class CoursePublicResponse(CourseBase):
     teacher: TeacherPublicResponse
 
 
-# payment status model
-class PaymentStatus(str, Enum):
-    pending = "pending"
-    completed = "completed"
-    failed = "failed"
-
-
-# payment base model
+# purchase base model
 class PurchaseBase(SQLModel):
+    # course price is in paise for razorpay
     amount: int
     currency: str = Field(default="INR")
     razorpay_order_id: str = Field(unique=True)
     razorpay_payment_id: str | None = Field(default=None, unique=True)
     razorpay_signature: str | None = Field(default=None)
-    status: str = Field(default=PaymentStatus.pending)
+    status: str
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
 
 
 # purchase table model
 class Purchase(PurchaseBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
-    created_at: datetime | None = Field(
-        default=None,
-        sa_column=Column(
-            DateTime(timezone=True), nullable=False, server_default=func.now()
-        ),
-    )
     student_id: str = Field(
         sa_column=Column(
             String,
@@ -314,11 +329,17 @@ class Purchase(PurchaseBase, table=True):
     course: Course = Relationship(back_populates="purchase")
 
 
-# create purchase model with pydantic vlidation
-class PurchaseCreate(SQLModel):
+# create purchase order response model
+class PurchaseOrderResponse(SQLModel):
+    key_id: str
+    id: str
     amount: int
     currency: str
+
+
+# verifying payment siganature model
+class PurchaseVerify(SQLModel):
     razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
-    status: PaymentStatus
+    course_id: uuid.UUID
