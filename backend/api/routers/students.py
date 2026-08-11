@@ -1,3 +1,4 @@
+import uuid
 from fastapi import status, HTTPException, APIRouter
 from backend.core.database import SessionDep
 from backend.core.security import AdminDep, StudentDep
@@ -107,7 +108,7 @@ def get_students(current_user: AdminDep, db_session: SessionDep):
 
 # get single student with id (admin access)
 @api_router.get("/{id}", response_model=StudentResponse)
-def get_student(id: int, db_session: SessionDep, current_user: AdminDep):
+def get_student(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     student = db_session.exec(select(Student).where(Student.user_id == id)).first()
     if not student:
         raise HTTPException(
@@ -120,7 +121,7 @@ def get_student(id: int, db_session: SessionDep, current_user: AdminDep):
 # update student (admin access)
 @api_router.patch("/{id}", response_model=StudentResponse)
 def update_student(
-    id: int, studentdata: StudentUpdate, db_session: SessionDep, current_user: AdminDep
+    id: uuid.UUID, studentdata: StudentUpdate, db_session: SessionDep, current_user: AdminDep
 ):
     student = db_session.exec(select(Student).where(Student.user_id == id)).first()
     if not student:
