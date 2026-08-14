@@ -10,7 +10,7 @@ from sqlmodel import (
     ForeignKey,
     Relationship,
 )
-from pydantic import EmailStr, model_validator
+from pydantic import EmailStr, model_validator, HttpUrl
 from datetime import datetime, date
 from enum import Enum
 
@@ -234,12 +234,9 @@ class CourseBase(SQLModel):
     course_name: str
     course_details: str
     course_language: str
-    course_file_type: str
     course_paid: bool
     course_price: int = Field(ge=0, le=15000)
-    # remove thumbnail and file unique key if database becomes slow
-    course_thumbnail: str = Field(unique=True)
-    course_file: str = Field(unique=True)
+    course_price_currency: str | None = Field(default="INR")
 
 
 # course table model
@@ -263,7 +260,7 @@ class Course(CourseBase, table=True):
     student: list[Student] = Relationship(
         back_populates="course", link_model=Enrollment
     )
-
+    media: Media = Relationship(back_populates="course")
 
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
@@ -275,24 +272,101 @@ class CourseUpdate(SQLModel):
     course_name: str | None = None
     course_details: str | None = None
     course_language: str | None = None
-    course_file_type: str | None = None
     course_paid: bool | None = None
     course_price: int | None = Field(default=None, ge=0, le=15000)
-    course_thumbnail: str | None = None
-    course_file: str | None = None
+    course_price_currency: str | None = Field(default="INR")
 
 
 # course response model for response body
 class CourseResponse(CourseBase):
     id: uuid.UUID
     teacher: TeacherResponse
+    media: MediaPublicResponse
 
 
 # course public response model for response body
 class CoursePublicResponse(CourseBase):
     id: uuid.UUID
     teacher: TeacherPublicResponse
+    media: MediaPublicResponse
 
+
+# course media upload status
+class MediaUploadStatus(str, Enum):
+    pending = "pending"
+    complete = "complete"
+
+
+# course media upload category
+class MediaUploadCategory(str, Enum):
+    thumbnail = "thumbnail"
+    resource = "resource"
+
+
+# course media upload type
+class MediaUploadType(str, Enum):
+    document = "document"
+    video = "video"
+    image = "image"
+
+
+# course media upload file type
+class MediaUploadFileType(str, Enum):
+    mp4 = "mp4"
+    pdf = "pdf"
+    jpg = "jpg"
+    png = "png"
+
+
+# course resources media model
+class Media(SQLModel, table=True):
+    category: str
+    media_type: str
+    file_name: str
+    file_extension: str
+    s3_key: str = Field(unique=True)
+    status: str = Field(default=MediaUploadStatus.pending)
+    id: uuid.UUID = Field(primary_key=True)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    course_id: uuid.UUID = Field(
+        sa_column=Column(
+            Uuid,
+            ForeignKey("course.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
+    course: Course = Relationship(back_populates="media")
+
+
+# upload course media model with pydantic vlidation
+class MediaUpload(SQLModel):
+    category: MediaUploadCategory
+    media_type: MediaUploadType
+    file_name: str
+    file_extension: MediaUploadFileType
+
+
+# media upload presigned model
+class MediaUploadPresigned(SQLModel):
+    media_id: uuid.UUID
+    upload_url: HttpUrl
+
+
+# media access presigned model
+class MediaAccessPresigned(SQLModel):
+    course_id: uuid.UUID
+    stream_url: HttpUrl
+
+
+# media public response model
+class MediaPublicResponse(SQLModel):
+    id: uuid.UUID
+    category: MediaUploadCategory
 
 # purchase base model
 class PurchaseBase(SQLModel):
