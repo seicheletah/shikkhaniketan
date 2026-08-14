@@ -142,6 +142,7 @@ class Student(StudentBase, table=True):
     user: User = Relationship(back_populates="student")
     purchase: Purchase = Relationship(back_populates="student")
     course: list[Course] = Relationship(back_populates="student", link_model=Enrollment)
+    review: list[Review] = Relationship(back_populates="student")
 
 
 # create student model with pydantic vlidation
@@ -164,6 +165,7 @@ class StudentUpdate(SQLModel):
 # student response model for response body
 class StudentResponse(StudentBase):
     user: UserResponse
+    course: list[CoursePublicResponse] = []
 
 
 # teacher base model
@@ -260,7 +262,9 @@ class Course(CourseBase, table=True):
     student: list[Student] = Relationship(
         back_populates="course", link_model=Enrollment
     )
-    media: Media = Relationship(back_populates="course")
+    media: list[Media] = Relationship(back_populates="course")
+    review: list[Review] = Relationship(back_populates="course")
+
 
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
@@ -281,14 +285,13 @@ class CourseUpdate(SQLModel):
 class CourseResponse(CourseBase):
     id: uuid.UUID
     teacher: TeacherResponse
-    media: MediaPublicResponse
 
 
 # course public response model for response body
 class CoursePublicResponse(CourseBase):
     id: uuid.UUID
     teacher: TeacherPublicResponse
-    media: MediaPublicResponse
+    media: list[MediaPublicResponse]
 
 
 # course media upload status
@@ -368,6 +371,7 @@ class MediaPublicResponse(SQLModel):
     id: uuid.UUID
     category: MediaUploadCategory
 
+
 # purchase base model
 class PurchaseBase(SQLModel):
     # course price is in paise for razorpay
@@ -416,4 +420,72 @@ class PurchaseVerify(SQLModel):
     razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
+    course_id: uuid.UUID
+
+
+# review base model
+class ReviewBase(SQLModel):
+    comment: str | None = Field(default=None)
+    rate: int | None = Field(default=None, ge=1, le=5)
+
+
+# review table model
+class Review(ReviewBase, table=True):
+    student_id: str = Field(
+        sa_column=Column(
+            String,
+            ForeignKey("student.phone_no", ondelete="CASCADE"),
+            primary_key=True,
+            nullable=False,
+        )
+    )
+    course_id: uuid.UUID = Field(
+        sa_column=Column(
+            Uuid,
+            ForeignKey("course.id", ondelete="CASCADE"),
+            primary_key=True,
+            nullable=False,
+        )
+    )
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    course: Course = Relationship(back_populates="review")
+    student: Student = Relationship(back_populates="review")
+
+
+# create review model with pydantic vlidation
+class ReviewCreate(ReviewBase):
+    pass
+
+
+# update Review model with pydantic vlidation
+class ReviewUpdate(SQLModel):
+    comment: str | None = None
+    rate: int | None = Field(default=None, ge=1, le=5)
+
+
+# review response model for response body
+class ReviewResponse(SQLModel):
+    comment: str
+    rate: int
+    course_id: uuid.UUID
+
+
+# review public response model for response body
+class ReviewPublicResponse(SQLModel):
+    comment: str
+    rate: int
+    first_name: str
+    last_name: str
+    course_id: uuid.UUID
+
+
+# rating public response model for response body
+class RatingPublicResponse(SQLModel):
+    total_reviews: int
+    average_rating: int | float
     course_id: uuid.UUID
