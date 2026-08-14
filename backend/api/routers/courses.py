@@ -2,8 +2,13 @@ import uuid
 import razorpay
 from fastapi import status, HTTPException, APIRouter, Response
 from backend.core.database import SessionDep
-from backend.core.security import StudentDep, TeacherDep, AdminDep
+from backend.core.security import LoginDep, StudentDep, TeacherDep, AdminDep
 from backend.core.config import settings
+from backend.utils import (
+    razorpay_client,
+    generate_upload_presigned_url,
+    generate_stream_presigned_url,
+)
 from backend.models import (
     Student,
     Teacher,
@@ -16,17 +21,16 @@ from backend.models import (
     Purchase,
     PurchaseOrderResponse,
     PurchaseVerify,
+    Media,
+    MediaUpload,
+    MediaUploadPresigned,
+    MediaAccessPresigned,
 )
 from sqlmodel import select, col
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone
 
 api_router = APIRouter(prefix="/courses", tags=["Courses"])
-
-# razorpay client initialization
-razorpay_client = razorpay.Client(
-    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-)
 
 
 # create course
@@ -42,23 +46,6 @@ def create_course(
     if not teacher:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
-        )
-    # remove thumbnail and file duplicate search logic if database becomes slow
-    thumbnail = db_session.exec(
-        select(Course).where(Course.course_thumbnail == coursedata.course_thumbnail)
-    ).first()
-    if thumbnail:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="thumbnail url already exists",
-        )
-    file = db_session.exec(
-        select(Course).where(Course.course_file == coursedata.course_file)
-    ).first()
-    if file:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="file url already exists",
         )
     course = Course(teacher_id=current_user.teacher.phone_no, **coursedata.model_dump())
     try:
@@ -203,6 +190,243 @@ def verify_payment(
     return {"detail": "success"}
 
 
+# for uploading course media thumbnail to s3
+@api_router.post(
+    "/{id}/media/thumbnail/upload",
+    status_code=status.HTTP_201_CREATED,
+    response_model=MediaUploadPresigned,
+)
+def upload_course_media_thumbnail(
+    id: uuid.UUID,
+    mediadata: MediaUpload,
+    db_session: SessionDep,
+    current_user: TeacherDep,
+):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
+    course = db_session.exec(
+        select(Course)
+        .where(Course.id == id)
+        .where(Course.teacher_id == current_user.teacher.phone_no)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
+        )
+    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    existing_thumbnail = db_session.exec(
+        select(Media).where(Media.category == "thumbnail").where(Media.course_id == id)
+    ).first()
+    if existing_thumbnail:
+        db_session.delete(existing_thumbnail)
+        db_session.commit()
+    media_thumbnail_id = uuid.uuid7()
+    media_thumbnail = Media(
+        id=media_thumbnail_id,
+        s3_key=s3_thumbnail_key,
+        course_id=id,
+        **mediadata.model_dump(),
+    )
+    try:
+        db_session.add(media_thumbnail)
+        db_session.commit()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+    media_thumbnail_presigned = generate_upload_presigned_url(s3_thumbnail_key)
+    return {
+        "media_id": media_thumbnail_id,
+        "upload_url": media_thumbnail_presigned,
+    }
+
+
+# for uploading course media resource to s3
+@api_router.post(
+    "/{id}/media/resource/upload",
+    status_code=status.HTTP_201_CREATED,
+    response_model=MediaUploadPresigned,
+)
+def upload_course_media_resource(
+    id: uuid.UUID,
+    mediadata: MediaUpload,
+    db_session: SessionDep,
+    current_user: TeacherDep,
+):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
+    course = db_session.exec(
+        select(Course)
+        .where(Course.id == id)
+        .where(Course.teacher_id == current_user.teacher.phone_no)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
+        )
+    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    existing_s3_resource_key = db_session.exec(
+        select(Media).where(Media.s3_key == s3_resource_key)
+    ).first()
+    if existing_s3_resource_key:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="resource file already exists",
+        )
+    media_resource_id = uuid.uuid7()
+    media_resource = Media(
+        id=media_resource_id,
+        s3_key=s3_resource_key,
+        course_id=id,
+        **mediadata.model_dump(),
+    )
+    try:
+        db_session.add(media_resource)
+        db_session.commit()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+    media_resource_presigned = generate_upload_presigned_url(s3_resource_key)
+    return {"media_id": media_resource_id, "upload_url": media_resource_presigned}
+
+
+# for updating media upload status
+@api_router.post("/{course_id}/media/{id}/status")
+def media_upload_status(
+    id: uuid.UUID,
+    course_id: uuid.UUID,
+    db_session: SessionDep,
+    current_user: TeacherDep,
+):
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
+    course = db_session.exec(
+        select(Course)
+        .where(Course.id == course_id)
+        .where(Course.teacher_id == current_user.teacher.phone_no)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
+        )
+
+    media = db_session.get(Media, id)
+    if not media or media.course_id != course_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="media not found"
+        )
+    media.status = "ready"
+    try:
+        db_session.add(media)
+        db_session.commit()
+        db_session.refresh(media)
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+    return {"status": media.status}
+
+
+# for accessing course media thumbnail from s3
+@api_router.get(
+    "/{id}/media/thumbnail/access",
+    response_model=MediaAccessPresigned,
+)
+def access_course_media_thumbnail(
+    id: uuid.UUID,
+    db_session: SessionDep,
+    current_user: LoginDep,
+):
+    course = db_session.get(Course, id)
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
+        )
+    media = db_session.exec(
+        select(Media)
+        .where(Media.course_id == course.id)
+        .where(Media.category == "thumbnail")
+        .where(Media.status == "ready")
+    ).first()
+    if not media:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"media not found"
+        )
+    thumbnail_stream_presigned = generate_stream_presigned_url(media.s3_key)
+    return {"course_id": id, "stream_url": thumbnail_stream_presigned}
+
+
+# for accessing course media resource from s3
+@api_router.get(
+    "/{id}/media/resource/access",
+    response_model=MediaAccessPresigned,
+)
+def access_course_media_resource(
+    id: uuid.UUID,
+    db_session: SessionDep,
+    current_user: LoginDep,
+):
+    course = db_session.get(Course, id)
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
+        )
+    if current_user.role == "teacher":
+        course = db_session.exec(
+            select(Course)
+            .where(Course.id == id)
+            .where(Course.teacher_id == current_user.teacher.phone_no)
+        ).first()
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
+            )
+    if current_user.role == "student":
+        enrollment = db_session.exec(
+            select(Enrollment)
+            .where(Enrollment.student_id == current_user.student.phone_no)
+            .where(Enrollment.course_id == id)
+        ).first()
+        if not enrollment:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
+            )
+    media = db_session.exec(
+        select(Media)
+        .where(Media.course_id == course.id)
+        .where(Media.category == "resource")
+        .where(Media.status == "ready")
+    ).first()
+    if not media:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"media not found"
+        )
+    resource_stream_presigned = generate_stream_presigned_url(media.s3_key)
+    return {"course_id": id, "stream_url": resource_stream_presigned}
+
+
 # get all courses (admin access)
 @api_router.get("/", response_model=list[CourseResponse])
 def get_courses(current_user: AdminDep, db_session: SessionDep):
@@ -222,25 +446,6 @@ def update_course(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
         )
-    # remove thumbnail and file duplicate search logic if database becomes slow
-    if coursedata.course_thumbnail:
-        thumbnail = db_session.exec(
-            select(Course).where(Course.course_thumbnail == coursedata.course_thumbnail)
-        ).first()
-        if thumbnail:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="thumbnail url already exists",
-            )
-    if coursedata.course_file:
-        file = db_session.exec(
-            select(Course).where(Course.course_file == coursedata.course_file)
-        ).first()
-        if file:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="file url already exists",
-            )
     course.sqlmodel_update(coursedata.model_dump(exclude_unset=True))
     try:
         db_session.add(course)
