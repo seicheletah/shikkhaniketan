@@ -1,18 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api.routers import users, auth, students, teachers, courses, reviews
+from backend.api.routers.v1.api import api_router
 
 # fastapi app instance
 app = FastAPI()
 
-# for enabling API routes
-app.include_router(users.api_router)
-app.include_router(auth.api_router)
-app.include_router(students.api_router)
-app.include_router(teachers.api_router)
-app.include_router(courses.api_router)
-app.include_router(reviews.api_router)
-
+app.include_router(api_router)
 
 # for cross-origin resource sharing
 app.add_middleware(
