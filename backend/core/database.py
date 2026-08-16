@@ -16,8 +16,3 @@ def get_session():
 
 # for reducing code repetition
 SessionDep = Annotated[Session, Depends(get_session)]
-
-try:
-    SQLModel.metadata.create_all(db_engine)
-except:
-    pass
