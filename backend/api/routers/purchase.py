@@ -20,7 +20,6 @@ from datetime import datetime, timezone
 api_router = APIRouter(prefix="/courses", tags=["Courses"])
 
 
-# course purchase order
 @api_router.post(
     "/{id}/purchase",
     status_code=status.HTTP_200_OK,
@@ -31,6 +30,9 @@ def purchase_course(
     db_session: SessionDep,
     current_user: StudentDep,
 ):
+    """
+    Create a purchase order by course ID.
+    """
     student = db_session.exec(
         select(Student).where(Student.user_id == current_user.id)
     ).first()
@@ -85,11 +87,13 @@ def purchase_course(
     return razorpay_order
 
 
-# for verifying payment signature
 @api_router.post("/verify-payment", status_code=status.HTTP_200_OK)
 def verify_payment(
     data: PurchaseVerify, db_session: SessionDep, current_user: StudentDep
 ):
+    """
+    Verify a payment signature.
+    """
     student = db_session.exec(
         select(Student).where(Student.user_id == current_user.id)
     ).first()

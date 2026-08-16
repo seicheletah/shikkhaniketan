@@ -16,13 +16,15 @@ from sqlalchemy.exc import SQLAlchemyError
 api_router = APIRouter(prefix="/courses", tags=["Courses"])
 
 
-# create course
 @api_router.post(
     "/", status_code=status.HTTP_201_CREATED, response_model=CourseResponse
 )
 def create_course(
     coursedata: CourseCreate, db_session: SessionDep, current_user: TeacherDep
 ):
+    """
+    Create a course.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -44,9 +46,11 @@ def create_course(
         )
 
 
-# search courses
 @api_router.get("/search", response_model=list[CoursePublicResponse])
 def search_courses(db_session: SessionDep, q: str, limit: int = 5, offset: int = 0):
+    """
+    Search courses using query parameters.
+    """
     course = db_session.exec(
         select(Course)
         .where(col(Course.course_name).ilike(f"%{q.strip()}%"))
@@ -56,9 +60,11 @@ def search_courses(db_session: SessionDep, q: str, limit: int = 5, offset: int =
     return course
 
 
-# get single course with id
 @api_router.get("/{id}", response_model=CoursePublicResponse)
 def get_course(id: uuid.UUID, db_session: SessionDep):
+    """
+    Get single course details with ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -68,13 +74,14 @@ def get_course(id: uuid.UUID, db_session: SessionDep):
     return course
 
 
-# get all courses (admin access)
 @api_router.get("/", response_model=list[CourseResponse])
 def get_courses(current_user: AdminDep, db_session: SessionDep):
+    """
+    Get all existing courses details (admin access).
+    """
     return db_session.exec(select(Course)).all()
 
 
-# update course (admin access)
 @api_router.patch("/{id}", response_model=CourseResponse)
 def update_course(
     id: uuid.UUID,
@@ -82,6 +89,9 @@ def update_course(
     db_session: SessionDep,
     current_user: AdminDep,
 ):
+    """
+    Update a course details with ID.  (admin access)
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -101,9 +111,11 @@ def update_course(
         )
 
 
-# delete course (admin access)
 @api_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_course(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
+    """
+    Delete a course by ID (admin access).
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
