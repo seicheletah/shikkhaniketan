@@ -5,3 +5,4 @@ pwdlib[argon2]==0.3.0
 PyJWT==2.13.0
 razorpay==2.0.1
 boto3==1.43.70
+alembic==1.19.1
