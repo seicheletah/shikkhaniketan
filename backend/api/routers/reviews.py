@@ -18,7 +18,6 @@ from sqlalchemy.exc import SQLAlchemyError
 api_router = APIRouter(prefix="/courses", tags=["Courses"])
 
 
-# create review on speciic course
 @api_router.post(
     "/{id}/review",
     status_code=status.HTTP_201_CREATED,
@@ -30,6 +29,9 @@ def create_review(
     db_session: SessionDep,
     current_user: StudentDep,
 ):
+    """
+    Create a review on speciic course by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -71,13 +73,15 @@ def create_review(
         )
 
 
-#  get all reviews on specific course
 @api_router.get("/{id}/review", response_model=list[ReviewPublicResponse])
 def get_review(
     id: uuid.UUID,
     db_session: SessionDep,
     current_user: LoginDep,
 ):
+    """
+    Get all reviews on a specific course by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -97,13 +101,15 @@ def get_review(
     return formatted_review
 
 
-# get rating on specific course
 @api_router.get("/{id}/rating", response_model=RatingPublicResponse)
 def get_rating(
     id: uuid.UUID,
     db_session: SessionDep,
     current_user: LoginDep,
 ):
+    """
+    Get total ratings on a specific course by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(

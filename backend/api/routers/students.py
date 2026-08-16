@@ -18,13 +18,15 @@ from sqlalchemy.exc import SQLAlchemyError
 api_router = APIRouter(prefix="/students", tags=["Students"])
 
 
-# create student
 @api_router.post(
     "/", status_code=status.HTTP_201_CREATED, response_model=StudentResponse
 )
 def create_student(
     userdata: StudentCreate, db_session: SessionDep, current_user: StudentDep
 ):
+    """
+    Create student.
+    """
     if current_user.id is not None:
         student = db_session.exec(
             select(Student).where(Student.user_id == current_user.id)
@@ -61,9 +63,11 @@ def create_student(
         )
 
 
-# get self
 @api_router.get("/me", response_model=StudentResponse)
 def get_self(db_session: SessionDep, current_user: StudentDep):
+    """
+    Get own details.
+    """
     student = db_session.exec(
         select(Student).where(Student.user_id == current_user.id)
     ).first()
@@ -74,11 +78,13 @@ def get_self(db_session: SessionDep, current_user: StudentDep):
     return student
 
 
-# update self
 @api_router.patch("/me", response_model=StudentResponse)
 def update_self(
     userdata: StudentUpdate, db_session: SessionDep, current_user: StudentDep
 ):
+    """
+    Update own details.
+    """
     student = db_session.exec(
         select(Student).where(Student.user_id == current_user.id)
     ).first()
@@ -109,7 +115,6 @@ def update_self(
         )
 
 
-# update self review
 @api_router.patch("/me/courses/{id}/review", response_model=ReviewResponse)
 def update_self_review(
     id: uuid.UUID,
@@ -117,6 +122,9 @@ def update_self_review(
     db_session: SessionDep,
     current_user: StudentDep,
 ):
+    """
+    Update own review done to a course by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -146,13 +154,15 @@ def update_self_review(
     )
 
 
-# delete self review
 @api_router.delete("/me/courses/{id}/review", status_code=status.HTTP_204_NO_CONTENT)
 def delete_self_review(
     id: uuid.UUID,
     db_session: SessionDep,
     current_user: StudentDep,
 ):
+    """
+    Delete own review done to a course by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -173,15 +183,19 @@ def delete_self_review(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# get all students (admin access)
 @api_router.get("/", response_model=list[StudentResponse])
 def get_students(current_user: AdminDep, db_session: SessionDep):
+    """
+    Get all student details (admin access).
+    """
     return db_session.exec(select(Student)).all()
 
 
-# get single student with id (admin access)
 @api_router.get("/{id}", response_model=StudentResponse)
 def get_student(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
+    """
+    Get a specific student details by ID (admin access).
+    """
     student = db_session.exec(select(Student).where(Student.user_id == id)).first()
     if not student:
         raise HTTPException(
@@ -191,7 +205,6 @@ def get_student(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     return student
 
 
-# update student (admin access)
 @api_router.patch("/{id}", response_model=StudentResponse)
 def update_student(
     id: uuid.UUID,
@@ -199,6 +212,9 @@ def update_student(
     db_session: SessionDep,
     current_user: AdminDep,
 ):
+    """
+    Update student details by ID (admin access).
+    """
     student = db_session.exec(select(Student).where(Student.user_id == id)).first()
     if not student:
         raise HTTPException(
