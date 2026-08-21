@@ -17,7 +17,7 @@ from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone
 
-api_router = APIRouter(prefix="/courses", tags=["Courses"])
+api_router = APIRouter(prefix="/courses", tags=["Purchase"])
 
 
 @api_router.post(

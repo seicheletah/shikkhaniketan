@@ -18,7 +18,7 @@ from backend.models import (
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
 
-api_router = APIRouter(prefix="/courses", tags=["Courses"])
+api_router = APIRouter(prefix="/courses", tags=["Media"])
 
 
 @api_router.post(
