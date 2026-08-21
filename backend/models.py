@@ -75,6 +75,12 @@ class UserUpdate(SQLModel):
     email_id: EmailStr | None = None
     hashed_password: str | None = None
 
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
+
 
 # user response model for response body
 class UserResponse(UserBase):
@@ -161,6 +167,12 @@ class StudentUpdate(SQLModel):
     about: str | None = None
     profile_photo: str | None = None
 
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
+
 
 # student response model for response body
 class StudentResponse(StudentBase):
@@ -215,6 +227,12 @@ class TeacherUpdate(SQLModel):
     address: str | None = None
     about: str | None = None
     profile_photo: str | None = None
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # teacher response model for response body
@@ -279,6 +297,12 @@ class CourseUpdate(SQLModel):
     course_paid: bool | None = None
     course_price: int | None = Field(default=None, ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # course response model for response body
@@ -466,6 +490,12 @@ class ReviewCreate(ReviewBase):
 class ReviewUpdate(SQLModel):
     comment: str | None = None
     rate: int | None = Field(default=None, ge=1, le=5)
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # review response model for response body
