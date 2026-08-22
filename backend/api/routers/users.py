@@ -4,7 +4,7 @@ from backend.core.database import SessionDep
 from backend.core.security import get_password_hash, LoginDep, AdminDep
 from backend.models import User, UserCreate, UserResponse, UserUpdate
 from sqlmodel import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 api_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -26,6 +26,12 @@ def create_user(userdata: UserCreate, db_session: SessionDep):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="email id already exists",
+        )
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
         )
 
 
@@ -72,6 +78,12 @@ def update_self(userdata: UserUpdate, db_session: SessionDep, current_user: Logi
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="email id already exists",
+        )
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
         )
 
 
@@ -137,4 +149,10 @@ def update_user(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="email id already exists",
+        )
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
         )
