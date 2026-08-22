@@ -1,53 +1,85 @@
-// Wait for the DOM to fully load
 document.addEventListener('DOMContentLoaded', () => {
 
-  // 1. Password Visibility Toggle (Show/Hide Password)
-  const togglePassword = document.querySelector('#togglePassword');
-  const passwordInput = document.querySelector('#password');
+  // Password Show / Hide
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
 
   if (togglePassword && passwordInput) {
     togglePassword.addEventListener('click', function () {
-      // Toggle the type attribute
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
 
-      // Toggle FontAwesome eye icon classes
+      passwordInput.type = type;
+
       this.classList.toggle('fa-eye');
       this.classList.toggle('fa-eye-slash');
     });
   }
 
-  // 2. Form Submission Handling
+
+  // Login Form
   const loginForm = document.getElementById('loginForm');
 
-  if (loginForm) {
-    loginForm.addEventListener('submit', function (e) {
-      e.preventDefault(); // Prevent default page refresh
+  loginForm.addEventListener('submit', async function (e) {
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+    e.preventDefault();
 
-      // Basic Validation Check
-      if (!email || !password) {
-        alert('Please fill in all fields.');
-        return;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    try {
+
+      const formData = new URLSearchParams();
+
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const response = await fetch(
+        'http://127.0.0.1:8000/api/v1/login',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+
+          body: formData
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+
+        // Login token save
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('token_type', data.token_type);
+
+        console.log('Login Success:', data);
+
+        alert('Login Successful!');
+
+        // পরে dashboard তৈরি হলে এই line ব্যবহার করবে
+        // window.location.href = 'student-dashboard.html';
+
+      } else {
+
+        alert(data.detail || 'Invalid email or password');
+
       }
 
-      // Action on Form Submit (Replace with backend API integration later)
-      console.log('Login Submitted:', { email, password });
-      alert(`Welcome back! Logging in with: ${email}`);
-      
-      // Optionally reset form
-      // loginForm.reset();
-    });
-  }
+    } catch (error) {
 
-  // 3. Google Sign-In Button Handler
-  const googleBtn = document.querySelector('.btn-google');
-  if (googleBtn) {
-    googleBtn.addEventListener('click', () => {
-      alert('Google Sign-In clicked!');
-    });
-  }
+      console.error('Login Error:', error);
+
+      alert('Backend server-এর সাথে connection হচ্ছে না!');
+
+    }
+
+  });
 
 });

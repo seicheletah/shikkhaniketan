@@ -1,14 +1,11 @@
-import os
 from sqlmodel import create_engine, SQLModel, Session
 import backend.models
-from dotenv import load_dotenv
 from typing import Annotated
 from fastapi import Depends
-
-load_dotenv()
+from backend.core.config import settings
 
 # for creating db engine
-db_engine = create_engine(f"postgresql+psycopg://{os.getenv("DATABASE_URL")}")
+db_engine = create_engine(settings.DATABASE_URL_DEV)
 
 
 # for creaing session objects with Depends()

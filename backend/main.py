@@ -1,18 +1,17 @@
+print("THIS IS MY MAIN.PY RUNNING")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api.routers import users, auth
+from backend.api.routers.v1.api import api_router
 
-# fastapi app instance
 app = FastAPI()
 
-app.include_router(users.api_router)
-app.include_router(auth.api_router)
-
-# for cross-origin resource sharing
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(api_router)

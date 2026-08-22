@@ -1,18 +1,15 @@
 import jwt
-import os
+import uuid
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
 from backend.models import User, Token, TokenData
 from fastapi import HTTPException, status, Depends
 from datetime import timedelta, datetime, timezone
-from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from backend.core.database import SessionDep
-
-load_dotenv()
-
+from backend.core.config import settings
 
 # passwordhash instance
 password_hash = PasswordHash.recommended()
@@ -41,11 +38,11 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(
-            minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, os.getenv("SECRET_KEY"), algorithm=os.getenv("ALGORITHM")
+        to_encode, settings.SECRET_KEY.get_secret_value(), algorithm=settings.ALGORITHM
     )
     return encoded_jwt
 
@@ -55,10 +52,10 @@ def verify_access_token(token: str, credentials_exception) -> TokenData:
     try:
         payload = jwt.decode(
             token,
-            os.getenv("SECRET_KEY"),
-            algorithms=[os.getenv("ALGORITHM", "HS256")],
+            settings.SECRET_KEY.get_secret_value(),
+            algorithms=[settings.ALGORITHM],
         )
-        id: int | None = payload.get("id")
+        id: uuid.UUID | None = payload.get("id")
         email_id: str | None = payload.get("sub")
         role: str | None = payload.get("role")
         if not id or not email_id or not role:
@@ -88,6 +85,37 @@ def get_current_user(
         return user
 
 
+# for authorizing admin accounts with JWT tokens
+def get_current_admin(current_user: LoginDep) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
+        )
+    return current_user
+
+
+# for authorizing teacher accounts with JWT tokens
+# needs refactoring to prevent code repetation
+# add checking teacher id exits or not
+def get_current_teacher(current_user: LoginDep) -> User:
+    if current_user.role != "teacher":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
+        )
+    return current_user
+
+
+# for authorizing student accounts with JWT tokens
+# needs refactoring to prevent code repetation
+# add checking student id exits or not
+def get_current_student(current_user: LoginDep) -> User:
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
+        )
+    return current_user
+
+
 # for authenticating user accounts with password
 def authenticate_user(
     logindata: OAuth2PasswordRequestForm, db_session: Session
@@ -107,10 +135,16 @@ def authenticate_user(
             detail=f"invalid credentials",
         )
     access_token = create_access_token(
-        data={"sub": logindata.username, "role": data.role, "id": data.id}
+        data={"sub": logindata.username, "role": data.role, "id": str(data.id)}
     )
     return Token(access_token=access_token, token_type="bearer")
 
 
 # for reducing code repetition
 LoginDep = Annotated[User, Depends(get_current_user)]
+
+AdminDep = Annotated[User, Depends(get_current_admin)]
+
+TeacherDep = Annotated[User, Depends(get_current_teacher)]
+
+StudentDep = Annotated[User, Depends(get_current_student)]
