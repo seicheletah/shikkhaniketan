@@ -10,8 +10,8 @@ from sqlmodel import select
     "request_body, response_body",
     [
         (
-            TeacherSampleData.request_body_user_teacher_creation,
-            TeacherSampleData.response_body_user_teacher_creation,
+            TeacherSampleData.request_body_user_teacher_creation_male,
+            TeacherSampleData.response_body_user_teacher_creation_male,
         ),
         (
             StudentSampleData.request_body_user_student_creation_male,
