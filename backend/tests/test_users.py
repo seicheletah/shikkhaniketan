@@ -5,22 +5,22 @@ from .sample_test_data import *
 from sqlmodel import select
 
 
-# create user test
+# create user account test
 @pytest.mark.parametrize(
     "request_body, response_body",
     [
         (
-            TeacherSampleData.request_body_teacher_creation,
-            TeacherSampleData.response_body_teacher_creation,
+            TeacherSampleData.request_body_user_teacher_creation,
+            TeacherSampleData.response_body_user_teacher_creation,
         ),
         (
-            StudentSampleData.request_body_student_creation,
-            StudentSampleData.response_body_student_creation,
+            StudentSampleData.request_body_user_student_creation_male,
+            StudentSampleData.response_body_user_student_creation_male,
         ),
     ],
 )
-def test_create_user_success(client, request_body, response_body):
-    response = client.post(f"{settings.API_V1_STR}/users", json=request_body)
+def test_cereate_user_success(client, user_account, request_body, response_body):
+    response = user_account(request_body)
     UserResponse(**response.json())
     assert response.status_code == 201
     assert response.json()["email_id"] == response_body["email_id"]
@@ -41,7 +41,8 @@ def test_create_user_wrong_request_body(client):
 # create admin user fail test
 def test_create_admin_fail(client):
     response = client.post(
-        f"{settings.API_V1_STR}/users", json=AdminSampleData.request_body_admin_creation
+        f"{settings.API_V1_STR}/users",
+        json=AdminSampleData.request_body_user_admin_creation,
     )
     assert response.status_code == 422
     assert response.json()["detail"][0]["msg"] == "Value error, access denied"
@@ -51,70 +52,87 @@ def test_create_admin_fail(client):
 def test_user_email_exists(client):
     client.post(
         f"{settings.API_V1_STR}/users",
-        json=StudentSampleData.request_body_student_creation,
+        json=StudentSampleData.request_body_user_student_creation_male,
     )
     response = client.post(
         f"{settings.API_V1_STR}/users",
-        json=StudentSampleData.request_body_student_creation,
+        json=StudentSampleData.request_body_user_student_creation_male,
     )
     assert response.status_code == 409
     assert response.json()["detail"] == "email id already exists"
 
 
 # get self student data test
-def test_get_self_student(client, student_login):
+def test_get_self_student(client, user_login):
+    login_response = user_login(
+        StudentSampleData.request_body_user_student_creation_male,
+        StudentSampleData.request_body_user_student_login_male,
+    )
     response = client.get(
         f"{settings.API_V1_STR}/users/me",
-        headers={"Authorization": f"Bearer {student_login}"},
+        headers={"Authorization": f"Bearer {login_response["token"]}"},
     )
     UserResponse(**response.json())
     assert response.status_code == 200
     assert (
         response.json()["email_id"]
-        == StudentSampleData.request_body_student_login["username"]
+        == StudentSampleData.request_body_user_student_login_male["username"]
     )
     assert (
         response.json()["role"]
-        == StudentSampleData.request_body_student_creation["role"]
+        == StudentSampleData.request_body_user_student_creation_male["role"]
     )
 
 
 # update own student user details test
-def test_update_self_student(client, student_login):
+def test_update_self_student(client, user_login):
+    login_response = user_login(
+        StudentSampleData.request_body_user_student_creation_male,
+        StudentSampleData.request_body_user_student_login_male,
+    )
     response = client.patch(
         f"{settings.API_V1_STR}/users/me",
-        json=StudentSampleData.request_body_student_update,
-        headers={"Authorization": f"Bearer {student_login}"},
+        json=StudentSampleData.request_body_user_student_update_male,
+        headers={"Authorization": f"Bearer {login_response["token"]}"},
     )
     UserResponse(**response.json())
     assert response.status_code == 200
     assert (
         response.json()["email_id"]
-        == StudentSampleData.request_body_student_update["email_id"]
+        == StudentSampleData.request_body_user_student_update_male["email_id"]
     )
 
 
 # wrong request body update test
-def test_update_self_wrong_request_body(client, student_login):
+def test_update_self_wrong_request_body(client, user_login):
+    login_response = user_login(
+        StudentSampleData.request_body_user_student_creation_male,
+        StudentSampleData.request_body_user_student_login_male,
+    )
     response = client.patch(
         f"{settings.API_V1_STR}/users/me",
         json=UserSampleData.request_body_wrong_model,
-        headers={"Authorization": f"Bearer {student_login}"},
+        headers={"Authorization": f"Bearer {login_response["token"]}"},
     )
     assert response.status_code == 422
     assert response.json()["detail"][0]["msg"] == "Value error, no value"
 
 
 # delete own student user details test
-def test_delete_self_student(session, client, student_login):
+def test_delete_self_student(session, client, user_login):
+    login_response = user_login(
+        StudentSampleData.request_body_user_student_creation_male,
+        StudentSampleData.request_body_user_student_login_male,
+    )
     response = client.delete(
         f"{settings.API_V1_STR}/users/me",
-        headers={"Authorization": f"Bearer {student_login}"},
+        headers={"Authorization": f"Bearer {login_response["token"]}"},
     )
     assert response.status_code == 204
     user = session.exec(
         select(User).where(
-            User.email_id == StudentSampleData.request_body_student_login["username"]
+            User.email_id
+            == StudentSampleData.request_body_user_student_login_male["username"]
         )
     ).first()
     assert user == None
@@ -127,7 +145,7 @@ def test_access_without_login(client):
     )
     response_patch = client.patch(
         f"{settings.API_V1_STR}/users/me",
-        json=StudentSampleData.request_body_student_update,
+        json=StudentSampleData.request_body_user_student_update_male,
     )
     response_delete = client.delete(
         f"{settings.API_V1_STR}/users/me",

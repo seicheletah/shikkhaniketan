@@ -10,12 +10,12 @@ from .sample_test_data import *
     "request_body_creation, request_body_login",
     [
         (
-            StudentSampleData.request_body_student_creation,
-            StudentSampleData.request_body_student_login,
+            StudentSampleData.request_body_user_student_creation_male,
+            StudentSampleData.request_body_user_student_login_male,
         ),
         (
-            TeacherSampleData.request_body_teacher_creation,
-            TeacherSampleData.request_body_teacher_login,
+            TeacherSampleData.request_body_user_teacher_creation,
+            TeacherSampleData.request_body_user_teacher_login,
         ),
     ],
 )
@@ -39,12 +39,12 @@ def test_login_user_success(client, request_body_creation, request_body_login):
     "request_body_creation, request_body_login",
     [
         (
-            StudentSampleData.request_body_student_creation,
-            StudentSampleData.request_body_student_login_fail,
+            StudentSampleData.request_body_user_student_creation_male,
+            StudentSampleData.request_body_user_student_login_male_fail,
         ),
         (
-            TeacherSampleData.request_body_teacher_creation,
-            TeacherSampleData.request_body_teacher_login_fail,
+            TeacherSampleData.request_body_user_teacher_creation,
+            TeacherSampleData.request_body_user_teacher_login_fail,
         ),
     ],
 )
@@ -59,7 +59,7 @@ def test_login_user_fail(client, request_body_creation, request_body_login):
 def test_login_nouser_fail(client):
     response = client.post(
         f"{settings.API_V1_STR}/login",
-        data=StudentSampleData.request_body_student_login,
+        data=StudentSampleData.request_body_user_student_login_male,
     )
     assert response.status_code == 401
     assert response.json()["detail"] == "invalid credentials"
