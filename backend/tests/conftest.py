@@ -76,3 +76,19 @@ def student_profile(client, user_login):
         return login_response
 
     return _student_profile
+
+
+# fixture for teacher profile creation
+@pytest.fixture(name="teacher_profile")
+def teacher_profile(client, user_login):
+    def _teacher_profile(create_user_account, user_login_data, profile_data):
+        login_response = user_login(create_user_account, user_login_data)
+        profile_response = client.post(
+            f"{settings.API_V1_STR}/teachers",
+            json=profile_data,
+            headers={"Authorization": f"Bearer {login_response["token"]}"},
+        )
+        login_response["profile_response"] = profile_response
+        return login_response
+
+    return _teacher_profile

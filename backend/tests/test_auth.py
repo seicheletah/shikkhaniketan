@@ -14,8 +14,8 @@ from .sample_test_data import *
             StudentSampleData.request_body_user_student_login_male,
         ),
         (
-            TeacherSampleData.request_body_user_teacher_creation,
-            TeacherSampleData.request_body_user_teacher_login,
+            TeacherSampleData.request_body_user_teacher_creation_male,
+            TeacherSampleData.request_body_user_teacher_login_male,
         ),
     ],
 )
@@ -43,8 +43,8 @@ def test_login_user_success(client, request_body_creation, request_body_login):
             StudentSampleData.request_body_user_student_login_male_fail,
         ),
         (
-            TeacherSampleData.request_body_user_teacher_creation,
-            TeacherSampleData.request_body_user_teacher_login_fail,
+            TeacherSampleData.request_body_user_teacher_creation_male,
+            TeacherSampleData.request_body_user_teacher_login_male_fail,
         ),
     ],
 )
