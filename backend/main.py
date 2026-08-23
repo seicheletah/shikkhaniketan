@@ -7,6 +7,8 @@ app = FastAPI()
 
 app.include_router(api_router)
 
+app.frontend("/", directory="frontend")
+
 # for cross-origin resource sharing
 app.add_middleware(
     CORSMiddleware,
