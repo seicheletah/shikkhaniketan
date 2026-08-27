@@ -50,9 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
-
-
 // 1. globaldatabade for all sidebar links
 const siteData = [
   { id: 1, title: 'HTML & CSS Fundamentals', category: 'My Courses', type: 'Course', link: '#course-html' },
@@ -62,56 +59,3 @@ const siteData = [
   { id: 5, title: 'Web Development Certificate', category: 'Certificates', type: 'Certificate', link: '#cert-web' }
 ];
 
-// 2. search filterin function
-function handleGlobalSearch() {
-  const query = document.getElementById('globalSearchInput').value.toLowerCase().trim();
-  const mainContent = document.getElementById('mainContentArea');
-
-  // when user is clear the search box, then default page is view
-  if (query === '') {
-    renderDefaultDashboard();
-    return;
-  }
-
-  // searching for all pages..
-  const filteredResults = siteData.filter(item => 
-    item.title.toLowerCase().includes(query) || 
-    item.category.toLowerCase().includes(query)
-  );
-
-  // view for searching result in main content area
-  displaySearchResults(filteredResults, query);
-}
-
-// 3. result screen renduring function
-function displaySearchResults(results, query) {
-  const mainContent = document.getElementById('dashboard');
-  
-  if (results.length === 0) {
-    mainContent.innerHTML = `<div class="no-results">"${query}" দিয়ে কোনো কোর্স, কুইজ বা নোট পাওয়া যায়নি।</div>`;
-    return;
-  }
-
-  let htmlContent = `<h2>Search Results for "${query}"</h2><div class="card-grid">`;
-  
-  results.forEach(item => {
-    htmlContent += `
-      <div class="card">
-        <span class="badge">${item.category}</span>
-        <h3>${item.title}</h3>
-        <p>Type: ${item.type}</p>
-        <a href="${item.link}">View Item</a>
-      </div>
-    `;
-  });
-
-  htmlContent += `</div>`;
-  mainContent.innerHTML = htmlContent;
-}
-
-// 4. default dashboard content loading function
-function renderDefaultDashboard() {
-  const mainContent = document.getElementById('dashboard');
-  // my original dashboard conternt is here
-  mainContent.innerHTML = `<h2>Dashboard Overview</h2>`;   /* Default Content Here(this is for return a another page) */
-}
