@@ -1,0 +1,221 @@
+/* Global Resets and Fonts */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #eef4fc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Navigation */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 80px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+}
+
+header nav a {
+    text-decoration: none;
+    color: #1f2937;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    transition: color 0.2s ease;
+}
+
+header nav a:hover {
+    color: #0284c7;
+}
+
+/* Main Container Layout */
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: auto;
+    width: 100%;
+    padding: 20px 40px;
+    gap: 40px;
+}
+
+/* Left Content Section */
+.left-section {
+    flex: 1;
+    max-width: 500px;
+}
+
+.left-section h1 {
+    font-size: 42px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.2;
+    margin-bottom: 15px;
+}
+
+.left-section p {
+    color: #6b7280;
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+.illustration-container img {
+    width: 100%;
+    max-width: 420px;
+    display: block;
+}
+
+/* Right Form Section */
+.right-section {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.form-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 40px 35px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+/* User Icon Badge */
+.icon-badge {
+    width: 70px;
+    height: 70px;
+    background-color: #f0fdf4;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 15px auto;
+    color: #22c55e
+    font-size: 32px;
+}
+
+.form-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: 0.5px;
+    margin-bottom: 25px;
+}
+
+/* Form Controls */
+.form-group {
+    position: relative;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+/* Hide visible label if you want placeholder-only style */
+.form-group label {
+    display: none; 
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px 12px 42px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #334155;
+    outline: none;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #94a3b8;
+}
+
+.form-group select {
+    appearance: none;
+    cursor: pointer;
+}
+
+/* Submit Button */
+/*.form-card button[type="submit"] {
+    width: 100%;
+    background-color: #0d9488;
+    color: #ffffff;
+    border: none;
+    padding: 13px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.form-card button[type="submit"]:hover {
+    background-color: #0f766e;
+}*/
+
+/* Responsive Design */
+@media (max-width: 900px) {
+    header {
+        padding: 20px 30px;
+    }
+    
+    .container {
+        flex-direction: column;
+        padding: 20px;
+    }
+    
+    .left-section {
+        text-align: center;
+    }
+    
+    .illustration-container img {
+        margin: 0 auto;
+    }
+    
+    .right-section {
+        justify-content: center;
+    }
+}
+
+
+.continue-btn {
+    width: 100%;
+    height: 50px;
+    background: #0d9488;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.continue-btn:hover {
+    background: #0f766e;
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shakkhaniketan - Create Account</title>
+    <link rel="stylesheet" href="sign_up.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="logo">Shakkhaniketan</div>
+        <nav>
+            <a href="index.html">
+              Home</a>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="container">
+        <!-- Left Section: Heading & Illustration -->
+        <section class="left-section">
+            <h1>Learn. Grow. Succeed.</h1>
+            <p>Interactive lessons and quizzes to help you learn better every day.</p>
+            
+            <div class="illustration-container">
+                <img src="picture.jpeg" alt="Student studying with interactive elements">
+            </div>
+        </section>
+
+        <!-- Right Section: Form -->
+        <section class="right-section">
+            <div class="form-card">
+                <div class="icon-badge">
+                    <!-- Icon Placeholder -->
+                </div>
+                <h2>CREATE ACCOUNT</h2>
+
+                <!--<form action="#" method="POST">
+                    
+                    <div class="form-group">
+                        <label for="first-name">Email</label>
+                        <input type="text" id="Email" name="Email" placeholder="Email" required>
+                    </div>
+
+                    <!-- Last Name 
+                    <div class="form-group">
+                        <label for="last-name">Password</label>
+                        <input type="text" id="Password" name="Password" placeholder="Password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Role</label>
+                        <select id="gender" name="gender" required>
+                            <option value="" disabled selected hidden>Role</option>
+                            <option value="male">Admin</option>
+                            <option value="female">Student</option>
+                            <option value="other">Teacher</option>
+                        </select>
+                    </div>
+
+
+                    <!-- Submit Button -->
+                    <!--<button type="submit">Continue</button></a>-->
+                    <!--<button type="button" onclick="window.location.href='create_account.html'">
+                        Continue
+                    </button>
+                    <button type="button" class="continue-btn" onclick="window.location.href='create_account.html'">
+                        Continue
+                    </button>
+                    
+                </form>-->
+                <form id="signupForm">
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Email" required>
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Password" required>
+    </div>
+
+    <div class="form-group">
+        <label for="role">Role</label>
+
+        <select id="role" required>
+            <option value="" disabled selected hidden>Select Role</option>
+            <option value="admin">Admin</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+        </select>
+    </div>
+
+    <button type="submit" class="continue-btn">
+        Continue
+    </button>
+
+</form>
+            </div>
+        </section>
+    </main>
+    <script src="sign_up.js"></script>
+
+
+</body>
+</html>

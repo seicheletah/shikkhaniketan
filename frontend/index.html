@@ -1,21 +1,87 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hello</title>
-  </head>
-  <body>
-    <h1
-      style="
-        color: greenyellow;
-        text-shadow: 1px 1px 2px black;
-        display: grid;
-        place-items: center;
-        height: 50vh;
-      "
-    >
-      Hello world
-    </h1>
-  </body>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shikkhaniketan - Learn. Grow. Succeed.</title>
+  <!-- Google Fonts & FontAwesome for Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="index.css">
+  
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="#" class="logo">Shikkhaniketan</a>
+      
+      <!-- Explore Dropdown -->
+      <div class="dropdown">
+        <button class="explore-btn">
+          Explore <i class="fa-solid fa-chevron-down"></i>
+        </button>
+
+        <div class="dropdown-menu">
+          <!-- Books Column -->
+          <div class="menu-column">
+            <h4><i class="fa-solid fa-user icon"></i> Books</h4>
+            <ul>
+              <li><a href="#"><i class="fa-brands fa-html5 icon" style="color: #e34f26;"></i> HTML Notes</a></li>
+              <li><a href="#"><i class="fa-brands fa-css3-alt icon" style="color: #1572b6;"></i> CSS Notes</a></li>
+              <li><a href="#"><i class="fa-brands fa-square-js icon" style="color: #f7df1e;"></i> JavaScript Notes</a></li>
+              <li><a href="#"><i class="fa-brands fa-python icon" style="color: #3776ab;"></i> Python Book</a></li>
+              <li><a href="#"><i class="fa-brands fa-java icon" style="color: #5382a1;"></i> Java Book</a></li>
+              <li><a href="#"><i class="fa-solid fa-c icon" style="color: #00599c;"></i> C Programming</a></li>
+              <li><a href="#"><i class="fa-solid fa-code icon" style="color: #00599c;"></i> C++ Programming</a></li>
+            </ul>
+          </div>
+
+          <!-- Courses Column -->
+          <div class="menu-column">
+            <h4><i class="fa-solid fa-desktop icon"></i> Courses</h4>
+            <ul>
+              <li><a href="#"><i class="fa-brands fa-html5 icon" style="color: #e34f26;"></i> HTML & CSS</a></li>
+              <li><a href="#"><i class="fa-brands fa-square-js icon" style="color: #f7df1e;"></i> JavaScript</a></li>
+              <li><a href="#"><i class="fa-brands fa-python icon" style="color: #3776ab;"></i> Python</a></li>
+              <li><a href="#"><i class="fa-brands fa-java icon" style="color: #5382a1;"></i> Java</a></li>
+              <li><a href="#"><i class="fa-solid fa-c icon" style="color: #00599c;"></i> C Programming</a></li>
+              <li><a href="#"><i class="fa-solid fa-code icon" style="color: #00599c;"></i> C++</a></li>
+              <li><a href="#"><i class="fa-solid fa-brain icon" style="color: #8b5cf6;"></i> Artificial Intelligence</a></li>
+              <li><a href="#"><i class="fa-solid fa-diagram-project icon" style="color: #10b981;"></i> Machine Learning</a></li>
+              <li><a href="#"><i class="fa-solid fa-chart-simple icon" style="color: #3b82f6;"></i> Data Science</a></li>
+              <li><a href="#"><i class="fa-solid fa-globe icon" style="color: #0284c7;"></i> Web Development</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Input -->
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search courses">
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <a href="login.html" class="login-btn">Log In</a>
+      <a href="sign_up.html" class="signup-btn">Sign Up</a>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <main class="hero">
+    <div class="hero-content">
+      <h1>Learn. Grow.<br>Succeed.</h1>
+      <p>Interactive lessons and quizzes to help you learn better every day.</p>
+    </div>
+
+    <div class="hero-image">
+      <img src="picture.jpeg" alt="Student Studying Illustration">
+    </div>
+  </main>
+  <script src="index.js"></script>
+
+</body>
 </html>

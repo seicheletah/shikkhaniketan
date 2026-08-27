@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shakkhaniketan - Create Account</title>
+    <link rel="stylesheet" href="create_account.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="logo">Shakkhaniketan</div>
+        <nav>
+            <a href="index.html">
+              Home</a>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="container">
+        <!-- Left Section: Heading & Illustration -->
+        <section class="left-section">
+            <h1>Learn. Grow. Succeed.</h1>
+            <p>Interactive lessons and quizzes to help you learn better every day.</p>
+            
+            <div class="illustration-container">
+                <img src="picture.jpeg" alt="Student studying with interactive elements">
+            </div>
+        </section>
+
+        <!-- Right Section: Form -->
+        <section class="right-section">
+            <div class="form-card">
+                <div class="icon-badge">
+                    <!-- Icon Placeholder -->
+                </div>
+                <h2>CREATE ACCOUNT</h2>
+
+                <!--<form action="#" method="POST">-->
+                    <form id="profileForm">
+                    <!-- First Name -->
+                    <div class="form-group">
+                        <label for="first-name">First Name</label>
+                        <input type="text" id="first-name" name="first_name" placeholder="First Name" required>
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="form-group">
+                        <label for="last-name">Last Name</label>
+                        <input type="text" id="last-name" name="last_name" placeholder="Last Name" required>
+                    </div>
+
+                    <!-- Email -->
+                    <!--<div class="form-group">
+                        <label for="email">Roll</label>
+                        <select id="email" name="email" required>
+                            <option value="" disabled selected hidden>Roll</option>
+                            <option value="male">Admin</option>
+                            <option value="female">Student</option>
+                            <option value="other">Teacher</option>
+                        </select>
+                        <input type="email" id="email" name="email" placeholder="Email" required>
+                    </div>-->
+
+                    <!-- Phone Number -->
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="" disabled selected hidden>Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob" name="dob" placeholder="mm/dd/yyyy" required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit">Done</button>
+                    
+                    
+                </form>
+            </div>
+        </section>
+    </main>
+    <script src="create_account.js"></script>
+
+</body>
+</html>

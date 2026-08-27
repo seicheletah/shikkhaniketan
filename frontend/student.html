@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student corner - Shikkhaniketan</title>
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="student.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- Overlay for mobile sidebar -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-book-open brand-icon"></i>
+                <h2>Shikkhaniketan</h2>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="my-courses">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>My Courses</span>
+                </a>
+                <a href="#" class="nav-item" data-page="my-progress">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>My Progress</span>
+                </a>
+                <a href="#" class="nav-item" data-page="quizzes">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Quizzes</span>
+                </a>
+                <a href="#" class="nav-item" data-page="certificates">
+                    <i class="fa-solid fa-award icon"></i>
+                    <span>Certificates</span>
+                </a>
+                <a href="#" class="nav-item" data-page="wishlist">
+                    <i class="fa-solid fa-heart"></i>
+                    <span>Wishlist</span>
+                </a>
+                <a href="#" class="nav-item" data-page="notes">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    <span>Books</span>
+                </a>
+                <a href="#" class="nav-item" data-page="profile">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="#" class="nav-item logout" data-page="logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area (Right Side) -->
+        <main class="main-content" id="mainContentArea">
+            <!-- Top Navigation Header -->
+            <header class="top-header">
+                <button class="mobile-toggle-btn" id="menuToggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="user-welcome">
+                    <h1>Student Corner</h1>
+                    <p>Keep learning and achieve your goals.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="globalSearchInput" placeholder="Search courses, notes, quizzes..." onkeyup="handleGlobalSearch()">
+                    </div>
+                    <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+                    <div class="profile-avatar">
+                        <img src="https://i.pravatar.cc/100?img=32" alt="User Profile">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Page Content Sections -->
+            <div class="content-body">
+                
+                <!-- 1. Dashboard View -->
+                <section class="page-section active" id="dashboard">
+                    <!-- Stats Overview Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card blue">
+                            <i class="fa-solid fa-book-bookmark icon"></i>
+                            <div>
+                                <p>Enrolled Courses</p>
+                                <h3>6</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card green">
+                            <i class="fa-solid fa-circle-check icon"></i>
+                            <div>
+                                <p>Completed Courses</p>
+                                <h3>2</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card orange">
+                            <i class="fa-solid fa-award icon"></i>
+                            <div>
+                                <p>Certificates</p>
+                                <h3>3</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Continue Learning Section -->
+                    <div class="section-header">
+                        <h2>Continue Learning</h2>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="course-grid">
+                        <div class="course-card">
+                            <div class="course-icon html"><i class="fa-brands fa-html5"></i></div>
+                            <h4>HTML & CSS Fundamentals</h4>
+                            <p class="progress-text">60% Complete</p>
+                            <div class="progress-bar"><div class="progress" style="width: 60%;"></div></div>
+                            <button class="btn-action">Continue</button>
+                        </div>
+                        <div class="course-card">
+                            <div class="course-icon js"><i class="fa-brands fa-js"></i></div>
+                            <h4>JavaScript Basics</h4>
+                            <p class="progress-text">40% Complete</p>
+                            <div class="progress-bar"><div class="progress" style="width: 40%;"></div></div>
+                            <button class="btn-action">Continue</button>
+                        </div>
+                        <div class="course-card">
+                            <div class="course-icon react"><i class="fa-brands fa-react"></i></div>
+                            <h4>React JS Crash Course</h4>
+                            <p class="progress-text">25% Complete</p>
+                            <div class="progress-bar"><div class="progress" style="width: 25%;"></div></div>
+                            <button class="btn-action">Continue</button>
+                        </div>
+                        <div class="course-card">
+                            <div class="course-icon python"><i class="fa-brands fa-python"></i></div>
+                            <h4>Python For Beginners</h4>
+                            <p class="progress-text">75% Complete</p>
+                            <div class="progress-bar"><div class="progress" style="width: 75%;"></div></div>
+                            <button class="btn-action">Continue</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. My Courses View -->
+                <section class="page-section" id="my-courses">
+                    <h2>My Enrolled Courses</h2>
+                    <p>Here you will see all your active and archived learning programs.</p>
+                </section>
+
+                <!-- 3. Certificates View -->
+                <section class="page-section" id="certificates">
+                    <h2>My Certificates</h2>
+                    <p>Download and view your earned certifications here.</p>
+                </section>
+
+                <!-- Additional fallback views for other pages -->
+                <section class="page-section" id="my-progress"><h2>My Progress</h2></section>
+                <section class="page-section" id="quizzes"><h2>Quizzes</h2></section>
+                <section class="page-section" id="wishlist"><h2>Wishlist</h2></section>
+                <section class="page-section" id="notes"><h2>Notes</h2></section>
+                <section class="page-section" id="profile"><h2>User Profile</h2></section>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript Link -->
+    <script src="student.js"></script>
+</body>
+</html>
