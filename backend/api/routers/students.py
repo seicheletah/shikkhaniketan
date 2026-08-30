@@ -148,10 +148,10 @@ def update_self_review(
         return existing_review
     except SQLAlchemyError:
         db_session.rollback()
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail="An unexpected error has occurred",
-    )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
 
 
 @api_router.delete("/me/courses/{id}/review", status_code=status.HTTP_204_NO_CONTENT)

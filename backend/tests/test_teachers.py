@@ -21,9 +21,22 @@ def test_access_without_login(client):
     response_update_self = client.patch(
         f"{settings.API_V1_STR}/teachers/me",
     )
+    response_teacher_course = client.get(
+        f"{settings.API_V1_STR}/teachers/{"bc8f0412-a89e-436f-b271-e493df1ba8c2"}/courses",
+    )
+    response_course_update = client.patch(
+        f"{settings.API_V1_STR}/teachers/me/courses/{"bc8f0412-a89e-436f-b271-e493df1ba8c2"}",
+        json=CourseSampleData.request_body_course_update_male,
+    )
+    response_course_delete = client.delete(
+        f"{settings.API_V1_STR}/teachers/me/courses/{"bc8f0412-a89e-436f-b271-e493df1ba8c2"}",
+    )
     assert response_create_account.status_code == 401
     assert response_get_self.status_code == 401
     assert response_update_self.status_code == 401
+    assert response_teacher_course.status_code == 401
+    assert response_course_update.status_code == 401
+    assert response_course_delete.status_code == 401
 
 
 # wrong request body create teacher test
