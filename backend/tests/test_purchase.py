@@ -96,3 +96,15 @@ def test_verify_course_success(client, student_profile, teacher_profile, course_
     assert response_verify_purchase_tampered_body_fail.status_code == 400
     assert response_verify_purchase.status_code == 200
     assert response_verify_purchase.json()["detail"] == "success"
+
+
+# access without authorization
+def test_access_without_login(client):
+    response_purchase_order = client.post(
+        f"{settings.API_V1_STR}/courses/{"2f4f3e55-7615-4502-8b5c-398ce98bd113"}/purchase",
+    )
+    response_verify_purchase = client.post(
+        f"{settings.API_V1_STR}/courses/verify-payment",
+    )
+    assert response_purchase_order.status_code == 401
+    assert response_verify_purchase.status_code == 401
