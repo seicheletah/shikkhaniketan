@@ -192,3 +192,9 @@ class CourseSampleData:
         "file_name": "samplevideo",
         "file_extension": "mp4",
     }
+
+
+class ReviewSampleData:
+    request_body_review_create = {"comment": "hello", "rate": 1}
+
+    request_body_review_update = {"comment": "bye", "rate": 5}
