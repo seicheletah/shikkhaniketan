@@ -137,7 +137,7 @@ def authenticate_user(
     access_token = create_access_token(
         data={"sub": logindata.username, "role": data.role, "id": str(data.id)}
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer", role=data.role)
 
 
 # for reducing code repetition
