@@ -17,9 +17,18 @@ def test_access_without_login(client):
     response_update_self = client.patch(
         f"{settings.API_V1_STR}/students/me",
     )
+    response_review_update = client.patch(
+        f"{settings.API_V1_STR}/students/me/courses/{"bc8f0412-a89e-436f-b271-e493df1ba8c2"}/review",
+        json=ReviewSampleData.request_body_review_update,
+    )
+    response_review_delete = client.delete(
+        f"{settings.API_V1_STR}/students/me/courses/{"bc8f0412-a89e-436f-b271-e493df1ba8c2"}/review",
+    )
     assert response_create_account.status_code == 401
     assert response_get_self.status_code == 401
     assert response_update_self.status_code == 401
+    assert response_review_update.status_code == 401
+    assert response_review_delete.status_code == 401
 
 
 # wrong request body create student test
