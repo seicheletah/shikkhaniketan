@@ -72,6 +72,17 @@ def test_verify_course_success(client, student_profile, teacher_profile, course_
         json=UserSampleData.request_body_wrong_model,
         headers={"Authorization": f"Bearer {student_profile_response["token"]}"},
     )
+    request_body_tampered = {
+        "razorpay_order_id": response_purchase_order.json()["id"],
+        "razorpay_payment_id": "pay_FG4ZdRK8ZnXC3k",
+        "razorpay_signature": valid_signature,
+        "course_id": response_course_create.json()["id"],
+    }
+    response_verify_purchase_tampered_body_fail = client.post(
+        f"{settings.API_V1_STR}/courses/verify-payment",
+        json=request_body_tampered,
+        headers={"Authorization": f"Bearer {student_profile_response["token"]}"},
+    )
     response_verify_purchase = client.post(
         f"{settings.API_V1_STR}/courses/verify-payment",
         json=request_body,
@@ -82,5 +93,6 @@ def test_verify_course_success(client, student_profile, teacher_profile, course_
         response_verify_purchase_wrong_body_fail.json()["detail"][0]["msg"]
         == "Field required"
     )
+    assert response_verify_purchase_tampered_body_fail.status_code == 400
     assert response_verify_purchase.status_code == 200
     assert response_verify_purchase.json()["detail"] == "success"
