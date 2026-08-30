@@ -19,6 +19,7 @@ from enum import Enum
 class Token(SQLModel):
     access_token: str
     token_type: str
+    role: str
 
 
 # token data valdation model
