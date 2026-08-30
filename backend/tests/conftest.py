@@ -92,3 +92,17 @@ def teacher_profile(client, user_login):
         return login_response
 
     return _teacher_profile
+
+
+# fixture for course creation
+@pytest.fixture(name="course_create")
+def course_create(client):
+    def _course_create(login_response, course_data):
+        course_response = client.post(
+            f"{settings.API_V1_STR}/courses",
+            json=course_data,
+            headers={"Authorization": f"Bearer {login_response["token"]}"},
+        )
+        return course_response
+
+    return _course_create

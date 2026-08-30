@@ -162,3 +162,33 @@ class StudentSampleData:
         "username": "test.student.female@email.com",
         "password": "12345",
     }
+
+
+class CourseSampleData:
+    request_body_course_create_male = {
+        "course_name": "Mastering Docker & Kubernetes",
+        "course_details": "A comprehensive guide to containerization and orchestration.",
+        "course_language": "English",
+        "course_paid": True,
+        "course_price": 899,
+    }
+
+    request_body_course_update_male = {
+        "course_language": "Dutch",
+        "course_paid": True,
+        "course_price": 499,
+    }
+
+    request_body_course_thumbnail_upload_male = {
+        "category": "thumbnail",
+        "media_type": "image",
+        "file_name": "sampleimage",
+        "file_extension": "jpg",
+    }
+
+    request_body_course_resource_upload_male = {
+        "category": "resource",
+        "media_type": "video",
+        "file_name": "samplevideo",
+        "file_extension": "mp4",
+    }
