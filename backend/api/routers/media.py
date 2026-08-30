@@ -193,7 +193,6 @@ def media_upload_status(
 def access_course_media_thumbnail(
     id: uuid.UUID,
     db_session: SessionDep,
-    current_user: LoginDep,
 ):
     """
     Access course thumbnail from AWS S3 by ID.
