@@ -308,6 +308,88 @@ body {
     background-color: var(--primary-color);
     color: white;
 }
+/*  ==============================================
+    teacher profile card in ( teacher profile page)
+*/  
+/* Container & Card Base */
+.profile-details {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  border: 1px solid #e5e7eb;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-details:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Profile Title */
+.profile-details h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  border-bottom: 2px solid #6366f1;
+  padding-bottom: 0.75rem;
+}
+
+/* Paragraph Blocks */
+.profile-details p {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.profile-details p:last-of-type {
+  border-bottom: none;
+  margin-bottom: 1rem;
+}
+
+/* Strong Labels */
+.profile-details p strong {
+  color: #6b7280;
+  font-weight: 600;
+  min-width: 110px;
+}
+
+/* Update Profile Button */
+.profile-details .update-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.75rem 1rem;
+  background-color: #4f46e5;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.profile-details .update-btn:hover {
+  background-color: #4338ca;
+}
+
+.profile-details .update-btn:active {
+  transform: scale(0.98);
+}
 
 /* Mobile & Tablet Responsive Media Queries */
 .sidebar-overlay {

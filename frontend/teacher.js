@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     alert(
                         data.detail ||
-                        'Teacher profile পাওয়া যাচ্ছে না.'
+                        'Teacher profile is not found.'
                     );
 
                 }
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             alert(
-                'Backend server-এর সাথে connection হচ্ছে না!'
+                'Backend server- connection is not found !'
             );
 
         }
@@ -237,18 +237,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function displayTeacherProfile(data) {
 
+        const firstName =
+            data.first_name || '';
+
+        const lastName =
+            data.last_name || '';
+
+        // Header-এর Welcome Name Dynamic করার অংশ
+        const welcomeNameElement = document.getElementById('teacherWelcomeName');
+        if (welcomeNameElement && firstName) {
+            welcomeNameElement.textContent = `Welcome, ${firstName}`;
+        }
+
+        // Header-এর About Section Dynamic করার অংশ
+        const welcomeAboutElement = document.getElementById('teacherWelcomeAbout');
+        if (welcomeAboutElement && data.about) {
+            welcomeAboutElement.textContent = data.about;
+        }
+
         const profileSection =
             document.getElementById('profile');
 
 
         if (!profileSection) return;
 
-
-        const firstName =
-            data.first_name || '';
-
-        const lastName =
-            data.last_name || '';
 
         const email =
             data.user?.email_id || 'Not available';
@@ -259,11 +271,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         profileSection.innerHTML = `
 
-            <h2>Teacher Profile</h2>
 
             <div class="profile-details">
+                
+            <h2>Teacher Profile</h2>
 
-                <p>
+                 <p>
                     <strong>Teacher ID:</strong>
                     ${teacherId}
                 </p>
@@ -302,6 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <strong>About:</strong>
                     ${data.about || 'Not provided'}
                 </p>
+
+                <button type="button" class="update-btn">Update Profile</button>
 
             </div>
         `;
@@ -490,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==============================
-    // INITIAL TOKEN CHECK
+    // INITIAL TOKEN CHECK & PROFILE LOAD
     // ==============================
 
     const token =
@@ -502,6 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(
             'Teacher page: Access token found.'
         );
+
+        // পেজ লোড হওয়া মাত্রই টিচারের নাম এবং About হেডারে দেখানোর জন্য API কলটি চালু করা হলো
+        getTeacherProfile();
 
     } else {
 
