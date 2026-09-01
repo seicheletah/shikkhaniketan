@@ -51,7 +51,7 @@ def upload_course_media_thumbnail(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
         )
-    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension.value}"
     existing_thumbnail = db_session.exec(
         select(Media).where(Media.category == "thumbnail").where(Media.course_id == id)
     ).first()
@@ -111,7 +111,7 @@ def upload_course_media_resource(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
         )
-    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension.value}"
     existing_s3_resource_key = db_session.exec(
         select(Media).where(Media.s3_key == s3_resource_key)
     ).first()
