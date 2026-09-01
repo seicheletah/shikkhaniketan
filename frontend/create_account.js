@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('phone');
     const genderSelect = document.getElementById('gender');
     const dobInput = document.getElementById('dob');
+    const addressInput = document.getElementById('address');
+    const aboutInput = document.getElementById('about');
+    const profilePhotoInput = document.getElementById('profile-photo');
 
 
     form.addEventListener('submit', async function (e) {
@@ -15,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // ==========================================
-        // 1. CHECK PROFILE INFORMATION
+        // 1. CHECK REQUIRED PROFILE INFORMATION
         // ==========================================
 
         if (
@@ -25,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             !genderSelect.value ||
             !dobInput.value
         ) {
-            alert('Please fill in all fields');
+            alert('Please fill in all required fields.');
             return;
         }
 
@@ -47,10 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         if (!email || !password || !role) {
-
             alert('Signup information not found. Please sign up again.');
             return;
-
         }
 
 
@@ -74,11 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'http://127.0.0.1:8000/api/v1/users/',
                 {
                     method: 'POST',
-
                     headers: {
                         'Content-Type': 'application/json'
                     },
-
                     body: JSON.stringify(userData)
                 }
             );
@@ -91,12 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (!userResponse.ok) {
-
-                alert(
-                    'Account creation failed: ' +
-                    JSON.stringify(userResult)
-                );
-
+                alert('Account creation failed: ' + JSON.stringify(userResult));
                 return;
             }
 
@@ -122,11 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'http://127.0.0.1:8000/api/v1/login',
                 {
                     method: 'POST',
-
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
-
                     body: loginBody
                 }
             );
@@ -139,12 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (!loginResponse.ok) {
-
-                alert(
-                    'Login failed: ' +
-                    JSON.stringify(loginResult)
-                );
-
+                alert('Login failed: ' + JSON.stringify(loginResult));
                 return;
             }
 
@@ -157,82 +144,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (!accessToken) {
-
                 alert('Access token not received.');
                 return;
-
             }
 
 
-            localStorage.setItem(
-                'access_token',
-                accessToken
-            );
-
+            localStorage.setItem('access_token', accessToken);
 
             console.log("Access token received.");
 
 
             // ==========================================
-            // STEP 3: GET GENDER
+            // STEP 3: FORMAT GENDER
             // ==========================================
 
             let genderValue = genderSelect.value;
 
-
-            /*
-             * Backend only accepts ONE character:
-             *
-             * Male   = m
-             * Female = f
-             * Other  = o
-             */
-
-            if (genderValue === 'male') {
-                genderValue = 'm';
-            }
-
-            if (genderValue === 'female') {
-                genderValue = 'f';
-            }
-
-            if (genderValue === 'other') {
-                genderValue = 'o';
-            }
-
-
-            console.log("FINAL GENDER:", genderValue);
+            if (genderValue === 'male') genderValue = 'm';
+            if (genderValue === 'female') genderValue = 'f';
+            if (genderValue === 'other') genderValue = 'o';
 
 
             // ==========================================
-            // STEP 4: CREATE PROFILE DATA
+            // STEP 4: CREATE PROFILE DATA WITH NEW FIELDS
             // ==========================================
 
             const profileData = {
-
                 first_name: firstNameInput.value.trim(),
-
                 last_name: lastNameInput.value.trim(),
-
                 phone_no: phoneInput.value.trim(),
-
                 gender: genderValue,
-
                 date_of_birth: dobInput.value,
-
-                address: "",
-
-                about: "",
-
-                profile_photo: ""
-
+                address: addressInput.value.trim() || "",
+                about: aboutInput.value.trim() || "",
+                profile_photo: profilePhotoInput.value.trim() || ""
             };
 
 
-            console.log(
-                "FINAL PROFILE DATA:",
-                profileData
-            );
+            console.log("FINAL PROFILE DATA:", profileData);
 
 
             // ==========================================
@@ -241,33 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let profileUrl;
 
-
             if (role.toLowerCase() === 'student') {
-
-                profileUrl =
-                    'http://127.0.0.1:8000/api/v1/students/';
-
-            }
-
-            else if (role.toLowerCase() === 'teacher') {
-
-                profileUrl =
-                    'http://127.0.0.1:8000/api/v1/teachers/';
-
-            }
-
-            else {
-
+                profileUrl = 'http://127.0.0.1:8000/api/v1/students/';
+            } else if (role.toLowerCase() === 'teacher') {
+                profileUrl = 'http://127.0.0.1:8000/api/v1/teachers/';
+            } else {
                 alert('Invalid role: ' + role);
                 return;
-
             }
 
 
-            console.log(
-                "Creating profile at:",
-                profileUrl
-            );
+            console.log("Creating profile at:", profileUrl);
 
 
             // ==========================================
@@ -278,31 +211,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 profileUrl,
                 {
                     method: 'POST',
-
                     headers: {
-
                         'accept': 'application/json',
-
                         'Content-Type': 'application/json',
-
-                        'Authorization':
-                            'Bearer ' + accessToken
-
+                        'Authorization': 'Bearer ' + accessToken
                     },
-
                     body: JSON.stringify(profileData)
                 }
             );
 
 
-            const profileResult =
-                await profileResponse.json();
+            const profileResult = await profileResponse.json();
 
 
-            console.log(
-                "Profile API response:",
-                profileResult
-            );
+            console.log("Profile API response:", profileResult);
 
 
             // ==========================================
@@ -310,14 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // ==========================================
 
             if (!profileResponse.ok) {
-
-                alert(
-                    'Account created, but profile creation failed: ' +
-                    JSON.stringify(profileResult)
-                );
-
+                alert('Account created, but profile creation failed: ' + JSON.stringify(profileResult));
                 return;
-
             }
 
 
@@ -325,17 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // SUCCESS
             // ==========================================
 
-            alert(
-                'Account and profile created successfully!'
-            );
+            alert('Account and profile created successfully!');
 
 
             // Remove temporary signup information
-
             localStorage.removeItem('signupEmail');
-
             localStorage.removeItem('signupPassword');
-
             localStorage.removeItem('signupRole');
 
 
@@ -344,34 +255,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // ==========================================
 
             if (role.toLowerCase() === 'student') {
-
-                window.location.href =
-                    'student.html';
-
+                window.location.href = 'student.html';
+            } else if (role.toLowerCase() === 'teacher') {
+                window.location.href = 'teacher.html';
             }
 
-            else if (role.toLowerCase() === 'teacher') {
-
-                window.location.href =
-                    'teacher.html';
-
-            }
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "API Error:",
-                error
-            );
-
-
-            alert(
-                'API Error: ' +
-                error.message
-            );
-
+        } catch (error) {
+            console.error("API Error:", error);
+            alert('API Error: ' + error.message);
         }
 
     });

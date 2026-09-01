@@ -255,6 +255,26 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeAboutElement.textContent = data.about;
         }
 
+        // Header-এর Profile Picture Dynamic করার অংশ (profile_photo key থেকে নেওয়া)
+        const profileImgElement = document.getElementById('teacherProfileImg');
+        if (profileImgElement) {
+            let photoUrl = data.profile_photo || data.profile_picture || data.image_url;
+
+            if (photoUrl) {
+                // যদি ব্যাকএন্ড থেকে ডিরেক্ট ফুল URL (http://...) না এসে রৈখিক পাত আসে (যেমন /uploads/abc.jpg)
+                if (!photoUrl.startsWith('http://') && !photoUrl.startsWith('https://')) {
+                    photoUrl = `http://127.0.0.1:8000/${photoUrl.startsWith('/') ? photoUrl.substring(1) : photoUrl}`;
+                }
+                
+                profileImgElement.src = photoUrl;
+                profileImgElement.style.display = 'block'; // ছবি আপলোড করা থাকলে শো করবে
+            } else {
+                // যদি কোনো ছবি আপলোড না থাকে, তবে খালি ডিফল্ট ইমেজ দেখাবে
+                profileImgElement.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                profileImgElement.style.display = 'block';
+            }
+        }
+
         const profileSection =
             document.getElementById('profile');
 
@@ -518,7 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'Teacher page: Access token found.'
         );
 
-        // পেজ লোড হওয়া মাত্রই টিচারের নাম এবং About হেডারে দেখানোর জন্য API কলটি চালু করা হলো
         getTeacherProfile();
 
     } else {
