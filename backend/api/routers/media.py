@@ -14,6 +14,7 @@ from backend.models import (
     MediaUpload,
     MediaUploadPresigned,
     MediaAccessPresigned,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -140,7 +141,10 @@ def upload_course_media_resource(
     return {"media_id": media_resource_id, "upload_url": media_resource_presigned}
 
 
-@api_router.post("/{course_id}/media/{id}/status")
+@api_router.post(
+    "/{course_id}/media/{id}/status",
+    response_model=GenericMessage,
+)
 def media_upload_status(
     id: uuid.UUID,
     course_id: uuid.UUID,
@@ -183,7 +187,7 @@ def media_upload_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
-    return {"status": media.status}
+    return {"detail": media.status}
 
 
 @api_router.get(

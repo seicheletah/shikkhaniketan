@@ -110,7 +110,7 @@ def test_media_upload_status_success(client, teacher_profile, course_create):
         headers={"Authorization": f"Bearer {profile_response["token"]}"},
     )
     assert response_media_upload_status.status_code == 200
-    assert response_media_upload_status.json()["status"] == "ready"
+    assert response_media_upload_status.json()["detail"] == "ready"
 
 
 # access course thumbnail from AWS S3 by course ID success test
