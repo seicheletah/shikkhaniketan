@@ -15,9 +15,8 @@ from backend.models import (
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
-from backend.utils import upload_to_s3
+from backend.utils import upload_to_s3, check_valid_file
 from backend.core.config import settings
-from backend.utils import check_valid_file
 
 api_router = APIRouter(prefix="/students", tags=["Students"])
 
