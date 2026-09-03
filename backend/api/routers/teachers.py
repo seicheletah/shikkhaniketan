@@ -1,5 +1,5 @@
 import uuid
-from fastapi import status, HTTPException, APIRouter, Response
+from fastapi import status, HTTPException, APIRouter, Response, UploadFile
 from backend.core.database import SessionDep
 from backend.core.security import TeacherDep, AdminDep, LoginDep
 from backend.models import (
@@ -11,9 +11,12 @@ from backend.models import (
     CourseResponse,
     CoursePublicResponse,
     CourseUpdate,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
+from backend.utils import upload_to_s3, check_valid_file
+from backend.core.config import settings
 
 api_router = APIRouter(prefix="/teachers", tags=["Teachers"])
 
@@ -61,6 +64,44 @@ def create_teacher(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"invalid credentials",
         )
+
+
+@api_router.post(
+    "/profile-pic/upload",
+    status_code=status.HTTP_201_CREATED,
+    response_model=GenericMessage,
+)
+def upload_profile_pic(
+    file: UploadFile,
+    db_session: SessionDep,
+    current_user: TeacherDep,
+):
+    """
+    Upload profile pic.
+    """
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
+    check_valid_file(file, "image")
+    unique_id = uuid.uuid4().hex[:8]
+    s3_profile_pic_key = f"profile_pic/{unique_id}_{file.filename}"
+    public_url = f"https://{settings.CLOUDFRONT_DOMAIN_NAME}/{s3_profile_pic_key}"
+    upload_response = upload_to_s3(file, s3_profile_pic_key)
+    try:
+        teacher.profile_pic = public_url
+        db_session.add(teacher)
+        db_session.commit()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+    return upload_response
 
 
 @api_router.get("/me", response_model=TeacherResponse)

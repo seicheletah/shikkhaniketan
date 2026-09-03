@@ -12,6 +12,7 @@ from backend.models import (
     Purchase,
     PurchaseOrderResponse,
     PurchaseVerify,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -87,7 +88,11 @@ def purchase_course(
     return razorpay_order
 
 
-@api_router.post("/verify-payment", status_code=status.HTTP_200_OK)
+@api_router.post(
+    "/verify-payment",
+    status_code=status.HTTP_200_OK,
+    response_model=GenericMessage,
+)
 def verify_payment(
     data: PurchaseVerify, db_session: SessionDep, current_user: StudentDep
 ):

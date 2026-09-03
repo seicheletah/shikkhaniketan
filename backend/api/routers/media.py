@@ -14,6 +14,7 @@ from backend.models import (
     MediaUpload,
     MediaUploadPresigned,
     MediaAccessPresigned,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -51,7 +52,7 @@ def upload_course_media_thumbnail(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
         )
-    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension.value}"
     existing_thumbnail = db_session.exec(
         select(Media).where(Media.category == "thumbnail").where(Media.course_id == id)
     ).first()
@@ -111,7 +112,7 @@ def upload_course_media_resource(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
         )
-    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension.value}"
     existing_s3_resource_key = db_session.exec(
         select(Media).where(Media.s3_key == s3_resource_key)
     ).first()
@@ -140,7 +141,10 @@ def upload_course_media_resource(
     return {"media_id": media_resource_id, "upload_url": media_resource_presigned}
 
 
-@api_router.post("/{course_id}/media/{id}/status")
+@api_router.post(
+    "/{course_id}/media/{id}/status",
+    response_model=GenericMessage,
+)
 def media_upload_status(
     id: uuid.UUID,
     course_id: uuid.UUID,
@@ -183,7 +187,7 @@ def media_upload_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
-    return {"status": media.status}
+    return {"detail": media.status}
 
 
 @api_router.get(
