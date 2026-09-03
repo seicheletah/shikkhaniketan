@@ -52,7 +52,6 @@ class TeacherSampleData:
         "date_of_birth": "1995-06-15",
         "address": "456 Oak Avenue, Metropolis, NY",
         "about": "Software engineer focused on building scalable cloud applications.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_teacher_profile_creation_female = {
@@ -63,7 +62,6 @@ class TeacherSampleData:
         "date_of_birth": "1997-08-22",
         "address": "789 Pine Road, Star City, CA",
         "about": "UX/UI designer passionate about creating intuitive digital experiences.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_teacher_profile_update_male = {
@@ -128,7 +126,6 @@ class StudentSampleData:
         "date_of_birth": "1995-06-15",
         "address": "456 Oak Avenue, Metropolis, NY",
         "about": "Software engineer focused on building scalable cloud applications.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_student_profile_update_male = {
@@ -149,7 +146,6 @@ class StudentSampleData:
         "date_of_birth": "1997-08-22",
         "address": "789 Pine Road, Star City, CA",
         "about": "UX/UI designer passionate about creating intuitive digital experiences.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_user_student_creation_female = {
