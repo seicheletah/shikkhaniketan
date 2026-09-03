@@ -1,5 +1,5 @@
 import uuid
-from fastapi import status, HTTPException, APIRouter, Response
+from fastapi import status, HTTPException, APIRouter, Response, UploadFile
 from backend.core.database import SessionDep
 from backend.core.security import AdminDep, StudentDep
 from backend.models import (
@@ -11,9 +11,13 @@ from backend.models import (
     ReviewResponse,
     Course,
     Review,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
+from backend.utils import upload_to_s3
+from backend.core.config import settings
+from backend.utils import check_valid_file
 
 api_router = APIRouter(prefix="/students", tags=["Students"])
 
@@ -61,6 +65,44 @@ def create_student(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"invalid credentials",
         )
+
+
+@api_router.post(
+    "/profile-pic/upload",
+    status_code=status.HTTP_201_CREATED,
+    response_model=GenericMessage,
+)
+def upload_profile_pic(
+    file: UploadFile,
+    db_session: SessionDep,
+    current_user: StudentDep,
+):
+    """
+    Upload profile pic.
+    """
+    student = db_session.exec(
+        select(Student).where(Student.user_id == current_user.id)
+    ).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
+        )
+    check_valid_file(file, "image")
+    unique_id = uuid.uuid4().hex[:8]
+    s3_profile_pic_key = f"profile_pic/{unique_id}_{file.filename}"
+    public_url = f"https://{settings.CLOUDFRONT_DOMAIN_NAME}/{s3_profile_pic_key}"
+    upload_response = upload_to_s3(file, s3_profile_pic_key)
+    try:
+        student.profile_pic = public_url
+        db_session.add(student)
+        db_session.commit()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+    return upload_response
 
 
 @api_router.get("/me", response_model=StudentResponse)
