@@ -52,7 +52,6 @@ class TeacherSampleData:
         "date_of_birth": "1995-06-15",
         "address": "456 Oak Avenue, Metropolis, NY",
         "about": "Software engineer focused on building scalable cloud applications.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_teacher_profile_creation_female = {
@@ -63,7 +62,6 @@ class TeacherSampleData:
         "date_of_birth": "1997-08-22",
         "address": "789 Pine Road, Star City, CA",
         "about": "UX/UI designer passionate about creating intuitive digital experiences.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_teacher_profile_update_male = {
@@ -128,7 +126,6 @@ class StudentSampleData:
         "date_of_birth": "1995-06-15",
         "address": "456 Oak Avenue, Metropolis, NY",
         "about": "Software engineer focused on building scalable cloud applications.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_student_profile_update_male = {
@@ -149,7 +146,6 @@ class StudentSampleData:
         "date_of_birth": "1997-08-22",
         "address": "789 Pine Road, Star City, CA",
         "about": "UX/UI designer passionate about creating intuitive digital experiences.",
-        "profile_photo": "https://example.com",
     }
 
     request_body_user_student_creation_female = {
@@ -162,3 +158,39 @@ class StudentSampleData:
         "username": "test.student.female@email.com",
         "password": "12345",
     }
+
+
+class CourseSampleData:
+    request_body_course_create_male = {
+        "course_name": "Mastering Docker & Kubernetes",
+        "course_details": "A comprehensive guide to containerization and orchestration.",
+        "course_language": "English",
+        "course_paid": True,
+        "course_price": 899,
+    }
+
+    request_body_course_update_male = {
+        "course_language": "Dutch",
+        "course_paid": True,
+        "course_price": 499,
+    }
+
+    request_body_course_thumbnail_upload_male = {
+        "category": "thumbnail",
+        "media_type": "image",
+        "file_name": "sampleimage",
+        "file_extension": "jpg",
+    }
+
+    request_body_course_resource_upload_male = {
+        "category": "resource",
+        "media_type": "video",
+        "file_name": "samplevideo",
+        "file_extension": "mp4",
+    }
+
+
+class ReviewSampleData:
+    request_body_review_create = {"comment": "hello", "rate": 1}
+
+    request_body_review_update = {"comment": "bye", "rate": 5}

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str
     AWS_REGION: str
     AWS_STORAGE_BUCKET_NAME: str
+    CLOUDFRONT_DOMAIN_NAME: str
     API_V1_STR: str
 
 

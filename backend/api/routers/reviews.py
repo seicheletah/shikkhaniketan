@@ -77,7 +77,6 @@ def create_review(
 def get_review(
     id: uuid.UUID,
     db_session: SessionDep,
-    current_user: LoginDep,
 ):
     """
     Get all reviews on a specific course by ID.
@@ -105,7 +104,6 @@ def get_review(
 def get_rating(
     id: uuid.UUID,
     db_session: SessionDep,
-    current_user: LoginDep,
 ):
     """
     Get total ratings on a specific course by ID.

@@ -15,6 +15,11 @@ from datetime import datetime, date
 from enum import Enum
 
 
+# generic message model
+class GenericMessage(SQLModel):
+    detail: str
+
+
 # access token generation model
 class Token(SQLModel):
     access_token: str
@@ -52,7 +57,7 @@ class User(UserBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    hashed_password: str = Field(unique=True)
+    hashed_password: str
     student: Student = Relationship(back_populates="user")
     teacher: Teacher = Relationship(back_populates="user")
 
@@ -127,11 +132,11 @@ class StudentBase(SQLModel):
     date_of_birth: date
     address: str
     about: str
-    profile_photo: str
 
 
 # student table model
 class Student(StudentBase, table=True):
+    profile_pic: str = Field(nullable=True)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -166,7 +171,6 @@ class StudentUpdate(SQLModel):
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
-    profile_photo: str | None = None
 
     @model_validator(mode="after")
     def check_empty_payload(self):
@@ -177,6 +181,7 @@ class StudentUpdate(SQLModel):
 
 # student response model for response body
 class StudentResponse(StudentBase):
+    profile_pic: str | None = None
     user: UserResponse
     course: list[CoursePublicResponse] = []
 
@@ -190,11 +195,11 @@ class TeacherBase(SQLModel):
     date_of_birth: date
     address: str
     about: str
-    profile_photo: str
 
 
 # teacher table model
 class Teacher(TeacherBase, table=True):
+    profile_pic: str = Field(nullable=True)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -227,7 +232,6 @@ class TeacherUpdate(SQLModel):
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
-    profile_photo: str | None = None
 
     @model_validator(mode="after")
     def check_empty_payload(self):
@@ -238,6 +242,7 @@ class TeacherUpdate(SQLModel):
 
 # teacher response model for response body
 class TeacherResponse(TeacherBase):
+    profile_pic: str | None = None
     user: UserResponse
 
 
@@ -246,7 +251,7 @@ class TeacherPublicResponse(SQLModel):
     first_name: str
     last_name: str
     about: str
-    profile_photo: str
+    profile_pic: str | None = None
     user: UserPublicResponse
 
 
