@@ -7,14 +7,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('phone');
     const genderSelect = document.getElementById('gender');
     const dobInput = document.getElementById('dob');
+    const addressInput = document.getElementById('address');
+    const aboutInput = document.getElementById('about');
+    const profilePhotoInput = document.getElementById('profile-photo');
+
 
     form.addEventListener('submit', async function (e) {
 
         e.preventDefault();
 
-        alert("Done button clicked!");
 
-        // সব field check
+        // ==========================================
+        // 1. CHECK REQUIRED PROFILE INFORMATION
+        // ==========================================
+
         if (
             !firstNameInput.value.trim() ||
             !lastNameInput.value.trim() ||
@@ -22,35 +28,50 @@ document.addEventListener('DOMContentLoaded', () => {
             !genderSelect.value ||
             !dobInput.value
         ) {
-            alert('Please fill in all fields');
+            alert('Please fill in all required fields.');
             return;
         }
 
-        // Signup page থেকে data নেওয়া
+
+        // ==========================================
+        // 2. GET SIGNUP INFORMATION
+        // ==========================================
+
         const email = localStorage.getItem('signupEmail');
         const password = localStorage.getItem('signupPassword');
         const role = localStorage.getItem('signupRole');
 
-        console.log("Signup data:", email, password, role);
+
+        console.log("Signup data:", {
+            email: email,
+            password: password,
+            role: role
+        });
+
 
         if (!email || !password || !role) {
             alert('Signup information not found. Please sign up again.');
             return;
         }
 
-        const userData = {
-            email_id: email,
-            role: role,
-            hashed_password: password
-        };
-
-        console.log("Sending API data:", userData);
 
         try {
 
-            alert("API call হচ্ছে...");
+            // ==========================================
+            // STEP 1: CREATE USER ACCOUNT
+            // ==========================================
 
-            const response = await fetch(
+            const userData = {
+                email_id: email,
+                role: role,
+                hashed_password: password
+            };
+
+
+            console.log("Creating user:", userData);
+
+
+            const userResponse = await fetch(
                 'http://127.0.0.1:8000/api/v1/users/',
                 {
                     method: 'POST',
@@ -61,37 +82,368 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             );
 
-            console.log("Response status:", response.status);
 
-            const data = await response.json();
+            const userResult = await userResponse.json();
 
-            console.log("API response:", data);
 
-            if (response.ok) {
+            console.log("User API response:", userResult);
 
-                alert('Account created successfully!');
 
-                localStorage.removeItem('signupEmail');
-                localStorage.removeItem('signupPassword');
-                localStorage.removeItem('signupRole');
+            if (!userResponse.ok) {
+                alert(
+                    'Account creation failed: ' +
+                    JSON.stringify(userResult)
+                );
+                return;
+            }
 
-                window.location.href = 'login.html';
+
+            // ==========================================
+            // STEP 2: LOGIN
+            // ==========================================
+
+            const loginBody = new URLSearchParams();
+
+            loginBody.append('grant_type', 'password');
+            loginBody.append('username', email);
+            loginBody.append('password', password);
+            loginBody.append('scope', '');
+            loginBody.append('client_id', 'string');
+            loginBody.append('client_secret', 'string');
+
+
+            console.log("Logging in...");
+
+
+            const loginResponse = await fetch(
+                'http://127.0.0.1:8000/api/v1/login',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
+                    body: loginBody
+                }
+            );
+
+
+            const loginResult = await loginResponse.json();
+
+
+            console.log("Login API response:", loginResult);
+
+
+            if (!loginResponse.ok) {
+                alert(
+                    'Login failed: ' +
+                    JSON.stringify(loginResult)
+                );
+                return;
+            }
+
+
+            // ==========================================
+            // STEP 3: GET ACCESS TOKEN
+            // ==========================================
+
+            const accessToken = loginResult.access_token;
+
+
+            if (!accessToken) {
+                alert('Access token not received.');
+                return;
+            }
+
+
+            localStorage.setItem(
+                'access_token',
+                accessToken
+            );
+
+
+            console.log("Access token received.");
+
+
+            // ==========================================
+            // STEP 4: FORMAT GENDER
+            // ==========================================
+
+            let genderValue = genderSelect.value;
+
+
+            if (genderValue === 'male') {
+                genderValue = 'm';
+            }
+
+            if (genderValue === 'female') {
+                genderValue = 'f';
+            }
+
+            if (genderValue === 'other') {
+                genderValue = 'o';
+            }
+
+
+            // ==========================================
+            // STEP 5: CREATE PROFILE DATA
+            // ==========================================
+            // IMPORTANT:
+            // profile_pic/profile_photo is NOT included here.
+            // Profile picture will be uploaded separately.
+            // ==========================================
+
+            const profileData = {
+                first_name: firstNameInput.value.trim(),
+                last_name: lastNameInput.value.trim(),
+                phone_no: phoneInput.value.trim(),
+                gender: genderValue,
+                date_of_birth: dobInput.value,
+                address: addressInput.value.trim() || "",
+                about: aboutInput.value.trim() || ""
+            };
+
+
+            console.log(
+                "FINAL PROFILE DATA:",
+                profileData
+            );
+
+
+            // ==========================================
+            // STEP 6: SELECT STUDENT / TEACHER API
+            // ==========================================
+
+            let profileUrl;
+            let uploadUrl;
+
+
+            if (role.toLowerCase() === 'student') {
+
+                profileUrl =
+                    'http://127.0.0.1:8000/api/v1/students/';
+
+                uploadUrl =
+                    'http://127.0.0.1:8000/api/v1/students/profile-pic/upload';
+
+            } else if (role.toLowerCase() === 'teacher') {
+
+                profileUrl =
+                    'http://127.0.0.1:8000/api/v1/teachers/';
+
+                uploadUrl =
+                    'http://127.0.0.1:8000/api/v1/teachers/profile-pic/upload';
 
             } else {
 
-                alert(
-                    'Account creation failed: ' +
-                    JSON.stringify(data)
-                );
+                alert('Invalid role: ' + role);
+                return;
+
             }
+
+
+            console.log(
+                "Creating profile at:",
+                profileUrl
+            );
+
+
+            // ==========================================
+            // STEP 7: CREATE STUDENT / TEACHER PROFILE
+            // ==========================================
+
+            const profileResponse = await fetch(
+                profileUrl,
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization':
+                            'Bearer ' + accessToken
+                    },
+
+                    body: JSON.stringify(profileData)
+                }
+            );
+
+
+            const profileResult =
+                await profileResponse.json();
+
+
+            console.log(
+                "Profile API response:",
+                profileResult
+            );
+
+
+            // ==========================================
+            // STEP 8: CHECK PROFILE CREATION
+            // ==========================================
+
+            if (!profileResponse.ok) {
+
+                alert(
+                    'Account created, but profile creation failed: ' +
+                    JSON.stringify(profileResult)
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "Student/Teacher profile created successfully."
+            );
+
+
+            // ==========================================
+            // STEP 9: UPLOAD PROFILE PICTURE
+            // ==========================================
+
+            if (
+                profilePhotoInput &&
+                profilePhotoInput.files &&
+                profilePhotoInput.files.length > 0
+            ) {
+
+                console.log(
+                    "Uploading profile picture..."
+                );
+
+
+                const selectedFile =
+                    profilePhotoInput.files[0];
+
+
+                // Create FormData
+                const formData = new FormData();
+
+
+                // IMPORTANT:
+                // Backend expects the field name "file"
+                formData.append(
+                    'file',
+                    selectedFile
+                );
+
+
+                console.log(
+                    "Selected profile picture:",
+                    selectedFile.name
+                );
+
+
+                const uploadResponse = await fetch(
+                    uploadUrl,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Authorization':
+                                'Bearer ' + accessToken
+                        },
+
+                        body: formData
+                    }
+                );
+
+
+                const uploadResult =
+                    await uploadResponse.json();
+
+
+                console.log(
+                    "Profile picture upload response:",
+                    uploadResult
+                );
+
+
+                // ==========================================
+                // CHECK PROFILE PICTURE UPLOAD
+                // ==========================================
+
+                if (!uploadResponse.ok) {
+
+                    alert(
+                        'Account and profile created, but profile picture upload failed: ' +
+                        JSON.stringify(uploadResult)
+                    );
+
+                    return;
+                }
+
+
+                console.log(
+                    "Profile picture uploaded successfully."
+                );
+
+            } else {
+
+                console.log(
+                    "No profile picture selected."
+                );
+
+            }
+
+
+            // ==========================================
+            // STEP 10: FINAL SUCCESS
+            // ==========================================
+
+            alert(
+                'Account, profile and profile picture created successfully!'
+            );
+
+
+            // ==========================================
+            // STEP 11: REMOVE TEMPORARY SIGNUP DATA
+            // ==========================================
+
+            localStorage.removeItem(
+                'signupEmail'
+            );
+
+            localStorage.removeItem(
+                'signupPassword'
+            );
+
+            localStorage.removeItem(
+                'signupRole'
+            );
+
+
+            // ==========================================
+            // STEP 12: GO TO PROFILE PAGE
+            // ==========================================
+
+            if (role.toLowerCase() === 'student') {
+
+                window.location.href =
+                    'student.html';
+
+            } else if (role.toLowerCase() === 'teacher') {
+
+                window.location.href =
+                    'teacher.html';
+
+            }
+
 
         } catch (error) {
 
-            console.error("API Error:", error);
+            console.error(
+                "API Error:",
+                error
+            );
 
             alert(
-                'API Error: ' + error.message
+                'API Error: ' +
+                error.message
             );
+
         }
 
     });
