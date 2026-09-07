@@ -1,87 +1,286 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shikkhaniketan - Learn. Grow. Succeed.</title>
-  <!-- Google Fonts & FontAwesome for Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="index.css">
-  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shikkhaniketan</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="nav-left">
-      <a href="#" class="logo">Shikkhaniketan</a>
-      
-      <!-- Explore Dropdown -->
-      <div class="dropdown">
-        <button class="explore-btn">
-          Explore <i class="fa-solid fa-chevron-down"></i>
-        </button>
+    <header class="navbar">
+        <div class="logo">Shikkhaniketan</div>
+        <div class="nav-center">
+            
+            <div class="dropdown-container">
+                <a href="#" class="explore-btn">Explore <i class="fas fa-chevron-down"></i></a>
+                
+                <div class="dropdown-menu">
+                    <div class="dropdown-column">
+                        <h4><i class="fas fa-user-alt"></i> Books</h4>
+                        <ul>
+                            <li><a href="#"><i class="fab fa-html5" style="color: #e34f26;"></i> HTML Notes</a></li>
+                            <li><a href="#"><i class="fab fa-css3-alt" style="color: #1572b6;"></i> CSS Notes</a></li>
+                            <li><a href="#"><i class="fab fa-js" style="color: #f7df1e;"></i> JavaScript Notes</a></li>
+                            <li><a href="#"><i class="fab fa-python" style="color: #3776ab;"></i> Python Book</a></li>
+                            <li><a href="#"><i class="fab fa-java" style="color: #5382a1;"></i> Java Book</a></li>
+                            <li><a href="#"><i class="fas fa-copyright" style="color: #00599c;"></i> C Programming</a></li>
+                            <li><a href="#"><i class="fas fa-code" style="color: #00599c;"></i> C++ Programming</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="dropdown-column">
+                        <h4><i class="fas fa-desktop"></i> Courses</h4>
+                        <ul>
+                            <li><a href="#"><i class="fab fa-html5" style="color: #e34f26;"></i> HTML & CSS</a></li>
+                            <li><a href="#"><i class="fab fa-js" style="color: #f7df1e;"></i> JavaScript</a></li>
+                            <li><a href="#"><i class="fab fa-python" style="color: #3776ab;"></i> Python</a></li>
+                            <li><a href="#"><i class="fab fa-java" style="color: #5382a1;"></i> Java</a></li>
+                            <li><a href="#"><i class="fas fa-copyright" style="color: #00599c;"></i> C Programming</a></li>
+                            <li><a href="#"><i class="fas fa-code" style="color: #00599c;"></i> C++</a></li>
+                            <li><a href="#"><i class="fas fa-brain" style="color: #8b5cf6;"></i> Artificial Intelligence</a></li>
+                            <li><a href="#"><i class="fas fa-network-wired" style="color: #10b981;"></i> Machine Learning</a></li>
+                            <li><a href="#"><i class="fas fa-chart-bar" style="color: #3b82f6;"></i> Data Science</a></li>
+                            <li><a href="#"><i class="fas fa-globe" style="color: #0284c7;"></i> Web Development</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
-        <div class="dropdown-menu">
-          <!-- Books Column -->
-          <div class="menu-column">
-            <h4><i class="fa-solid fa-user icon"></i> Books</h4>
-            <ul>
-              <li><a href="#"><i class="fa-brands fa-html5 icon" style="color: #e34f26;"></i> HTML Notes</a></li>
-              <li><a href="#"><i class="fa-brands fa-css3-alt icon" style="color: #1572b6;"></i> CSS Notes</a></li>
-              <li><a href="#"><i class="fa-brands fa-square-js icon" style="color: #f7df1e;"></i> JavaScript Notes</a></li>
-              <li><a href="#"><i class="fa-brands fa-python icon" style="color: #3776ab;"></i> Python Book</a></li>
-              <li><a href="#"><i class="fa-brands fa-java icon" style="color: #5382a1;"></i> Java Book</a></li>
-              <li><a href="#"><i class="fa-solid fa-c icon" style="color: #00599c;"></i> C Programming</a></li>
-              <li><a href="#"><i class="fa-solid fa-code icon" style="color: #00599c;"></i> C++ Programming</a></li>
-            </ul>
-          </div>
-
-          <!-- Courses Column -->
-          <div class="menu-column">
-            <h4><i class="fa-solid fa-desktop icon"></i> Courses</h4>
-            <ul>
-              <li><a href="#"><i class="fa-brands fa-html5 icon" style="color: #e34f26;"></i> HTML & CSS</a></li>
-              <li><a href="#"><i class="fa-brands fa-square-js icon" style="color: #f7df1e;"></i> JavaScript</a></li>
-              <li><a href="#"><i class="fa-brands fa-python icon" style="color: #3776ab;"></i> Python</a></li>
-              <li><a href="#"><i class="fa-brands fa-java icon" style="color: #5382a1;"></i> Java</a></li>
-              <li><a href="#"><i class="fa-solid fa-c icon" style="color: #00599c;"></i> C Programming</a></li>
-              <li><a href="#"><i class="fa-solid fa-code icon" style="color: #00599c;"></i> C++</a></li>
-              <li><a href="#"><i class="fa-solid fa-brain icon" style="color: #8b5cf6;"></i> Artificial Intelligence</a></li>
-              <li><a href="#"><i class="fa-solid fa-diagram-project icon" style="color: #10b981;"></i> Machine Learning</a></li>
-              <li><a href="#"><i class="fa-solid fa-chart-simple icon" style="color: #3b82f6;"></i> Data Science</a></li>
-              <li><a href="#"><i class="fa-solid fa-globe icon" style="color: #0284c7;"></i> Web Development</a></li>
-            </ul>
-          </div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search courses">
+            </div>
         </div>
-      </div>
+        <div class="nav-right">
+            <a href="login.html" class="login-btn">Log In</a>
+            <a href="sign_up.html" class="signup-btn">Sign Up</a>
+        </div>
+    </header>
 
-      <!-- Search Input -->
-      <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Search courses">
-      </div>
-    </div>
+    <section class="hero">
+        <div class="hero-text">
+            <h1>Learn. Grow.<br>Succeed.</h1>
+            <p>Interactive lessons and quizzes to help you learn better every day.</p>
+            <a href="#" class="btn-primary">Start Learning</a>
+        </div>
+        <div class="hero-image">
+            <img src="picture.jpeg" alt="Hero Illustration">
+        </div>
+    </section>
 
-    <div class="nav-right">
-      <a href="login.html" class="login-btn">Log In</a>
-      <a href="sign_up.html" class="signup-btn">Sign Up</a>
-    </div>
-  </nav>
+    <section class="container">
+        <div class="section-header">
+            <h2>Popular Courses</h2>
+            <a href="#" class="view-all">View All &rarr;</a>
+        </div>
+        <div class="grid-cards">
+            <div class="card">
+                <div class="card-icon html-icon"><i class="fab fa-html5"></i></div>
+                <h3>HTML & CSS</h3>
+                <p>Learn the basics of web development.</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-star rating"></i> 4.3</span>
+                    <span><i class="fas fa-users"></i> 12.5K students</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon js-icon"><i class="fab fa-js"></i></div>
+                <h3>JavaScript</h3>
+                <p>Learn JavaScript from scratch.</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-star rating"></i> 4.6</span>
+                    <span><i class="fas fa-users"></i> 10.3K students</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon python-icon"><i class="fab fa-python"></i></div>
+                <h3>Python</h3>
+                <p>Learn Python step by step.</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-star rating"></i> 4.8</span>
+                    <span><i class="fas fa-users"></i> 15.2K students</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon java-icon"><i class="fab fa-java"></i></div>
+                <h3>Java</h3>
+                <p>Object oriented programming.</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-star rating"></i> 4.5</span>
+                    <span><i class="fas fa-users"></i> 8.4K students</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon c-icon">C</div>
+                <h3>C Programming</h3>
+                <p>Learn C language basics.</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-star rating"></i> 4.4</span>
+                    <span><i class="fas fa-users"></i> 6.1K students</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-icon cpp-icon">C++</div>
+                <h3>C++</h3>
+                <p>Advance your programming skills.</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-star rating"></i> 4.6</span>
+                    <span><i class="fas fa-users"></i> 7.2K students</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <!-- HERO SECTION -->
-  <main class="hero">
-    <div class="hero-content">
-      <h1>Learn. Grow.<br>Succeed.</h1>
-      <p>Interactive lessons and quizzes to help you learn better every day.</p>
-    </div>
+    <section class="container">
+        <h2>Explore by Category</h2>
+        <div class="grid-categories">
+            <div class="cat-card cat-1"><i class="fas fa-code"></i><span>Programming</span></div>
+            <div class="cat-card cat-2"><i class="fas fa-globe"></i><span>Web Development</span></div>
+            <div class="cat-card cat-3"><i class="fas fa-brain"></i><span>AI & Machine Learning</span></div>
+            <div class="cat-card cat-4"><i class="fas fa-chart-bar"></i><span>Data Science</span></div>
+            <div class="cat-card cat-5"><i class="fas fa-laptop-code"></i><span>Computer Science</span></div>
+            <div class="cat-card cat-6"><i class="fas fa-user-tie"></i><span>Interview Preparation</span></div>
+        </div>
+    </section>
 
-    <div class="hero-image">
-      <img src="picture.jpeg" alt="Student Studying Illustration">
-    </div>
-  </main>
-  <script src="index.js"></script>
+    <section class="container">
+        <h2 class="text-center">Why Choose Shikkhaniketan?</h2>
+        <div class="grid-features">
+            <div class="feature-item"><i class="fas fa-graduation-cap"></i><h4>Interactive Learning</h4></div>
+            <div class="feature-item"><i class="fas fa-clipboard-list"></i><h4>Practice & Quizzes</h4></div>
+            <div class="feature-item"><i class="fas fa-chart-line"></i><h4>Track Your Progress</h4></div>
+            <div class="feature-item"><i class="fas fa-trophy"></i><h4>Earn Certificates</h4></div>
+            <div class="feature-item"><i class="fas fa-book-open"></i><h4>Free Learning Resources</h4></div>
+            <div class="feature-item"><i class="fas fa-mobile-alt"></i><h4>Learn Anytime, Anywhere</h4></div>
+        </div>
+    </section>
+
+    <section class="container">
+        <h2 class="text-center">Learn. Practice. Test.</h2>
+        <div class="steps-wrapper">
+            <div class="step-card">
+                <div class="step-badge">01</div>
+                <h4>Learn</h4>
+                <p>Watch videos, read notes and understand concepts.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-badge">02</div>
+                <h4>Practice</h4>
+                <p>Solve exercises and improve your skills.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-badge">03</div>
+                <h4>Test</h4>
+                <p>Take quizzes and test your knowledge.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="container grid-two-col">
+        <div class="box">
+            <h3>Test Your Knowledge 🧠</h3>
+            <div class="quiz-item">
+                <div>
+                    <strong>HTML Basics Quiz</strong>
+                    <p>10 Questions • 5 Minutes</p>
+                </div>
+                <button class="btn-outline">Take Quiz</button>
+            </div>
+            <div class="quiz-item">
+                <div>
+                    <strong>Python Beginner Quiz</strong>
+                    <p>15 Questions • 10 Minutes</p>
+                </div>
+                <button class="btn-outline">Take Quiz</button>
+            </div>
+            <div class="quiz-item">
+                <div>
+                    <strong>JavaScript Quiz</strong>
+                    <p>12 Questions • 7 Minutes</p>
+                </div>
+                <button class="btn-outline">Take Quiz</button>
+            </div>
+            <a href="#" class="view-all">View All Quizzes &rarr;</a>
+        </div>
+
+        <div class="box">
+            <h3>Track Your Learning Progress 📊</h3>
+            <div class="progress-item">
+                <div class="progress-label"><span>Python</span> <span>80%</span></div>
+                <div class="progress-bar"><div class="fill python-bar"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>HTML & CSS</span> <span>60%</span></div>
+                <div class="progress-bar"><div class="fill html-bar"></div></div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label"><span>JavaScript</span> <span>40%</span></div>
+                <div class="progress-bar"><div class="fill js-bar"></div></div>
+            </div>
+            <a href="#" class="view-all">Go to Dashboard &rarr;</a>
+        </div>
+    </section>
+
+    <section class="container cert-banner">
+        <div class="cert-text">
+            <h2>Learn. Complete. Get Certified.</h2>
+            <p>Complete courses, pass quizzes and earn your certificates.</p>
+            <a href="#" class="btn-primary">View Certificates</a>
+        </div>
+        <div class="cert-img">
+            <i class="fas fa-certificate cert-icon"></i>
+        </div>
+    </section>
+
+    <section class="container cta-banner">
+        <div>
+            <h3>Ready to Start Learning?</h3>
+            <p>Learn new skills and build your future with Shikkhaniketan.</p>
+        </div>
+        <a href="#" class="btn-primary">Get Started</a>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Shikkhaniketan</h3>
+                <p>Your one-stop platform for learning, practicing and growing together.</p>
+                <div class="socials">
+                    <i class="fab fa-facebook"></i>
+                    <i class="fab fa-twitter"></i>
+                    <i class="fab fa-instagram"></i>
+                    <i class="fab fa-youtube"></i>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <a href="#">Courses</a>
+                <a href="#">Books & Notes</a>
+                <a href="#">Quizzes</a>
+                <a href="#">Categories</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#">Help Center</a>
+                <a href="#">Contact Us</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms & Conditions</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="#">About Us</a>
+                <a href="#">Careers</a>
+                <a href="#">Blog</a>
+                <a href="#">News</a>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2025 Shikkhaniketan. All rights reserved.
+        </div>
+    </footer>
+    <script src="index.js"></script>
 
 </body>
 </html>
