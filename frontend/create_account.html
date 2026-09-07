@@ -1,105 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Shakkhaniketan - Create Account</title>
+
     <link rel="stylesheet" href="create_account.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 </head>
+
 <body>
 
     <!-- Header Section -->
     <header>
         <div class="logo">Shakkhaniketan</div>
+
         <nav>
             <a href="index.html">Home</a>
         </nav>
     </header>
 
-    <!-- Main Content Container -->
+
+    <!-- Main Content -->
     <main class="container">
-        <!-- Left Section: Heading & Illustration -->
+
+        <!-- Left Section -->
         <section class="left-section">
+
             <h1>Learn. Grow. Succeed.</h1>
-            <p>Interactive lessons and quizzes to help you learn better every day.</p>
-            
+
+            <p>
+                Interactive lessons and quizzes to help you learn
+                better every day.
+            </p>
+
             <div class="illustration-container">
-                <img src="picture.jpeg" alt="Student studying with interactive elements">
+                <img
+                    src="picture.jpeg"
+                    alt="Student studying with interactive elements"
+                >
             </div>
+
         </section>
 
-        <!-- Right Section: Form -->
+
+        <!-- Right Section -->
         <section class="right-section">
+
             <div class="form-card">
+
                 <div class="icon-badge">
-                    <!-- Icon Placeholder -->
+                    <!-- Icon -->
                 </div>
+
                 <h2>CREATE ACCOUNT</h2>
 
+
+                <!-- Profile Form -->
                 <form id="profileForm">
+
                     <!-- First Name -->
                     <div class="form-group">
-                        <label for="first-name">First Name</label>
-                        <input type="text" id="first-name" name="first_name" placeholder="First Name" required>
+
+                        <label for="first-name">
+                            First Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="first-name"
+                            name="first_name"
+                            placeholder="First Name"
+                            required
+                        >
+
                     </div>
+
 
                     <!-- Last Name -->
                     <div class="form-group">
-                        <label for="last-name">Last Name</label>
-                        <input type="text" id="last-name" name="last_name" placeholder="Last Name" required>
+
+                        <label for="last-name">
+                            Last Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="last-name"
+                            name="last_name"
+                            placeholder="Last Name"
+                            required
+                        >
+
                     </div>
+
 
                     <!-- Phone Number -->
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+
+                        <label for="phone">
+                            Phone Number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            placeholder="Phone Number"
+                            required
+                        >
+
                     </div>
+
 
                     <!-- Gender -->
                     <div class="form-group">
-                        <label for="gender">Gender</label>
-                        <select id="gender" name="gender" required>
-                            <option value="" disabled selected hidden>Gender</option>
-                            <option value="m">Male</option>
-                            <option value="f">Female</option>
-                            <option value="o">Other</option>
+
+                        <label for="gender">
+                            Gender
+                        </label>
+
+                        <select
+                            id="gender"
+                            name="gender"
+                            required
+                        >
+
+                            <option
+                                value=""
+                                disabled
+                                selected
+                                hidden
+                            >
+                                Gender
+                            </option>
+
+                            <option value="m">
+                                Male
+                            </option>
+
+                            <option value="f">
+                                Female
+                            </option>
+
+                            <option value="o">
+                                Other
+                            </option>
+
                         </select>
+
                     </div>
+
 
                     <!-- Date of Birth -->
                     <div class="form-group">
-                        <label for="dob">Date of Birth</label>
-                        <input type="date" id="dob" name="dob" required>
+
+                        <label for="dob">
+                            Date of Birth
+                        </label>
+
+                        <input
+                            type="date"
+                            id="dob"
+                            name="dob"
+                            required
+                        >
+
                     </div>
+
 
                     <!-- Address -->
                     <div class="form-group">
-                        <label for="address">Address</label>
-                        <input type="text" id="address" name="address" placeholder="Enter your address">
+
+                        <label for="address">
+                            Address
+                        </label>
+
+                        <input
+                            type="text"
+                            id="address"
+                            name="address"
+                            placeholder="Enter your address"
+                        >
+
                     </div>
+
 
                     <!-- About -->
                     <div class="form-group">
-                        <label for="about">About</label>
-                        <input type="text" id="about" name="about" placeholder="Tell something about yourself..." rows="3"></input>
+
+                        <label for="about">
+                            About
+                        </label>
+
+                        <textarea
+                            id="about"
+                            name="about"
+                            placeholder="Tell something about yourself..."
+                            rows="3"
+                        ></textarea>
+
                     </div>
 
-                    <!-- Profile Photo URL -->
+
+                    <!-- Profile Photo -->
                     <div class="form-group">
-                        <label for="profile-photo">Profile Photo URL</label>
-                        <input type="file" id="profile-photo" name="profile_photo" accept="image/*" placeholder="Upload your Picture">
+
+                        <label for="profile-photo">
+                            Profile Photo
+                        </label>
+
+                        <input
+                            type="file"
+                            id="profile-photo"
+                            name="profile_photo"
+                            accept="image/*"
+                        >
+
                     </div>
+
 
                     <!-- Submit Button -->
-                    <button type="submit">Done</button>
+                    <button type="submit">
+                        Done
+                    </button>
+
                 </form>
+
             </div>
+
         </section>
+
     </main>
+
+
+    <!-- JavaScript -->
     <script src="create_account.js"></script>
 
 </body>
+
 </html>
