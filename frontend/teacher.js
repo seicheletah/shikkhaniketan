@@ -255,24 +255,21 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeAboutElement.textContent = data.about;
         }
 
-        // Header-এর Profile Picture Dynamic করার অংশ (profile_photo key থেকে নেওয়া)
+        // Header-এর Profile Picture Dynamic করার অংশ
         const profileImgElement = document.getElementById('teacherProfileImg');
-        if (profileImgElement) {
-            let photoUrl = data.profile_photo || data.profile_picture || data.image_url;
+        let photoUrl = data.profile_pic || data.profile_photo || data.profile_picture || data.image_url;
 
-            if (photoUrl) {
-                // যদি ব্যাকএন্ড থেকে ডিরেক্ট ফুল URL (http://...) না এসে রৈখিক পাত আসে (যেমন /uploads/abc.jpg)
-                if (!photoUrl.startsWith('http://') && !photoUrl.startsWith('https://')) {
-                    photoUrl = `http://127.0.0.1:8000/${photoUrl.startsWith('/') ? photoUrl.substring(1) : photoUrl}`;
-                }
-                
-                profileImgElement.src = photoUrl;
-                profileImgElement.style.display = 'block'; // ছবি আপলোড করা থাকলে শো করবে
-            } else {
-                // যদি কোনো ছবি আপলোড না থাকে, তবে খালি ডিফল্ট ইমেজ দেখাবে
-                profileImgElement.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                profileImgElement.style.display = 'block';
+        if (photoUrl) {
+            if (!photoUrl.startsWith('http://') && !photoUrl.startsWith('https://')) {
+                photoUrl = `http://127.0.0.1:8000/${photoUrl.startsWith('/') ? photoUrl.substring(1) : photoUrl}`;
             }
+        } else {
+            photoUrl = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+        }
+
+        if (profileImgElement) {
+            profileImgElement.src = photoUrl;
+            profileImgElement.style.display = 'block';
         }
 
         const profileSection =
@@ -294,7 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div class="profile-details">
                 
-            <h2>Teacher Profile</h2>
+                <h2>Teacher Profile</h2>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="${photoUrl}" alt="Profile Picture" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                </div>
 
                  <p>
                     <strong>Teacher ID:</strong>

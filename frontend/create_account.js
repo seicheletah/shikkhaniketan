@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dobInput = document.getElementById('dob');
     const addressInput = document.getElementById('address');
     const aboutInput = document.getElementById('about');
-    const profilePhotoInput = document.getElementById('profile-photo');
+    const profilePhotoInput = document.getElementById('profile_pic');
 
 
     form.addEventListener('submit', async function (e) {
@@ -89,8 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("User API response:", userResult);
 
 
-            if (!userResponse.ok) {
-                alert('Account creation failed: ' + JSON.stringify(userResult));
+            // যদি ৪০৯ (User Already Exists) আসে, তাহলেও আটকাবে না, সরাসরি লগইন স্টেপে চলে যাবে
+            if (!userResponse.ok && userResponse.status !== 409) {
+                alert('Account creation failed: ' + (userResult.detail || JSON.stringify(userResult)));
                 return;
             }
 
@@ -166,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             // ==========================================
-            // STEP 4: CREATE PROFILE DATA WITH NEW FIELDS
+            // STEP 4: CREATE PROFILE DATA
             // ==========================================
 
             const profileData = {
@@ -176,8 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 gender: genderValue,
                 date_of_birth: dobInput.value,
                 address: addressInput.value.trim() || "",
-                about: aboutInput.value.trim() || "",
-                profile_photo: profilePhotoInput.value.trim() || ""
+                about: aboutInput.value.trim() || ""
             };
 
 
@@ -227,13 +227,49 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Profile API response:", profileResult);
 
 
-            // ==========================================
-            // STEP 7: CHECK PROFILE CREATION
-            // ==========================================
-
             if (!profileResponse.ok) {
                 alert('Account created, but profile creation failed: ' + JSON.stringify(profileResult));
                 return;
+            }
+
+
+            // ==========================================
+            // STEP 7: UPLOAD PROFILE PIC IF SELECTED
+            // ==========================================
+
+            if (profilePhotoInput && profilePhotoInput.files && profilePhotoInput.files[0]) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', profilePhotoInput.files[0]);
+
+                    let uploadUrl = '';
+                    if (role.toLowerCase() === 'teacher') {
+                        uploadUrl = 'http://127.0.0.1:8000/api/v1/teachers/profile-pic/upload';
+                    } else if (role.toLowerCase() === 'student') {
+                        uploadUrl = 'http://127.0.0.1:8000/api/v1/students/profile-pic/upload';
+                    }
+
+                    if (uploadUrl) {
+                        console.log("Uploading profile picture to:", uploadUrl);
+
+                        const uploadResponse = await fetch(uploadUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + accessToken
+                            },
+                            body: formData
+                        });
+
+                        const uploadResult = await uploadResponse.json();
+                        console.log("Profile Pic Upload response:", uploadResult);
+
+                        if (!uploadResponse.ok) {
+                            console.error('Photo upload failed:', uploadResult);
+                        }
+                    }
+                } catch (imgError) {
+                    console.error("Image Upload Error:", imgError);
+                }
             }
 
 
