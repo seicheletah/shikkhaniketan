@@ -90,10 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (!userResponse.ok) {
-                alert(
-                    'Account creation failed: ' +
-                    JSON.stringify(userResult)
-                );
+                alert('Account creation failed: ' + JSON.stringify(userResult));
                 return;
             }
 
@@ -120,8 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     method: 'POST',
                     headers: {
-                        'Content-Type':
-                            'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/x-www-form-urlencoded'
                     },
                     body: loginBody
                 }
@@ -135,16 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (!loginResponse.ok) {
-                alert(
-                    'Login failed: ' +
-                    JSON.stringify(loginResult)
-                );
+                alert('Login failed: ' + JSON.stringify(loginResult));
                 return;
             }
 
 
             // ==========================================
-            // STEP 3: GET ACCESS TOKEN
+            // GET ACCESS TOKEN
             // ==========================================
 
             const accessToken = loginResult.access_token;
@@ -156,41 +149,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
 
-            localStorage.setItem(
-                'access_token',
-                accessToken
-            );
-
+            localStorage.setItem('access_token', accessToken);
 
             console.log("Access token received.");
 
 
             // ==========================================
-            // STEP 4: FORMAT GENDER
+            // STEP 3: FORMAT GENDER
             // ==========================================
 
             let genderValue = genderSelect.value;
 
-
-            if (genderValue === 'male') {
-                genderValue = 'm';
-            }
-
-            if (genderValue === 'female') {
-                genderValue = 'f';
-            }
-
-            if (genderValue === 'other') {
-                genderValue = 'o';
-            }
+            if (genderValue === 'male') genderValue = 'm';
+            if (genderValue === 'female') genderValue = 'f';
+            if (genderValue === 'other') genderValue = 'o';
 
 
             // ==========================================
-            // STEP 5: CREATE PROFILE DATA
-            // ==========================================
-            // IMPORTANT:
-            // profile_pic/profile_photo is NOT included here.
-            // Profile picture will be uploaded separately.
+            // STEP 4: CREATE PROFILE DATA WITH NEW FIELDS
             // ==========================================
 
             const profileData = {
@@ -200,250 +176,93 @@ document.addEventListener('DOMContentLoaded', () => {
                 gender: genderValue,
                 date_of_birth: dobInput.value,
                 address: addressInput.value.trim() || "",
-                about: aboutInput.value.trim() || ""
+                about: aboutInput.value.trim() || "",
+                profile_photo: profilePhotoInput.value.trim() || ""
             };
 
 
-            console.log(
-                "FINAL PROFILE DATA:",
-                profileData
-            );
+            console.log("FINAL PROFILE DATA:", profileData);
 
 
             // ==========================================
-            // STEP 6: SELECT STUDENT / TEACHER API
+            // STEP 5: SELECT PROFILE API
             // ==========================================
 
             let profileUrl;
-            let uploadUrl;
-
 
             if (role.toLowerCase() === 'student') {
-
-                profileUrl =
-                    'http://127.0.0.1:8000/api/v1/students/';
-
-                uploadUrl =
-                    'http://127.0.0.1:8000/api/v1/students/profile-pic/upload';
-
+                profileUrl = 'http://127.0.0.1:8000/api/v1/students/';
             } else if (role.toLowerCase() === 'teacher') {
-
-                profileUrl =
-                    'http://127.0.0.1:8000/api/v1/teachers/';
-
-                uploadUrl =
-                    'http://127.0.0.1:8000/api/v1/teachers/profile-pic/upload';
-
+                profileUrl = 'http://127.0.0.1:8000/api/v1/teachers/';
             } else {
-
                 alert('Invalid role: ' + role);
                 return;
-
             }
 
 
-            console.log(
-                "Creating profile at:",
-                profileUrl
-            );
+            console.log("Creating profile at:", profileUrl);
 
 
             // ==========================================
-            // STEP 7: CREATE STUDENT / TEACHER PROFILE
+            // STEP 6: CREATE STUDENT / TEACHER PROFILE
             // ==========================================
 
             const profileResponse = await fetch(
                 profileUrl,
                 {
                     method: 'POST',
-
                     headers: {
                         'accept': 'application/json',
                         'Content-Type': 'application/json',
-                        'Authorization':
-                            'Bearer ' + accessToken
+                        'Authorization': 'Bearer ' + accessToken
                     },
-
                     body: JSON.stringify(profileData)
                 }
             );
 
 
-            const profileResult =
-                await profileResponse.json();
+            const profileResult = await profileResponse.json();
 
 
-            console.log(
-                "Profile API response:",
-                profileResult
-            );
+            console.log("Profile API response:", profileResult);
 
 
             // ==========================================
-            // STEP 8: CHECK PROFILE CREATION
+            // STEP 7: CHECK PROFILE CREATION
             // ==========================================
 
             if (!profileResponse.ok) {
-
-                alert(
-                    'Account created, but profile creation failed: ' +
-                    JSON.stringify(profileResult)
-                );
-
+                alert('Account created, but profile creation failed: ' + JSON.stringify(profileResult));
                 return;
             }
 
 
-            console.log(
-                "Student/Teacher profile created successfully."
-            );
+            // ==========================================
+            // SUCCESS
+            // ==========================================
+
+            alert('Account and profile created successfully!');
+
+
+            // Remove temporary signup information
+            localStorage.removeItem('signupEmail');
+            localStorage.removeItem('signupPassword');
+            localStorage.removeItem('signupRole');
 
 
             // ==========================================
-            // STEP 9: UPLOAD PROFILE PICTURE
-            // ==========================================
-
-            if (
-                profilePhotoInput &&
-                profilePhotoInput.files &&
-                profilePhotoInput.files.length > 0
-            ) {
-
-                console.log(
-                    "Uploading profile picture..."
-                );
-
-
-                const selectedFile =
-                    profilePhotoInput.files[0];
-
-
-                // Create FormData
-                const formData = new FormData();
-
-
-                // IMPORTANT:
-                // Backend expects the field name "file"
-                formData.append(
-                    'file',
-                    selectedFile
-                );
-
-
-                console.log(
-                    "Selected profile picture:",
-                    selectedFile.name
-                );
-
-
-                const uploadResponse = await fetch(
-                    uploadUrl,
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Authorization':
-                                'Bearer ' + accessToken
-                        },
-
-                        body: formData
-                    }
-                );
-
-
-                const uploadResult =
-                    await uploadResponse.json();
-
-
-                console.log(
-                    "Profile picture upload response:",
-                    uploadResult
-                );
-
-
-                // ==========================================
-                // CHECK PROFILE PICTURE UPLOAD
-                // ==========================================
-
-                if (!uploadResponse.ok) {
-
-                    alert(
-                        'Account and profile created, but profile picture upload failed: ' +
-                        JSON.stringify(uploadResult)
-                    );
-
-                    return;
-                }
-
-
-                console.log(
-                    "Profile picture uploaded successfully."
-                );
-
-            } else {
-
-                console.log(
-                    "No profile picture selected."
-                );
-
-            }
-
-
-            // ==========================================
-            // STEP 10: FINAL SUCCESS
-            // ==========================================
-
-            alert(
-                'Account, profile and profile picture created successfully!'
-            );
-
-
-            // ==========================================
-            // STEP 11: REMOVE TEMPORARY SIGNUP DATA
-            // ==========================================
-
-            localStorage.removeItem(
-                'signupEmail'
-            );
-
-            localStorage.removeItem(
-                'signupPassword'
-            );
-
-            localStorage.removeItem(
-                'signupRole'
-            );
-
-
-            // ==========================================
-            // STEP 12: GO TO PROFILE PAGE
+            // GO TO PROFILE PAGE
             // ==========================================
 
             if (role.toLowerCase() === 'student') {
-
-                window.location.href =
-                    'student.html';
-
+                window.location.href = 'student.html';
             } else if (role.toLowerCase() === 'teacher') {
-
-                window.location.href =
-                    'teacher.html';
-
+                window.location.href = 'teacher.html';
             }
 
-
         } catch (error) {
-
-            console.error(
-                "API Error:",
-                error
-            );
-
-            alert(
-                'API Error: ' +
-                error.message
-            );
-
+            console.error("API Error:", error);
+            alert('API Error: ' + error.message);
         }
 
     });
