@@ -1,85 +1,250 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Password Show / Hide
-  const togglePassword = document.getElementById('togglePassword');
-  const passwordInput = document.getElementById('password');
+    // ==========================================
+    // PASSWORD SHOW / HIDE
+    // ==========================================
 
-  if (togglePassword && passwordInput) {
-    togglePassword.addEventListener('click', function () {
-      const type = passwordInput.type === 'password' ? 'text' : 'password';
+    const togglePassword =
+        document.getElementById('togglePassword');
 
-      passwordInput.type = type;
+    const passwordInput =
+        document.getElementById('password');
 
-      this.classList.toggle('fa-eye');
-      this.classList.toggle('fa-eye-slash');
+    if (togglePassword && passwordInput) {
+
+        togglePassword.addEventListener('click', function () {
+
+            const type =
+                passwordInput.type === 'password'
+                    ? 'text'
+                    : 'password';
+
+            passwordInput.type = type;
+
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+
+
+    // ==========================================
+    // ROLE SELECTION
+    // ==========================================
+
+    const roleButtons =
+        document.querySelectorAll('.role-btn');
+
+    let selectedRole = null;
+
+
+    roleButtons.forEach(button => {
+
+        button.addEventListener('click', function () {
+
+            // Remove active class from all buttons
+            roleButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active class to selected button
+            this.classList.add('active');
+
+            // Get selected role
+            selectedRole =
+                this.getAttribute('data-role');
+
+            console.log(
+                'Selected Role:',
+                selectedRole
+            );
+        });
+
     });
-  }
 
 
-  // Login Form
-  const loginForm = document.getElementById('loginForm');
+    // ==========================================
+    // LOGIN FORM
+    // ==========================================
 
-  loginForm.addEventListener('submit', async function (e) {
+    const loginForm =
+        document.getElementById('loginForm');
 
-    e.preventDefault();
 
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    loginForm.addEventListener(
+        'submit',
+        async function (e) {
 
-    if (!email || !password) {
-      alert('Please fill in all fields.');
-      return;
-    }
+            e.preventDefault();
 
-    try {
 
-      const formData = new URLSearchParams();
+            const email =
+                document.getElementById('email')
+                    .value.trim();
 
-      formData.append('username', email);
-      formData.append('password', password);
+            const password =
+                document.getElementById('password')
+                    .value;
 
-      const response = await fetch(
-        'http://127.0.0.1:8000/api/v1/login',
-        {
-          method: 'POST',
 
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
+            // ==========================================
+            // CHECK EMAIL & PASSWORD
+            // ==========================================
 
-          body: formData
+            if (!email || !password) {
+
+                alert(
+                    'Please fill in all fields.'
+                );
+
+                return;
+            }
+
+
+            // ==========================================
+            // CHECK ROLE
+            // ==========================================
+
+            if (!selectedRole) {
+
+                alert(
+                    'Please select your role.'
+                );
+
+                return;
+            }
+
+
+            try {
+
+                // ==========================================
+                // LOGIN API
+                // ==========================================
+
+                const formData =
+                    new URLSearchParams();
+
+                formData.append(
+                    'username',
+                    email
+                );
+
+                formData.append(
+                    'password',
+                    password
+                );
+
+
+                const response =
+                    await fetch(
+                        'http://127.0.0.1:8000/api/v1/login',
+                        {
+                            method: 'POST',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/x-www-form-urlencoded'
+                            },
+
+                            body: formData
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                // ==========================================
+                // LOGIN SUCCESS
+                // ==========================================
+
+                if (response.ok) {
+
+                    console.log(
+                        'Login Success:',
+                        data
+                    );
+
+
+                    // Save token
+                    localStorage.setItem(
+                        'access_token',
+                        data.access_token
+                    );
+
+                    localStorage.setItem(
+                        'token_type',
+                        data.token_type
+                    );
+
+
+                    // Save selected role
+                    localStorage.setItem(
+                        'userRole',
+                        selectedRole
+                    );
+
+
+                    console.log(
+                        'Selected role:',
+                        selectedRole
+                    );
+
+
+                    alert(
+                        'Login Successful!'
+                    );
+
+
+                    // ==========================================
+                    // REDIRECT
+                    // ==========================================
+
+                    if (selectedRole === 'student') {
+
+                        window.location.href =
+                            'student.html';
+
+                    } else if (
+                        selectedRole === 'teacher'
+                    ) {
+
+                        window.location.href =
+                            'teacher.html';
+
+                    } else if (
+                        selectedRole === 'admin'
+                    ) {
+
+                        // Jodi admin page thake
+                        window.location.href =
+                            'admin.html';
+
+                    }
+
+                } else {
+
+                    alert(
+                        data.detail ||
+                        'Invalid email or password'
+                    );
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    'Login Error:',
+                    error
+                );
+
+
+                alert(
+                    'Backend server-এর সাথে connection হচ্ছে না!'
+                );
+            }
+
         }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-
-        // Login token save
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('token_type', data.token_type);
-
-        console.log('Login Success:', data);
-
-        alert('Login Successful!');
-
-        // পরে dashboard তৈরি হলে এই line ব্যবহার করবে
-        // window.location.href = 'student-dashboard.html';
-
-      } else {
-
-        alert(data.detail || 'Invalid email or password');
-
-      }
-
-    } catch (error) {
-
-      console.error('Login Error:', error);
-
-      alert('Backend server-এর সাথে connection হচ্ছে না!');
-
-    }
-
-  });
+    );
 
 });
