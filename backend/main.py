@@ -6,6 +6,11 @@ from backend.api.routers.v1.api import api_router
 
 app = FastAPI()
 
+app.include_router(api_router)
+
+app.frontend("/", directory="frontend")
+
+# for cross-origin resource sharing
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

@@ -14,14 +14,14 @@ from backend.models import (
     MediaUpload,
     MediaUploadPresigned,
     MediaAccessPresigned,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
 
-api_router = APIRouter(prefix="/courses", tags=["Courses"])
+api_router = APIRouter(prefix="/courses", tags=["Media"])
 
 
-# for uploading course media thumbnail to s3
 @api_router.post(
     "/{id}/media/thumbnail/upload",
     status_code=status.HTTP_201_CREATED,
@@ -33,6 +33,9 @@ def upload_course_media_thumbnail(
     db_session: SessionDep,
     current_user: TeacherDep,
 ):
+    """
+    Upload a thumbnail to AWS S3 by course ID.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -49,7 +52,7 @@ def upload_course_media_thumbnail(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
         )
-    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    s3_thumbnail_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension.value}"
     existing_thumbnail = db_session.exec(
         select(Media).where(Media.category == "thumbnail").where(Media.course_id == id)
     ).first()
@@ -79,7 +82,6 @@ def upload_course_media_thumbnail(
     }
 
 
-# for uploading course media resource to s3
 @api_router.post(
     "/{id}/media/resource/upload",
     status_code=status.HTTP_201_CREATED,
@@ -91,6 +93,9 @@ def upload_course_media_resource(
     db_session: SessionDep,
     current_user: TeacherDep,
 ):
+    """
+    Upload resource (video or document) to AWS S3 by course ID.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -107,7 +112,7 @@ def upload_course_media_resource(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
         )
-    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension}"
+    s3_resource_key = f"media/{current_user.teacher.user_id}/course/{id}/{mediadata.file_name}.{mediadata.file_extension.value}"
     existing_s3_resource_key = db_session.exec(
         select(Media).where(Media.s3_key == s3_resource_key)
     ).first()
@@ -136,14 +141,19 @@ def upload_course_media_resource(
     return {"media_id": media_resource_id, "upload_url": media_resource_presigned}
 
 
-# for updating media upload status
-@api_router.post("/{course_id}/media/{id}/status")
+@api_router.post(
+    "/{course_id}/media/{id}/status",
+    response_model=GenericMessage,
+)
 def media_upload_status(
     id: uuid.UUID,
     course_id: uuid.UUID,
     db_session: SessionDep,
     current_user: TeacherDep,
 ):
+    """
+    Update media (thumbnail or resource) upload status to 'ready'.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -177,10 +187,9 @@ def media_upload_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
-    return {"status": media.status}
+    return {"detail": media.status}
 
 
-# for accessing course media thumbnail from s3
 @api_router.get(
     "/{id}/media/thumbnail/access",
     response_model=MediaAccessPresigned,
@@ -188,8 +197,10 @@ def media_upload_status(
 def access_course_media_thumbnail(
     id: uuid.UUID,
     db_session: SessionDep,
-    current_user: LoginDep,
 ):
+    """
+    Access course thumbnail from AWS S3 by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(
@@ -209,7 +220,6 @@ def access_course_media_thumbnail(
     return {"course_id": id, "stream_url": thumbnail_stream_presigned}
 
 
-# for accessing course media resource from s3
 @api_router.get(
     "/{id}/media/resource/access",
     response_model=MediaAccessPresigned,
@@ -219,6 +229,9 @@ def access_course_media_resource(
     db_session: SessionDep,
     current_user: LoginDep,
 ):
+    """
+    Access course resource (video or document) from AWS S3 by ID.
+    """
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(

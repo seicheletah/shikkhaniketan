@@ -1,6 +1,9 @@
 import razorpay
 import boto3
+import filetype
 from backend.core.config import settings
+from fastapi import UploadFile, HTTPException, status
+from botocore.exceptions import BotoCoreError, ClientError
 
 # razorpay client initialization
 razorpay_client = razorpay.Client(
@@ -38,3 +41,38 @@ def generate_stream_presigned_url(s3_key: str, expires_in: int = 600) -> str:
         },
         ExpiresIn=expires_in,
     )
+
+
+# for uploading files directly to s3
+def upload_to_s3(file: UploadFile, s3_key: str) -> dict:
+    try:
+        s3_client.upload_fileobj(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=s3_key,
+            Fileobj=file.file,
+            ExtraArgs={"ContentType": file.content_type},
+        )
+        return {"detail": "success"}
+    except (BotoCoreError, ClientError):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"file upload failed",
+        )
+
+
+# check uploaded files are correct type
+def check_valid_file(file: UploadFile, type: str):
+    head_bytes = file.file.read(261)
+    kind = filetype.guess(head_bytes)
+    if kind is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"invalid file type",
+        )
+    elif not kind.mime.startswith(f"{type}/"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"invalid file type",
+        )
+    file.file.seek(0)
+    return

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Razorpay Test Page</title>
+  <!-- 1. Load Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; }
+    input, button { width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 16px; box-sizing: border-box; }
+    button { background-color: #3399cc; color: white; border: none; font-weight: bold; cursor: pointer; }
+    #status { padding: 10px; background-color: #f4f4f4; border-radius: 4px; font-weight: bold; word-break: break-all; }
+  </style>
+</head>
+<body>
+
+  <h2>Razorpay Integration Test</h2>
+
+  <label for="courseId">Course ID (UUID):</label>
+  <input type="text" id="courseId" placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000">
+
+  <label for="token">Bearer Token (JWT without 'Bearer '):</label>
+  <input type="text" id="token" placeholder="Paste student JWT token here">
+
+  <button onclick="startCheckout()">Buy Course Now</button>
+
+  <h3>Status Log:</h3>
+  <div id="status">Waiting for input...</div>
+
+  <script>
+    // ⚠️ Update this URL if your FastAPI runs on a different port or host
+    const API_BASE_URL = "http://localhost:8000";
+
+    async function startCheckout() {
+      const courseId = document.getElementById("courseId").value.trim();
+      const token = document.getElementById("token").value.trim();
+      const statusDiv = document.getElementById("status");
+
+      if (!courseId || !token) {
+        alert("Please enter both Course ID and Bearer Token.");
+        return;
+      }
+
+      statusDiv.innerText = "⏳ 1/3 Creating order on server...";
+
+      try {
+        // STEP 1: Call FastAPI order creation endpoint
+        const checkoutRes = await fetch(`${API_BASE_URL}/courses/${courseId}/purchase`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!checkoutRes.ok) {
+          const err = await checkoutRes.json();
+          statusDiv.innerText = "❌ Step 1 Failed: " + JSON.stringify(err);
+          return;
+        }
+
+        const orderData = await checkoutRes.json();
+        statusDiv.innerText = "⏳ 2/3 Order created! Opening Razorpay modal...";
+
+        // STEP 2: Configure Razorpay modal using backend order details
+        const options = {
+          key: orderData.key_id,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: "Test Course Platform",
+          description: orderData.course_name || "Course Checkout",
+          order_id: orderData.id,
+
+          // STEP 3: Callback triggered after successful payment in modal
+          handler: async function (paymentResponse) {
+            statusDiv.innerText = "⏳ 3/3 Payment successful in modal! Verifying signature on server...";
+            await verifyPayment(paymentResponse, courseId, token);
+          },
+
+          theme: { color: "#3399cc" }
+        };
+
+        // STEP 4: Instantiate and open modal
+        const rzp = new Razorpay(options);
+
+        rzp.on("payment.failed", function (response) {
+          statusDiv.innerText = "❌ Payment Failed: " + response.error.description;
+        });
+
+        rzp.open();
+
+      } catch (error) {
+        statusDiv.innerText = "❌ Network Error: " + error.message;
+      }
+    }
+
+    // STEP 5: Send payment signature back to FastAPI backend
+    async function verifyPayment(paymentResponse, courseId, token) {
+      const statusDiv = document.getElementById("status");
+
+      try {
+        const verifyRes = await fetch(`${API_BASE_URL}/courses/verify-payment`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            course_id: courseId
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyRes.ok) {
+          statusDiv.innerText = "✅ SUCCESS! Enrollment Granted: " + JSON.stringify(verifyData);
+        } else {
+          statusDiv.innerText = "❌ Verification Failed: " + JSON.stringify(verifyData);
+        }
+      } catch (error) {
+        statusDiv.innerText = "❌ Verification Network Error: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

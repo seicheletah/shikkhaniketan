@@ -18,7 +18,7 @@ password_hash = PasswordHash.recommended()
 DUMMY_HASH = password_hash.hash("dummypassword")
 
 # checks request header for token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/login")
 
 
 # create a hashed password
@@ -137,7 +137,7 @@ def authenticate_user(
     access_token = create_access_token(
         data={"sub": logindata.username, "role": data.role, "id": str(data.id)}
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer", role=data.role)
 
 
 # for reducing code repetition

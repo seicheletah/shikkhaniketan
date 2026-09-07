@@ -15,10 +15,16 @@ from datetime import datetime, date
 from enum import Enum
 
 
+# generic message model
+class GenericMessage(SQLModel):
+    detail: str
+
+
 # access token generation model
 class Token(SQLModel):
     access_token: str
     token_type: str
+    role: str
 
 
 # token data valdation model
@@ -51,7 +57,7 @@ class User(UserBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
-    hashed_password: str = Field(unique=True)
+    hashed_password: str
     student: Student = Relationship(back_populates="user")
     teacher: Teacher = Relationship(back_populates="user")
 
@@ -74,6 +80,12 @@ class UserCreate(SQLModel):
 class UserUpdate(SQLModel):
     email_id: EmailStr | None = None
     hashed_password: str | None = None
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # user response model for response body
@@ -120,11 +132,11 @@ class StudentBase(SQLModel):
     date_of_birth: date
     address: str
     about: str
-    profile_photo: str
 
 
 # student table model
 class Student(StudentBase, table=True):
+    profile_pic: str = Field(nullable=True)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -159,11 +171,17 @@ class StudentUpdate(SQLModel):
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
-    profile_photo: str | None = None
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # student response model for response body
 class StudentResponse(StudentBase):
+    profile_pic: str | None = None
     user: UserResponse
     course: list[CoursePublicResponse] = []
 
@@ -177,11 +195,11 @@ class TeacherBase(SQLModel):
     date_of_birth: date
     address: str
     about: str
-    profile_photo: str
 
 
 # teacher table model
 class Teacher(TeacherBase, table=True):
+    profile_pic: str = Field(nullable=True)
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
@@ -214,11 +232,17 @@ class TeacherUpdate(SQLModel):
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
-    profile_photo: str | None = None
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # teacher response model for response body
 class TeacherResponse(TeacherBase):
+    profile_pic: str | None = None
     user: UserResponse
 
 
@@ -227,7 +251,7 @@ class TeacherPublicResponse(SQLModel):
     first_name: str
     last_name: str
     about: str
-    profile_photo: str
+    profile_pic: str | None = None
     user: UserPublicResponse
 
 
@@ -279,6 +303,12 @@ class CourseUpdate(SQLModel):
     course_paid: bool | None = None
     course_price: int | None = Field(default=None, ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # course response model for response body
@@ -466,6 +496,12 @@ class ReviewCreate(ReviewBase):
 class ReviewUpdate(SQLModel):
     comment: str | None = None
     rate: int | None = Field(default=None, ge=1, le=5)
+
+    @model_validator(mode="after")
+    def check_empty_payload(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        return self
 
 
 # review response model for response body

@@ -1,5 +1,5 @@
 import uuid
-from fastapi import status, HTTPException, APIRouter, Response
+from fastapi import status, HTTPException, APIRouter, Response, UploadFile
 from backend.core.database import SessionDep
 from backend.core.security import TeacherDep, AdminDep, LoginDep
 from backend.models import (
@@ -11,20 +11,25 @@ from backend.models import (
     CourseResponse,
     CoursePublicResponse,
     CourseUpdate,
+    GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
+from backend.utils import upload_to_s3, check_valid_file
+from backend.core.config import settings
 
 api_router = APIRouter(prefix="/teachers", tags=["Teachers"])
 
 
-# create teacher
 @api_router.post(
     "/", status_code=status.HTTP_201_CREATED, response_model=TeacherResponse
 )
 def create_teacher(
     userdata: TeacherCreate, db_session: SessionDep, current_user: TeacherDep
 ):
+    """
+    Create teacher.
+    """
     if current_user.id is not None:
         teacher = db_session.exec(
             select(Teacher).where(Teacher.user_id == current_user.id)
@@ -61,9 +66,49 @@ def create_teacher(
         )
 
 
-# get self
+@api_router.post(
+    "/profile-pic/upload",
+    status_code=status.HTTP_201_CREATED,
+    response_model=GenericMessage,
+)
+def upload_profile_pic(
+    file: UploadFile,
+    db_session: SessionDep,
+    current_user: TeacherDep,
+):
+    """
+    Upload profile pic.
+    """
+    teacher = db_session.exec(
+        select(Teacher).where(Teacher.user_id == current_user.id)
+    ).first()
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
+        )
+    check_valid_file(file, "image")
+    unique_id = uuid.uuid4().hex[:8]
+    s3_profile_pic_key = f"profile_pic/{unique_id}_{file.filename}"
+    public_url = f"https://{settings.CLOUDFRONT_DOMAIN_NAME}/{s3_profile_pic_key}"
+    upload_response = upload_to_s3(file, s3_profile_pic_key)
+    try:
+        teacher.profile_pic = public_url
+        db_session.add(teacher)
+        db_session.commit()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+    return upload_response
+
+
 @api_router.get("/me", response_model=TeacherResponse)
 def get_self(db_session: SessionDep, current_user: TeacherDep):
+    """
+    Get own teacher details.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -74,11 +119,13 @@ def get_self(db_session: SessionDep, current_user: TeacherDep):
     return teacher
 
 
-# update self
 @api_router.patch("/me", response_model=TeacherResponse)
 def update_self(
     userdata: TeacherUpdate, db_session: SessionDep, current_user: TeacherDep
 ):
+    """
+    Update self teacher details.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -109,9 +156,11 @@ def update_self(
         )
 
 
-# get all self courses
 @api_router.get("/me/courses", response_model=list[CourseResponse])
 def get_self_course(db_session: SessionDep, current_user: TeacherDep):
+    """
+    Get all own course details.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -125,9 +174,11 @@ def get_self_course(db_session: SessionDep, current_user: TeacherDep):
     return course
 
 
-# get all courses of specific teachers
 @api_router.get("/{id}/courses", response_model=list[CoursePublicResponse])
 def get_teacher_course(id: uuid.UUID, db_session: SessionDep, current_user: LoginDep):
+    """
+    Get all courses added by specific teachers by ID.
+    """
     teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
     if not teacher:
         raise HTTPException(
@@ -139,11 +190,16 @@ def get_teacher_course(id: uuid.UUID, db_session: SessionDep, current_user: Logi
     return course
 
 
-# update self course
 @api_router.patch("/me/courses/{id}", response_model=CourseResponse)
 def update_self_course(
-    id: uuid.UUID, coursedata: CourseUpdate, db_session: SessionDep, current_user: TeacherDep
+    id: uuid.UUID,
+    coursedata: CourseUpdate,
+    db_session: SessionDep,
+    current_user: TeacherDep,
 ):
+    """
+    Update own course details added by course ID.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -174,9 +230,11 @@ def update_self_course(
         )
 
 
-# delete self course
 @api_router.delete("/me/courses/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_self_course(id: uuid.UUID, db_session: SessionDep, current_user: TeacherDep):
+    """
+    Delete own course by ID.
+    """
     teacher = db_session.exec(
         select(Teacher).where(Teacher.user_id == current_user.id)
     ).first()
@@ -198,15 +256,19 @@ def delete_self_course(id: uuid.UUID, db_session: SessionDep, current_user: Teac
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# get all teachers (admin access)
 @api_router.get("/", response_model=list[TeacherResponse])
 def get_teachers(current_user: AdminDep, db_session: SessionDep):
+    """
+    Get all teachers details (admin access).
+    """
     return db_session.exec(select(Teacher)).all()
 
 
-# get single teacher with id (admin access)
 @api_router.get("/{id}", response_model=TeacherResponse)
 def get_teacher(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
+    """
+    Get single teacher details by ID (admin access).
+    """
     teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
     if not teacher:
         raise HTTPException(
@@ -216,11 +278,16 @@ def get_teacher(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
     return teacher
 
 
-# update teacher (admin access)
 @api_router.patch("/{id}", response_model=TeacherResponse)
 def update_teacher(
-    id: uuid.UUID, teacherdata: TeacherUpdate, db_session: SessionDep, current_user: AdminDep
+    id: uuid.UUID,
+    teacherdata: TeacherUpdate,
+    db_session: SessionDep,
+    current_user: AdminDep,
 ):
+    """
+    Update a specific teacher details by ID (admin access).
+    """
     teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
     if not teacher:
         raise HTTPException(
