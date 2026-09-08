@@ -1,4 +1,4 @@
-console.log("🔥 STUDENT JS LOADED - FINAL VERSION");
+console.log("🔥 STUDENT JS LOADED - FIXED VERSION");
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -219,11 +219,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
 
-                // Header profile picture
+                // 1. Update Top Welcome Header Name & About
+                updateWelcomeHeader(data);
+
+                // 2. Header profile picture
                 displayStudentProfilePicture(data);
 
-
-                // Profile page
+                // 3. Profile page contents
                 displayStudentProfile(data);
 
 
@@ -293,15 +295,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ==============================
+    // UPDATE WELCOME HEADER (FIXED)
+    // ==============================
+
+    function updateWelcomeHeader(data) {
+
+        const firstName = data.first_name || "";
+        const lastName = data.last_name || "";
+
+        // Welcome Name Update
+        const welcomeNameElement =
+            document.getElementById("studentWelcomeName");
+
+        if (welcomeNameElement) {
+            if (firstName || lastName) {
+                welcomeNameElement.textContent = `Welcome, ${firstName} ${lastName}`.trim();
+            } else {
+                welcomeNameElement.textContent = "Welcome";
+            }
+        }
+
+        // Welcome About Update
+        const welcomeAboutElement =
+            document.getElementById("studentWelcomeAbout");
+
+        if (welcomeAboutElement) {
+            welcomeAboutElement.textContent = data.about || "";
+        }
+
+    }
+
+
+    // ==============================
     // DISPLAY HEADER PROFILE PICTURE
     // ==============================
 
     function displayStudentProfilePicture(data) {
 
         const profileImage =
-            document.getElementById(
-                "studentProfileImg"
-            );
+            document.getElementById("studentProfileImg");
 
 
         if (!profileImage) {
@@ -326,8 +358,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (profilePic) {
 
-            profileImage.src =
-                profilePic;
+            let photoUrl = profilePic;
+
+            if (
+                !profilePic.startsWith("http://") &&
+                !profilePic.startsWith("https://")
+            ) {
+                photoUrl = `${API_BASE_URL}${profilePic.startsWith("/") ? "" : "/"}${profilePic}`;
+            }
+
+            profileImage.src = photoUrl;
 
         }
 
@@ -339,10 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        // ==============================
-        // IMAGE ERROR
-        // ==============================
-
+        // Image Error Fallback
         profileImage.onerror = () => {
 
             console.error(
@@ -353,19 +390,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             profileImage.src =
                 DEFAULT_PROFILE_IMAGE;
-
-        };
-
-
-        // ==============================
-        // IMAGE SUCCESS
-        // ==============================
-
-        profileImage.onload = () => {
-
-            console.log(
-                "Student profile picture loaded successfully."
-            );
 
         };
 
@@ -392,57 +416,35 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        // ==============================
-        // BASIC INFORMATION
-        // ==============================
-
-        const firstName =
-            data.first_name || "";
-
-        const lastName =
-            data.last_name || "";
-
-        const email =
-            data.user?.email_id || "";
-
-        const userId =
-            data.user?.id || "Not available";
-
-        const phone =
-            data.phone_no || "Not provided";
-
-        const gender =
-            data.gender || "Not provided";
-
-        const dateOfBirth =
-            data.date_of_birth || "Not provided";
-
-        const address =
-            data.address || "Not provided";
-
-        const about =
-            data.about || "Not provided";
+        // Basic Info
+        const firstName = data.first_name || "";
+        const lastName = data.last_name || "";
+        const email = data.user?.email_id || "";
+        const userId = data.user?.id || "Not available";
+        const phone = data.phone_no || "Not provided";
+        const gender = data.gender || "Not provided";
+        const dateOfBirth = data.date_of_birth || "Not provided";
+        const address = data.address || "Not provided";
+        const about = data.about || "Not provided";
 
 
-        // ==============================
-        // PROFILE PICTURE
-        // ==============================
+        // Profile Picture URL
+        const profilePic = data.profile_pic;
+        let profileImageUrl = DEFAULT_PROFILE_IMAGE;
 
-        const profilePic =
-            data.profile_pic ||
-            DEFAULT_PROFILE_IMAGE;
+        if (profilePic) {
+            if (
+                profilePic.startsWith("http://") ||
+                profilePic.startsWith("https://")
+            ) {
+                profileImageUrl = profilePic;
+            } else {
+                profileImageUrl = `${API_BASE_URL}${profilePic.startsWith("/") ? "" : "/"}${profilePic}`;
+            }
+        }
 
 
-        console.log(
-            "Profile Page Image URL:",
-            profilePic
-        );
-
-
-        // ==============================
-        // PROFILE HTML
-        // ==============================
-
+        // Render Profile Card HTML
         profileSection.innerHTML = `
 
             <div class="profile-card">
@@ -450,20 +452,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="profile-header">
 
                     <img
-                        src="${profilePic}"
+                        src="${profileImageUrl}"
                         alt="Student Profile"
                         class="profile-page-image"
                     >
 
                     <div class="profile-title">
 
-                        <h2>
-                            Student Profile
-                        </h2>
+                        <h2>Student Profile</h2>
 
-                        <p>
-                            ${firstName} ${lastName}
-                        </p>
+                        <p>${firstName} ${lastName}</p>
 
                     </div>
 
@@ -528,64 +526,28 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
 
-        // ==============================
-        // PROFILE PAGE IMAGE
-        // ==============================
-
+        // Image Error Handler
         const profilePageImage =
-            profileSection.querySelector(
-                ".profile-page-image"
-            );
-
+            profileSection.querySelector(".profile-page-image");
 
         if (profilePageImage) {
 
             profilePageImage.onerror = () => {
-
-                console.error(
-                    "Profile page image failed to load:",
-                    profilePageImage.src
-                );
-
-
-                profilePageImage.src =
-                    DEFAULT_PROFILE_IMAGE;
-
-            };
-
-
-            profilePageImage.onload = () => {
-
-                console.log(
-                    "Profile page image loaded successfully."
-                );
-
+                profilePageImage.src = DEFAULT_PROFILE_IMAGE;
             };
 
         }
 
 
-        // ==============================
-        // UPDATE PROFILE BUTTON
-        // ==============================
-
+        // Update Profile Button Click Event
         const updateProfileBtn =
-            document.getElementById(
-                "studentUpdateProfileBtn"
-            );
-
+            document.getElementById("studentUpdateProfileBtn");
 
         if (updateProfileBtn) {
 
-            updateProfileBtn.addEventListener(
-                "click",
-                () => {
-
-                    window.location.href =
-                        "update_profile.html";
-
-                }
-            );
+            updateProfileBtn.addEventListener("click", () => {
+                window.location.href = "update_profile.html";
+            });
 
         }
 
@@ -598,22 +560,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function logout() {
 
-        localStorage.removeItem(
-            "access_token"
-        );
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("token_type");
 
-        localStorage.removeItem(
-            "token_type"
-        );
+        alert("Logged out successfully!");
 
-
-        alert(
-            "Logged out successfully!"
-        );
-
-
-        window.location.href =
-            "login.html";
+        window.location.href = "login.html";
 
     }
 
@@ -622,29 +574,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // LOAD PROFILE ON PAGE LOAD
     // ==============================
 
-    const token =
-        localStorage.getItem(
-            "access_token"
-        );
-
+    const token = localStorage.getItem("access_token");
 
     if (token) {
-
-        console.log(
-            "Student page: Access token found."
-        );
-
-
+        console.log("Student page: Access token found.");
         getStudentProfile();
-
-    }
-
-    else {
-
-        console.warn(
-            "Student page: No access token found."
-        );
-
+    } else {
+        console.warn("Student page: No access token found.");
     }
 
 });

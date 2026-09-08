@@ -164,15 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let genderValue = genderSelect.value;
 
             if (genderValue === 'male') {
-                genderValue = 'm';
+                genderValue = 'Male';
             }
 
             if (genderValue === 'female') {
-                genderValue = 'f';
+                genderValue = 'Female';
             }
 
             if (genderValue === 'other') {
-                genderValue = 'o';
+                genderValue = 'Others';
             }
 
             // ==========================================
