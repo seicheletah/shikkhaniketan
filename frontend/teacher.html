@@ -5,87 +5,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Teacher Corner - Shikkhaniketan</title>
+    <title>Teacher Dashboard - SkillHub</title>
 
-    <!-- CSS Link -->
+    <!-- CSS -->
     <link rel="stylesheet" href="teacher.css">
 
-    <!-- FontAwesome for Icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+</head>
 
 <body>
 
     <div class="dashboard-container">
 
-        <!-- ==========================================
-             MOBILE SIDEBAR OVERLAY
-        =========================================== -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+        <!-- ================= SIDEBAR ================= -->
 
-        <!-- ==========================================
-             LEFT SIDEBAR
-        =========================================== -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar">
+
+            <!-- BRAND -->
 
             <div class="brand">
 
-                <i class="fa-solid fa-book-open brand-icon"></i>
+                <div class="brand-logo-box">
 
-                <h2>Shikkhaniketan</h2>
+                    <i class="fa-solid fa-graduation-cap"></i>
+
+                </div>
+
+                <h2 class="brand-name">
+                    SkillHub
+                </h2>
 
             </div>
 
 
+            <!-- NAVIGATION -->
+
             <nav class="nav-menu">
 
-                <!-- Dashboard -->
                 <a href="#"
                    class="nav-item active"
-                   data-page="dashboard">
+                   data-page="courses">
 
-                    <i class="fa-solid fa-house"></i>
-
-                    <span>Dashboard</span>
+                    <span>
+                        Courses
+                    </span>
 
                 </a>
 
 
-                <!-- My Courses -->
                 <a href="#"
                    class="nav-item"
-                   data-page="my-courses">
+                   data-page="settings">
 
-                    <i class="fa-solid fa-graduation-cap"></i>
-
-                    <span>My Courses</span>
-
-                </a>
-
-
-                <!-- Profile -->
-                <a href="#"
-                   class="nav-item"
-                   data-page="profile">
-
-                    <i class="fa-solid fa-user"></i>
-
-                    <span>Profile</span>
+                    <span>
+                        Settings
+                    </span>
 
                 </a>
 
 
-                <!-- Logout -->
                 <a href="#"
                    class="nav-item logout"
                    data-page="logout">
 
-                    <i class="fa-solid fa-right-from-bracket"></i>
-
-                    <span>Logout</span>
+                    <span>
+                        Logout
+                    </span>
 
                 </a>
 
@@ -95,118 +88,123 @@
 
 
 
-        <!-- ==========================================
-             MAIN CONTENT
-        =========================================== -->
-        <main class="main-content" id="mainContentArea">
+        <!-- ================= MAIN CONTENT ================= -->
+
+        <main class="main-content">
 
 
-            <!-- ==========================================
-                 TOP HEADER
-            =========================================== -->
-            <header class="top-header">
+            <!-- ================= TOP BAR ================= -->
 
+            <div class="top-bar">
 
-                <!-- Mobile Menu Button -->
-                <button class="mobile-toggle-btn" id="menuToggle">
+                <div class="search-box">
 
-                    <i class="fa-solid fa-bars"></i>
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-                </button>
-
-
-
-                <!-- Teacher Welcome -->
-                <div class="user-welcome">
-
-                    <h1 id="teacherWelcomeName">
-                        Welcome
-                    </h1>
-
-                    <p id="teacherWelcomeAbout"></p>
+                    <input
+                        type="text"
+                        placeholder="Search your courses...">
 
                 </div>
 
 
+                <div class="top-bar-right">
 
-                <!-- Header Actions -->
-                <div class="header-actions">
-
-
-                    <!-- Search -->
-                    <div class="search-box">
-
-                        <i class="fa-solid fa-magnifying-glass"></i>
-
-                        <input
-                            type="text"
-                            id="globalSearchInput"
-                            placeholder="Search courses, notes, quizzes..."
-                            onkeyup="handleGlobalSearch()"
-                        >
-
-                    </div>
-
-
-
-                    <!-- Notification -->
-                    <button class="icon-btn">
-
-                        <i class="fa-regular fa-bell"></i>
-
-                    </button>
-
-
-
-                    <!-- ==================================
-                         TEACHER PROFILE IMAGE
-                    =================================== -->
-                    <div class="profile-avatar">
+                    <div class="user-profile">
 
                         <img
                             id="teacherProfileImg"
-                            src="https://i.pravatar.cc/100?img=12"
-                            alt="Teacher Profile"
-                        >
+                            src="https://i.pravatar.cc/150?img=47"
+                            alt="Teacher Profile">
+
+                        <span
+                            class="user-name"
+                            id="teacherUserName">
+
+                            Teacher
+
+                        </span>
 
                     </div>
-
 
                 </div>
 
-            </header>
+            </div>
 
 
 
-            <!-- ==========================================
-                 PAGE CONTENT
-            =========================================== -->
+            <!-- ================= CONTENT BODY ================= -->
+
             <div class="content-body">
 
 
-                <!-- ======================================
-                     1. DASHBOARD
-                ======================================= -->
+                <!-- ================= COURSES ================= -->
+
                 <section
                     class="page-section active"
-                    id="dashboard"
-                >
+                    id="courses">
 
 
-                    <!-- Stats -->
+                    <!-- ANALYTICS HEADER -->
+
+                    <div class="analytics-header">
+
+                        <div class="header-left">
+
+                            <h2>
+                                Analytics
+                            </h2>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="btn-publish">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Publish New Course
+
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- ================= STATS ================= -->
+
                     <div class="stats-grid">
 
 
-                        <!-- Enrolled Courses -->
-                        <div class="stat-card blue">
+                        <!-- CARD 1 -->
 
-                            <i class="fa-solid fa-book-bookmark icon"></i>
+                        <div class="stat-card">
 
-                            <div>
+                            <div class="stat-icon">
 
-                                <p>Enrolled Courses</p>
+                                <i class="fa-solid fa-users"></i>
 
-                                <h3>6</h3>
+                            </div>
+
+
+                            <div class="stat-details">
+
+                                <span class="stat-label">
+                                    Total Purchased
+                                </span>
+
+                                <h3 class="stat-value">
+                                    1,248
+                                </h3>
+
+                                <span class="stat-meta positive">
+
+                                    <i class="fa-solid fa-arrow-up"></i>
+
+                                    +12% this month
+
+                                </span>
 
                             </div>
 
@@ -214,16 +212,40 @@
 
 
 
-                        <!-- Completed Courses -->
-                        <div class="stat-card green">
+                        <!-- CARD 2 -->
 
-                            <i class="fa-solid fa-circle-check icon"></i>
+                        <div class="stat-card">
 
-                            <div>
+                            <div class="stat-icon star">
 
-                                <p>Completed Courses</p>
+                                <i class="fa-solid fa-star"></i>
 
-                                <h3>2</h3>
+                            </div>
+
+
+                            <div class="stat-details">
+
+                                <span class="stat-label">
+                                    Total Rating Reviews
+                                </span>
+
+                                <h3 class="stat-value">
+
+                                    4.8
+
+                                    <span class="sub-text">
+                                        (342 reviews)
+                                    </span>
+
+                                </h3>
+
+                                <span class="stat-meta positive">
+
+                                    <i class="fa-solid fa-arrow-up"></i>
+
+                                    98% positive
+
+                                </span>
 
                             </div>
 
@@ -231,304 +253,267 @@
 
 
 
-                        <!-- Certificates -->
-                        <div class="stat-card orange">
+                        <!-- CARD 3 -->
 
-                            <i class="fa-solid fa-award icon"></i>
+                        <div class="stat-card">
 
-                            <div>
+                            <div class="stat-icon wallet">
 
-                                <p>Certificates</p>
-
-                                <h3>3</h3>
+                                <i class="fa-solid fa-wallet"></i>
 
                             </div>
 
-                        </div>
 
+                            <div class="stat-details">
 
-                    </div>
+                                <span class="stat-label">
+                                    Total Earnings
+                                </span>
 
+                                <h3 class="stat-value">
+                                    ₹84,500
+                                </h3>
 
+                                <span class="stat-meta positive">
 
-                    <!-- Continue Learning -->
-                    <div class="section-header">
+                                    <i class="fa-solid fa-arrow-up"></i>
 
-                        <h2>Continue Learning</h2>
+                                    +18% increase
 
-                        <a href="#" class="view-all">
-                            View All
-                        </a>
-
-                    </div>
-
-
-
-                    <div class="course-grid">
-
-
-                        <!-- Course 1 -->
-                        <div class="course-card">
-
-                            <div class="course-icon html">
-
-                                <i class="fa-brands fa-html5"></i>
+                                </span>
 
                             </div>
-
-                            <h4>
-                                HTML & CSS Fundamentals
-                            </h4>
-
-                            <p class="progress-text">
-                                60% Complete
-                            </p>
-
-                            <div class="progress-bar">
-
-                                <div
-                                    class="progress"
-                                    style="width: 60%;">
-                                </div>
-
-                            </div>
-
-                            <button class="btn-action">
-                                Continue
-                            </button>
-
-                        </div>
-
-
-
-                        <!-- Course 2 -->
-                        <div class="course-card">
-
-                            <div class="course-icon js">
-
-                                <i class="fa-brands fa-js"></i>
-
-                            </div>
-
-                            <h4>
-                                JavaScript Basics
-                            </h4>
-
-                            <p class="progress-text">
-                                40% Complete
-                            </p>
-
-                            <div class="progress-bar">
-
-                                <div
-                                    class="progress"
-                                    style="width: 40%;">
-                                </div>
-
-                            </div>
-
-                            <button class="btn-action">
-                                Continue
-                            </button>
-
-                        </div>
-
-
-
-                        <!-- Course 3 -->
-                        <div class="course-card">
-
-                            <div class="course-icon react">
-
-                                <i class="fa-brands fa-react"></i>
-
-                            </div>
-
-                            <h4>
-                                React JS Crash Course
-                            </h4>
-
-                            <p class="progress-text">
-                                25% Complete
-                            </p>
-
-                            <div class="progress-bar">
-
-                                <div
-                                    class="progress"
-                                    style="width: 25%;">
-                                </div>
-
-                            </div>
-
-                            <button class="btn-action">
-                                Continue
-                            </button>
-
-                        </div>
-
-
-
-                        <!-- Course 4 -->
-                        <div class="course-card">
-
-                            <div class="course-icon python">
-
-                                <i class="fa-brands fa-python"></i>
-
-                            </div>
-
-                            <h4>
-                                Python For Beginners
-                            </h4>
-
-                            <p class="progress-text">
-                                75% Complete
-                            </p>
-
-                            <div class="progress-bar">
-
-                                <div
-                                    class="progress"
-                                    style="width: 75%;">
-                                </div>
-
-                            </div>
-
-                            <button class="btn-action">
-                                Continue
-                            </button>
 
                         </div>
 
 
                     </div>
 
+
+
+                    <!-- ================= PUBLISHED COURSES ================= -->
+
+                    <div class="published-courses-wrapper">
+
+
+                        <div class="section-title">
+
+                            <h3>
+                                Published Courses
+                            </h3>
+
+                        </div>
+
+
+
+                        <div class="instructor-course-list">
+
+
+                            <!-- COURSE 1 -->
+
+                            <div class="instructor-course-card">
+
+
+                                <div class="course-info">
+
+                                    <div class="course-icon-box">
+
+                                        <i class="fa-brands fa-html5"></i>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <h4>
+                                            HTML & CSS Fundamentals
+                                        </h4>
+
+                                        <p>
+                                            Created on Aug 12, 2026
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <div class="course-metrics">
+
+                                    <div class="metric">
+
+                                        <span>
+                                            Purchases
+                                        </span>
+
+                                        <strong>
+                                            520
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div class="metric">
+
+                                        <span>
+                                            Rating
+                                        </span>
+
+                                        <strong>
+                                            4.9 ★
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <div class="course-actions">
+
+                                    <button
+                                        type="button"
+                                        class="btn-action">
+
+                                        Edit Course
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- COURSE 2 -->
+
+                            <div class="instructor-course-card">
+
+
+                                <div class="course-info">
+
+                                    <div class="course-icon-box">
+
+                                        <i class="fa-brands fa-js"></i>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <h4>
+                                            Modern JavaScript ES6+
+                                        </h4>
+
+                                        <p>
+                                            Created on Jul 25, 2026
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <div class="course-metrics">
+
+                                    <div class="metric">
+
+                                        <span>
+                                            Purchases
+                                        </span>
+
+                                        <strong>
+                                            410
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div class="metric">
+
+                                        <span>
+                                            Rating
+                                        </span>
+
+                                        <strong>
+                                            4.7 ★
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <div class="course-actions">
+
+                                    <button
+                                        type="button"
+                                        class="btn-action">
+
+                                        Edit Course
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
                 </section>
 
 
 
-                <!-- ======================================
-                     2. MY COURSES
-                ======================================= -->
+                <!-- ================= SETTINGS ================= -->
+
                 <section
                     class="page-section"
-                    id="my-courses"
-                >
-
-                    <h2>
-                        My Courses
-                    </h2>
-
-                    <p>
-                        Here you will see all your courses.
-                    </p>
-
-                </section>
+                    id="settings">
 
 
+                    <div class="section-title-wrapper">
 
-                <!-- ======================================
-                     3. CERTIFICATES
-                ======================================= -->
-                <section
-                    class="page-section"
-                    id="certificates"
-                >
+                        <h2>
+                            Settings
+                        </h2>
 
-                    <h2>
-                        My Certificates
-                    </h2>
+                        <p>
+                            Manage your instructor profile, payout options, and preferences.
+                        </p>
 
-                    <p>
-                        Your earned certificates will appear here.
-                    </p>
+                    </div>
 
-                </section>
-
-
-
-                <!-- ======================================
-                     4. QUIZZES
-                ======================================= -->
-                <section
-                    class="page-section"
-                    id="quizzes"
-                >
-
-                    <h2>
-                        Quizzes
-                    </h2>
-
-                </section>
-
-
-
-                <!-- ======================================
-                     5. WISHLIST
-                ======================================= -->
-                <section
-                    class="page-section"
-                    id="wishlist"
-                >
-
-                    <h2>
-                        Wishlist
-                    </h2>
-
-                </section>
-
-
-
-                <!-- ======================================
-                     6. NOTES
-                ======================================= -->
-                <section
-                    class="page-section"
-                    id="notes"
-                >
-
-                    <h2>
-                        Notes
-                    </h2>
-
-                </section>
-
-
-
-                <!-- ======================================
-                     7. TEACHER PROFILE
-                ======================================= -->
-                <section
-                    class="page-section"
-                    id="profile"
-                >
-
-                    <h2>
-                        Teacher Profile
-                    </h2>
 
                     <!--
-                        teacher.js এখানেই
-                        teacher profile information
-                        এবং profile picture
-                        automatically show করবে।
+                        Teacher.js will load account details
+                        from /api/v1/teachers/me
                     -->
+
+                    <div id="accountDetails"></div>
+
 
                 </section>
 
 
             </div>
 
+
         </main>
+
 
     </div>
 
 
 
-    <!-- ==========================================
-         JAVASCRIPT
-    =========================================== -->
+    <!-- ================= JAVASCRIPT ================= -->
+
     <script src="teacher.js"></script>
 
 </body>

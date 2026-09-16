@@ -1,199 +1,109 @@
-console.log("🔥 STUDENT JS LOADED - FINAL VERSION");
+document.addEventListener("DOMContentLoaded", function () {
 
-document.addEventListener("DOMContentLoaded", () => {
+    const API_URL = "http://127.0.0.1:8000/api/v1/students/me";
 
-    // ==============================
-    // API CONFIGURATION
-    // ==============================
-
-    const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
-
-    const DEFAULT_PROFILE_IMAGE =
-        "https://i.pravatar.cc/150?img=32";
-
-
-    // ==============================
-    // PAGE NAVIGATION
-    // ==============================
+    const token = localStorage.getItem("access_token");
 
     const navItems = document.querySelectorAll(".nav-item");
-    const pageSections = document.querySelectorAll(".page-section");
+    const sections = document.querySelectorAll(".page-section");
 
-    navItems.forEach((item) => {
+    const profileImage = document.getElementById("studentProfileImg");
+    const userName = document.getElementById("studentUserName");
 
-        item.addEventListener("click", (event) => {
+    const accountDetails = document.getElementById("accountDetails");
+
+
+    // =========================================
+    // LOGIN CHECK
+    // =========================================
+
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+
+    // =========================================
+    // SIDEBAR NAVIGATION
+    // =========================================
+
+    navItems.forEach(function (item) {
+
+        item.addEventListener("click", function (event) {
 
             event.preventDefault();
 
-            const targetPage = item.getAttribute("data-page");
-
-            if (!targetPage) {
-                return;
-            }
+            const page = item.getAttribute("data-page");
 
 
-            // ==============================
+            // =================================
             // LOGOUT
-            // ==============================
+            // =================================
 
-            if (targetPage === "logout") {
+            if (page === "logout") {
                 logout();
                 return;
             }
 
 
-            // ==============================
-            // REMOVE ACTIVE FROM NAV
-            // ==============================
+            // =================================
+            // REMOVE ACTIVE CLASS
+            // =================================
 
-            navItems.forEach((nav) => {
+            navItems.forEach(function (nav) {
                 nav.classList.remove("active");
             });
 
-
-            // ==============================
-            // HIDE ALL SECTIONS
-            // ==============================
-
-            pageSections.forEach((section) => {
+            sections.forEach(function (section) {
                 section.classList.remove("active");
             });
 
 
-            // ==============================
-            // ACTIVE NAV ITEM
-            // ==============================
+            // =================================
+            // ADD ACTIVE CLASS
+            // =================================
 
             item.classList.add("active");
 
+            const selectedSection =
+                document.getElementById(page);
 
-            // ==============================
-            // SHOW SELECTED SECTION
-            // ==============================
-
-            const targetSection =
-                document.getElementById(targetPage);
-
-            if (targetSection) {
-                targetSection.classList.add("active");
+            if (selectedSection) {
+                selectedSection.classList.add("active");
             }
 
 
-            // ==============================
-            // LOAD PROFILE
-            // ==============================
+            // =================================
+            // SETTINGS
+            // =================================
 
-            if (targetPage === "profile") {
-                getStudentProfile();
+            if (page === "settings") {
+                loadStudentProfile();
             }
-
-
-            closeMobileSidebar();
 
         });
 
     });
 
 
-    // ==============================
-    // MOBILE SIDEBAR
-    // ==============================
+    // =========================================
+    // LOAD STUDENT PROFILE
+    // =========================================
 
-    const menuToggle =
-        document.getElementById("menuToggle");
-
-    const sidebar =
-        document.getElementById("sidebar");
-
-    const sidebarOverlay =
-        document.getElementById("sidebarOverlay");
-
-
-    if (menuToggle) {
-
-        menuToggle.addEventListener("click", () => {
-
-            if (sidebar) {
-                sidebar.classList.toggle("open");
-            }
-
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.toggle("active");
-            }
-
-        });
-
-    }
-
-
-    if (sidebarOverlay) {
-
-        sidebarOverlay.addEventListener(
-            "click",
-            closeMobileSidebar
-        );
-
-    }
-
-
-    function closeMobileSidebar() {
-
-        if (sidebar) {
-            sidebar.classList.remove("open");
-        }
-
-        if (sidebarOverlay) {
-            sidebarOverlay.classList.remove("active");
-        }
-
-    }
-
-
-    // ==============================
-    // GET STUDENT PROFILE
-    // GET /students/me
-    // ==============================
-
-    async function getStudentProfile() {
-
-        const token =
-            localStorage.getItem("access_token");
-
-
-        // ==============================
-        // TOKEN CHECK
-        // ==============================
-
-        if (!token) {
-
-            alert("Please login first.");
-
-            window.location.href = "login.html";
-
-            return;
-        }
-
+    async function loadStudentProfile() {
 
         try {
 
             console.log("Calling Student API...");
 
 
-            const response = await fetch(
-                `${API_BASE_URL}/students/me`,
-                {
-                    method: "GET",
-
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Accept": "application/json"
-                    }
+            const response = await fetch(API_URL, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Accept": "application/json"
                 }
-            );
-
-
-            const data =
-                await response.json();
+            });
 
 
             console.log(
@@ -202,89 +112,166 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
 
+            // =================================
+            // TOKEN EXPIRED / UNAUTHORIZED
+            // =================================
+
+            if (response.status === 401) {
+
+                console.warn(
+                    "Student token expired or invalid."
+                );
+
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("token_type");
+                localStorage.removeItem("userRole");
+
+                window.location.href = "login.html";
+
+                return;
+            }
+
+
+            const data = await response.json();
+
+
             console.log(
                 "Student API Response:",
                 data
             );
 
 
-            // ==============================
-            // SUCCESS
-            // ==============================
+            // =================================
+            // API ERROR
+            // =================================
 
-            if (response.ok) {
+            if (!response.ok) {
+
+                console.error(
+                    "Student API Error:",
+                    data
+                );
+
+                showAccountError(
+                    "Unable to load account details."
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "Student details loaded successfully"
+            );
+
+
+            // =================================
+            // STUDENT INFORMATION
+            // =================================
+
+            const firstName =
+                data.first_name || "Not provided";
+
+            const lastName =
+                data.last_name || "Not provided";
+
+            const email =
+                data.user?.email_id ||
+                data.email_id ||
+                "Not provided";
+
+            const phone =
+                data.phone_no || "Not provided";
+
+            const gender =
+                data.gender || "Not provided";
+
+            const dob =
+                data.date_of_birth || "Not provided";
+
+            const address =
+                data.address || "Not provided";
+
+            const about =
+                data.about || "Not provided";
+
+
+            // =================================
+            // TOP BAR NAME
+            // =================================
+
+            if (userName) {
+
+                const fullName =
+                    `${firstName} ${lastName}`.trim();
+
+                userName.textContent =
+                    fullName || "Student";
+            }
+
+
+            // =================================
+            // PROFILE IMAGE
+            // =================================
+
+            console.log(
+                "Profile pic from API:",
+                data.profile_pic
+            );
+
+            if (profileImage) {
+
+                if (data.profile_pic) {
+
+                    profileImage.src =
+                        data.profile_pic;
+
+                } else {
+
+                    profileImage.src =
+                        "https://i.pravatar.cc/150?img=32";
+                }
+
+
+                profileImage.onerror =
+                    function () {
+
+                        this.src =
+                            "https://i.pravatar.cc/150?img=32";
+
+                    };
+
 
                 console.log(
-                    "Student details loaded successfully"
+                    "Student profile picture loaded successfully."
                 );
-
-
-                // Header profile picture
-                displayStudentProfilePicture(data);
-
-
-                // Profile page
-                displayStudentProfile(data);
-
-
-                return;
             }
 
 
-            // ==============================
-            // UNAUTHORIZED
-            // ==============================
+            // =================================
+            // ACCOUNT DETAILS
+            // =================================
 
-            if (response.status === 401) {
+            displayStudentProfile({
+                firstName,
+                lastName,
+                email,
+                phone,
+                gender,
+                dob,
+                address,
+                about
+            });
 
-                alert(
-                    "Login expired. Please login again."
-                );
-
-
-                localStorage.removeItem(
-                    "access_token"
-                );
-
-                localStorage.removeItem(
-                    "token_type"
-                );
-
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            // ==============================
-            // OTHER ERROR
-            // ==============================
+        } catch (error) {
 
             console.error(
-                "Student API Error:",
-                data
-            );
-
-
-            alert(
-                data.detail ||
-                "Unable to load student details."
-            );
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Fetch Error:",
+                "Student profile error:",
                 error
             );
 
-
-            alert(
-                "Backend server-এর সাথে connection হচ্ছে না!"
+            showAccountError(
+                "Backend server-এর সাথে connection হচ্ছে না।"
             );
 
         }
@@ -292,294 +279,177 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ==============================
-    // DISPLAY HEADER PROFILE PICTURE
-    // ==============================
+    // =========================================
+    // DISPLAY ACCOUNT DETAILS
+    // =========================================
 
-    function displayStudentProfilePicture(data) {
+    function displayStudentProfile(profile) {
 
-        const profileImage =
-            document.getElementById(
-                "studentProfileImg"
-            );
+        const accountDetails =
+            document.getElementById("accountDetails");
 
 
-        if (!profileImage) {
+        if (!accountDetails) {
 
             console.error(
-                "studentProfileImg element not found!"
+                "Account details section not found!"
             );
 
             return;
         }
 
 
-        const profilePic =
-            data.profile_pic;
+        accountDetails.innerHTML = `
+
+            <div class="account-details-card">
+
+                <h3>Account Details</h3>
 
 
-        console.log(
-            "Profile pic from API:",
-            profilePic
-        );
+                <div class="account-details">
 
 
-        if (profilePic) {
+                    <!-- FIRST NAME -->
 
-            profileImage.src =
-                profilePic;
+                    <div class="detail-row">
 
-        }
+                        <span>First Name</span>
 
-        else {
-
-            profileImage.src =
-                DEFAULT_PROFILE_IMAGE;
-
-        }
-
-
-        // ==============================
-        // IMAGE ERROR
-        // ==============================
-
-        profileImage.onerror = () => {
-
-            console.error(
-                "Profile image failed to load:",
-                profileImage.src
-            );
-
-
-            profileImage.src =
-                DEFAULT_PROFILE_IMAGE;
-
-        };
-
-
-        // ==============================
-        // IMAGE SUCCESS
-        // ==============================
-
-        profileImage.onload = () => {
-
-            console.log(
-                "Student profile picture loaded successfully."
-            );
-
-        };
-
-    }
-
-
-    // ==============================
-    // DISPLAY STUDENT PROFILE
-    // ==============================
-
-    function displayStudentProfile(data) {
-
-        const profileSection =
-            document.getElementById("profile");
-
-
-        if (!profileSection) {
-
-            console.error(
-                "Profile section not found!"
-            );
-
-            return;
-        }
-
-
-        // ==============================
-        // BASIC INFORMATION
-        // ==============================
-
-        const firstName =
-            data.first_name || "";
-
-        const lastName =
-            data.last_name || "";
-
-        const email =
-            data.user?.email_id || "";
-
-        const userId =
-            data.user?.id || "Not available";
-
-        const phone =
-            data.phone_no || "Not provided";
-
-        const gender =
-            data.gender || "Not provided";
-
-        const dateOfBirth =
-            data.date_of_birth || "Not provided";
-
-        const address =
-            data.address || "Not provided";
-
-        const about =
-            data.about || "Not provided";
-
-
-        // ==============================
-        // PROFILE PICTURE
-        // ==============================
-
-        const profilePic =
-            data.profile_pic ||
-            DEFAULT_PROFILE_IMAGE;
-
-
-        console.log(
-            "Profile Page Image URL:",
-            profilePic
-        );
-
-
-        // ==============================
-        // PROFILE HTML
-        // ==============================
-
-        profileSection.innerHTML = `
-
-            <div class="profile-card">
-
-                <div class="profile-header">
-
-                    <img
-                        src="${profilePic}"
-                        alt="Student Profile"
-                        class="profile-page-image"
-                    >
-
-                    <div class="profile-title">
-
-                        <h2>
-                            Student Profile
-                        </h2>
-
-                        <p>
-                            ${firstName} ${lastName}
-                        </p>
+                        <strong>
+                            ${escapeHTML(profile.firstName)}
+                        </strong>
 
                     </div>
 
+
+                    <!-- LAST NAME -->
+
+                    <div class="detail-row">
+
+                        <span>Last Name</span>
+
+                        <strong>
+                            ${escapeHTML(profile.lastName)}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="detail-row">
+
+                        <span>Email</span>
+
+                        <strong>
+                            ${escapeHTML(profile.email)}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="detail-row">
+
+                        <span>Phone</span>
+
+                        <strong>
+                            ${escapeHTML(profile.phone)}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- GENDER -->
+
+                    <div class="detail-row">
+
+                        <span>Gender</span>
+
+                        <strong>
+                            ${escapeHTML(profile.gender)}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- DATE OF BIRTH -->
+
+                    <div class="detail-row">
+
+                        <span>Date of Birth</span>
+
+                        <strong>
+                            ${escapeHTML(profile.dob)}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- ADDRESS -->
+
+                    <div class="detail-row">
+
+                        <span>Address</span>
+
+                        <strong>
+                            ${escapeHTML(profile.address)}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- ABOUT ME -->
+
+                    <div class="detail-row">
+
+                        <span>About Me</span>
+
+                        <strong>
+                            ${escapeHTML(profile.about)}
+                        </strong>
+
+                    </div>
+
+
                 </div>
 
 
-                <div class="profile-info">
-
-                    <p>
-                        <strong>User ID:</strong>
-                        ${userId}
-                    </p>
-
-                    <p>
-                        <strong>Name:</strong>
-                        ${firstName} ${lastName}
-                    </p>
-
-                    <p>
-                        <strong>Email:</strong>
-                        ${email}
-                    </p>
-
-                    <p>
-                        <strong>Phone:</strong>
-                        ${phone}
-                    </p>
-
-                    <p>
-                        <strong>Gender:</strong>
-                        ${gender}
-                    </p>
-
-                    <p>
-                        <strong>Date of Birth:</strong>
-                        ${dateOfBirth}
-                    </p>
-
-                    <p>
-                        <strong>Address:</strong>
-                        ${address}
-                    </p>
-
-                    <p>
-                        <strong>About:</strong>
-                        ${about}
-                    </p>
-
-                </div>
-
+                <!-- UPDATE PROFILE BUTTON -->
 
                 <button
                     type="button"
-                    class="update-btn"
-                    id="studentUpdateProfileBtn"
-                >
+                    class="update-profile-option"
+                    id="openUpdateProfile">
+
                     Update Profile
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
                 </button>
+
 
             </div>
 
         `;
 
 
-        // ==============================
-        // PROFILE PAGE IMAGE
-        // ==============================
-
-        const profilePageImage =
-            profileSection.querySelector(
-                ".profile-page-image"
-            );
-
-
-        if (profilePageImage) {
-
-            profilePageImage.onerror = () => {
-
-                console.error(
-                    "Profile page image failed to load:",
-                    profilePageImage.src
-                );
-
-
-                profilePageImage.src =
-                    DEFAULT_PROFILE_IMAGE;
-
-            };
-
-
-            profilePageImage.onload = () => {
-
-                console.log(
-                    "Profile page image loaded successfully."
-                );
-
-            };
-
-        }
-
-
-        // ==============================
+        // =====================================
         // UPDATE PROFILE BUTTON
-        // ==============================
+        // =====================================
 
-        const updateProfileBtn =
+        const updateButton =
             document.getElementById(
-                "studentUpdateProfileBtn"
+                "openUpdateProfile"
             );
 
 
-        if (updateProfileBtn) {
+        if (updateButton) {
 
-            updateProfileBtn.addEventListener(
+            updateButton.addEventListener(
                 "click",
-                () => {
+                function () {
 
                     window.location.href =
                         "update_profile.html";
@@ -592,25 +462,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ==============================
+    // =========================================
+    // SHOW ACCOUNT ERROR
+    // =========================================
+
+    function showAccountError(message) {
+
+        const accountDetails =
+            document.getElementById("accountDetails");
+
+
+        if (!accountDetails) {
+            return;
+        }
+
+
+        accountDetails.innerHTML = `
+
+            <div class="account-details-card">
+
+                <h3>Account Details</h3>
+
+                <p>
+                    ${escapeHTML(message)}
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+
+    // =========================================
+    // ESCAPE HTML
+    // =========================================
+
+    function escapeHTML(value) {
+
+        return String(value)
+
+            .replace(/&/g, "&amp;")
+
+            .replace(/</g, "&lt;")
+
+            .replace(/>/g, "&gt;")
+
+            .replace(/"/g, "&quot;")
+
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    // =========================================
     // LOGOUT
-    // ==============================
+    // =========================================
 
     function logout() {
 
-        localStorage.removeItem(
-            "access_token"
-        );
+        localStorage.removeItem("access_token");
 
-        localStorage.removeItem(
-            "token_type"
-        );
+        localStorage.removeItem("token_type");
 
-
-        alert(
-            "Logged out successfully!"
-        );
-
+        localStorage.removeItem("userRole");
 
         window.location.href =
             "login.html";
@@ -618,33 +533,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ==============================
+    // =========================================
     // LOAD PROFILE ON PAGE LOAD
-    // ==============================
+    // =========================================
 
-    const token =
-        localStorage.getItem(
-            "access_token"
-        );
-
-
-    if (token) {
-
-        console.log(
-            "Student page: Access token found."
-        );
-
-
-        getStudentProfile();
-
-    }
-
-    else {
-
-        console.warn(
-            "Student page: No access token found."
-        );
-
-    }
+    loadStudentProfile();
 
 });
