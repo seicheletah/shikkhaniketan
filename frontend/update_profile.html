@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Update Profile - Shikkhaniketan</title>
+
+    <link rel="stylesheet"
+          href="update_profile.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="update-container">
+
+        <!-- ================= HEADER ================= -->
+
+        <header class="update-header">
+
+            <div class="brand">
+                <i class="fa-solid fa-book-open"></i>
+
+                <div>
+                    <h1>Shikkhaniketan</h1>
+                    <p>Student Profile</p>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="back-btn"
+                id="backBtn">
+
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Profile
+
+            </button>
+
+        </header>
+
+
+        <!-- ================= MAIN CONTENT ================= -->
+
+        <main class="update-main">
+
+            <div class="page-title">
+
+                <span class="title-icon">
+                    <i class="fa-solid fa-user-pen"></i>
+                </span>
+
+                <div>
+                    <h2>Update Profile</h2>
+
+                    <p>
+                        Update your personal information and profile photo.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- ================= PROFILE FORM ================= -->
+
+            <form id="updateProfileForm">
+
+                <!-- PROFILE PHOTO -->
+
+                <div class="profile-photo-section">
+
+                    <div class="profile-image-wrapper">
+
+                        <img
+                            id="profilePreview"
+                            src="https://i.pravatar.cc/150?img=32"
+                            alt="Profile Photo">
+
+                        <label
+                            for="profilePhoto"
+                            class="camera-btn">
+
+                            <i class="fa-solid fa-camera"></i>
+
+                        </label>
+
+                    </div>
+
+                    <div class="photo-text">
+
+                        <h3>Profile Photo</h3>
+
+                        <p>
+                            Choose a JPG, JPEG or PNG image.
+                        </p>
+
+                        <input
+                            type="file"
+                            id="profilePhoto"
+                            name="profile_photo"
+                            accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================= PERSONAL INFORMATION ================= -->
+
+                <div class="form-section">
+
+                    <div class="section-heading">
+
+                        <i class="fa-solid fa-user"></i>
+
+                        <h3>Personal Information</h3>
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <!-- FIRST NAME -->
+
+                        <div class="form-group">
+
+                            <label for="firstName">
+                                First Name
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-user"></i>
+
+                                <input
+                                    type="text"
+                                    id="firstName"
+                                    name="first_name"
+                                    placeholder="Enter first name"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LAST NAME -->
+
+                        <div class="form-group">
+
+                            <label for="lastName">
+                                Last Name
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-user"></i>
+
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    name="last_name"
+                                    placeholder="Enter last name"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="form-group full-width">
+
+                            <label for="email">
+                                Email
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-envelope"></i>
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    placeholder="Email"
+                                    readonly>
+
+                            </div>
+
+                            <small>
+                                Email cannot be changed here.
+                            </small>
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div class="form-group">
+
+                            <label for="phone">
+                                Phone Number
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-phone"></i>
+
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    name="phone_no"
+                                    placeholder="Enter phone number">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- GENDER -->
+
+                        <div class="form-group">
+
+                            <label for="gender">
+                                Gender
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-venus-mars"></i>
+
+                                <select
+                                    id="gender"
+                                    name="gender">
+
+                                    <option value="">
+                                        Select Gender
+                                    </option>
+
+                                    <option value="m">
+                                        Male
+                                    </option>
+
+                                    <option value="f">
+                                        Female
+                                    </option>
+
+                                    <option value="o">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DATE OF BIRTH -->
+
+                        <div class="form-group">
+
+                            <label for="dateOfBirth">
+                                Date of Birth
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-calendar"></i>
+
+                                <input
+                                    type="date"
+                                    id="dateOfBirth"
+                                    name="date_of_birth">
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="form-group full-width">
+
+                            <label for="address">
+                                Address
+                            </label>
+
+                            <div class="input-wrapper textarea-wrapper">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <textarea
+                                    id="address"
+                                    name="address"
+                                    placeholder="Enter your address"
+                                    rows="3"></textarea>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ABOUT -->
+
+                        <div class="form-group full-width">
+
+                            <label for="about">
+                                About Me
+                            </label>
+
+                            <div class="input-wrapper textarea-wrapper">
+
+                                <i class="fa-solid fa-align-left"></i>
+
+                                <textarea
+                                    id="about"
+                                    name="about"
+                                    placeholder="Tell us something about yourself"
+                                    rows="4"></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================= BUTTONS ================= -->
+
+                <div class="form-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-btn"
+                        id="cancelBtn">
+
+                        <i class="fa-solid fa-xmark"></i>
+                        Cancel
+
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="save-btn"
+                        id="saveBtn">
+
+                        <i class="fa-solid fa-check"></i>
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </main>
+
+    </div>
+
+
+    <script src="update_profile.js"></script>
+
+</body>
+
+</html>

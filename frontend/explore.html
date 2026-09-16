@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shikkhaniketan - Explore & Search</title>
+  <link rel="stylesheet" href="explore.css">
+</head>
+<body>
+
+  <!-- Top Search Bar Section -->
+  <section class="search-section">
+    <div class="search-box">
+      <!-- Professional SVG Search Icon -->
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" placeholder="Search courses, videos, documents...">
+    </div>
+  </section>
+
+  <!-- Full Page Main Container -->
+  <div class="full-page-container">
+    
+    <!-- Left Filter Sidebar -->
+    <aside class="filter-sidebar">
+      <h3 class="filter-title">Filter</h3>
+      <div class="filter-group">
+        <label><input type="checkbox"> Class 9-10</label>
+        <label><input type="checkbox"> Class 11-12</label>
+        <label><input type="checkbox"> Science</label>
+        <label><input type="checkbox"> Mathematics</label>
+      </div>
+    </aside>
+
+    <!-- Right Content Area -->
+    <main class="content-area">
+      <div class="controls-bar">
+        <div class="tabs">
+          <button class="tab-btn active">Videos</button>
+          <span class="divider">|</span>
+          <button class="tab-btn">Documents</button>
+        </div>
+
+        <div class="sort-box">
+          <label for="sort">Sort</label>
+          <select id="sort">
+            <option value="data">Data</option>
+            <option value="popular">Popularity</option>
+            <option value="newest">Newest</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Result Cards Grid -->
+      <div class="cards-grid">
+        <div class="card">Video / Document 1</div>
+        <div class="card">Video / Document 2</div>
+        <div class="card">Video / Document 3</div>
+        <div class="card">Video / Document 4</div>
+      </div>
+    </main>
+
+  </div>
+
+</body>
+</html>

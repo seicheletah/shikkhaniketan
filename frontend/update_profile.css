@@ -1,0 +1,670 @@
+/* ==============================
+   RESET
+============================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eef5fc 0%,
+            #e3effa 100%
+        );
+
+    min-height: 100vh;
+
+    color: #243447;
+}
+
+
+/* ==============================
+   MAIN CONTAINER
+============================== */
+
+.update-container {
+    min-height: 100vh;
+
+    padding: 25px;
+}
+
+
+/* ==============================
+   HEADER
+============================== */
+
+.update-header {
+    max-width: 1100px;
+
+    margin: 0 auto 25px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 18px 25px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    box-shadow:
+        0 8px 25px rgba(30, 70, 110, 0.08);
+}
+
+
+.brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+.brand > i {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: #e9f3ff;
+
+    color: #2d7dd2;
+
+    font-size: 23px;
+}
+
+
+.brand h1 {
+    font-size: 21px;
+
+    color: #1d3557;
+
+    margin-bottom: 3px;
+}
+
+
+.brand p {
+    color: #7a8a9a;
+
+    font-size: 13px;
+}
+
+
+/* ==============================
+   BACK BUTTON
+============================== */
+
+.back-btn {
+    border: none;
+
+    background: #edf5ff;
+
+    color: #2878c8;
+
+    padding: 11px 17px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.back-btn:hover {
+    background: #dceeff;
+
+    transform: translateY(-1px);
+}
+
+
+/* ==============================
+   MAIN
+============================== */
+
+.update-main {
+    max-width: 1100px;
+
+    margin: 0 auto;
+
+    background: white;
+
+    border-radius: 20px;
+
+    padding: 35px;
+
+    box-shadow:
+        0 10px 35px rgba(30, 70, 110, 0.08);
+}
+
+
+/* ==============================
+   PAGE TITLE
+============================== */
+
+.page-title {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding-bottom: 25px;
+
+    border-bottom: 1px solid #e8eef5;
+
+    margin-bottom: 30px;
+}
+
+
+.title-icon {
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #eaf4ff;
+
+    color: #2878c8;
+
+    border-radius: 14px;
+
+    font-size: 21px;
+}
+
+
+.page-title h2 {
+    font-size: 25px;
+
+    color: #1d3557;
+
+    margin-bottom: 5px;
+}
+
+
+.page-title p {
+    color: #7b8b9b;
+
+    font-size: 14px;
+}
+
+
+/* ==============================
+   PROFILE PHOTO
+============================== */
+
+.profile-photo-section {
+    display: flex;
+
+    align-items: center;
+
+    gap: 25px;
+
+    background: #f7fbff;
+
+    border: 1px solid #e4eef8;
+
+    border-radius: 16px;
+
+    padding: 22px;
+
+    margin-bottom: 30px;
+}
+
+
+.profile-image-wrapper {
+    position: relative;
+
+    width: 105px;
+    height: 105px;
+
+    flex-shrink: 0;
+}
+
+
+.profile-image-wrapper img {
+    width: 105px;
+    height: 105px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    border: 4px solid white;
+
+    box-shadow:
+        0 5px 18px rgba(40, 90, 140, 0.15);
+}
+
+
+.camera-btn {
+    position: absolute;
+
+    right: 0;
+    bottom: 0;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #2878c8;
+
+    color: white;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    border: 3px solid white;
+
+    font-size: 13px;
+}
+
+
+#profilePhoto {
+    margin-top: 9px;
+
+    font-size: 13px;
+
+    width: 100%;
+}
+
+
+.photo-text h3 {
+    color: #243b53;
+
+    font-size: 17px;
+
+    margin-bottom: 5px;
+}
+
+
+.photo-text p {
+    color: #8291a1;
+
+    font-size: 13px;
+}
+
+
+/* ==============================
+   FORM SECTION
+============================== */
+
+.form-section {
+    margin-bottom: 25px;
+}
+
+
+.section-heading {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #edf1f5;
+}
+
+
+.section-heading i {
+    color: #2878c8;
+
+    font-size: 17px;
+}
+
+
+.section-heading h3 {
+    color: #263c53;
+
+    font-size: 18px;
+}
+
+
+/* ==============================
+   FORM GRID
+============================== */
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 22px 25px;
+}
+
+
+.form-group {
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+
+.form-group label {
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: #41576b;
+
+    margin-bottom: 8px;
+}
+
+
+.form-group small {
+    color: #8a98a6;
+
+    margin-top: 5px;
+
+    font-size: 11px;
+}
+
+
+/* ==============================
+   INPUT
+============================== */
+
+.input-wrapper {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+}
+
+
+.input-wrapper > i {
+    position: absolute;
+
+    left: 14px;
+
+    color: #8ba0b4;
+
+    font-size: 14px;
+
+    pointer-events: none;
+}
+
+
+.input-wrapper input,
+.input-wrapper select,
+.input-wrapper textarea {
+    width: 100%;
+
+    border: 1px solid #d9e3ec;
+
+    border-radius: 10px;
+
+    background: #fbfdff;
+
+    color: #263c53;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition: 0.2s;
+}
+
+
+.input-wrapper input,
+.input-wrapper select {
+    height: 45px;
+
+    padding: 0 14px 0 40px;
+}
+
+
+.input-wrapper textarea {
+    padding: 13px 14px 13px 40px;
+
+    resize: vertical;
+
+    min-height: 90px;
+
+    font-family: inherit;
+}
+
+
+.input-wrapper input:focus,
+.input-wrapper select:focus,
+.input-wrapper textarea:focus {
+    border-color: #65a9e5;
+
+    background: white;
+
+    box-shadow:
+        0 0 0 3px rgba(40, 120, 200, 0.08);
+}
+
+
+.input-wrapper select {
+    cursor: pointer;
+
+    appearance: auto;
+}
+
+
+.textarea-wrapper {
+    align-items: flex-start;
+}
+
+
+.textarea-wrapper > i {
+    top: 15px;
+}
+
+
+/* ==============================
+   READONLY EMAIL
+============================== */
+
+#email {
+    background: #f1f5f9;
+
+    cursor: not-allowed;
+
+    color: #718096;
+}
+
+
+/* ==============================
+   ACTION BUTTONS
+============================== */
+
+.form-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    border-top: 1px solid #e8eef5;
+
+    padding-top: 25px;
+
+    margin-top: 10px;
+}
+
+
+.cancel-btn,
+.save-btn {
+    border: none;
+
+    padding: 12px 21px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    transition: 0.2s;
+}
+
+
+.cancel-btn {
+    background: #f1f4f7;
+
+    color: #637486;
+}
+
+
+.cancel-btn:hover {
+    background: #e5e9ed;
+}
+
+
+.save-btn {
+    background: #2878c8;
+
+    color: white;
+
+    box-shadow:
+        0 5px 14px rgba(40, 120, 200, 0.2);
+}
+
+
+.save-btn:hover {
+    background: #216daf;
+
+    transform: translateY(-1px);
+}
+
+
+.save-btn:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* ==============================
+   RESPONSIVE
+============================== */
+
+@media (max-width: 700px) {
+
+    .update-container {
+        padding: 12px;
+    }
+
+
+    .update-header {
+        padding: 15px;
+
+        border-radius: 14px;
+    }
+
+
+    .brand h1 {
+        font-size: 17px;
+    }
+
+
+    .brand p {
+        display: none;
+    }
+
+
+    .back-btn {
+        padding: 9px 11px;
+
+        font-size: 12px;
+    }
+
+
+    .back-btn i {
+        margin-right: 3px;
+    }
+
+
+    .update-main {
+        padding: 22px 17px;
+
+        border-radius: 15px;
+    }
+
+
+    .page-title h2 {
+        font-size: 21px;
+    }
+
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .form-group.full-width {
+        grid-column: auto;
+    }
+
+
+    .profile-photo-section {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+
+    .cancel-btn,
+    .save-btn {
+        width: 100%;
+
+        justify-content: center;
+    }
+
+}

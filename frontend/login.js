@@ -1,250 +1,211 @@
+
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ==========================================
-    // PASSWORD SHOW / HIDE
-    // ==========================================
+    const loginForm = document.getElementById('loginForm');
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
 
-    const togglePassword =
-        document.getElementById('togglePassword');
-
-    const passwordInput =
-        document.getElementById('password');
-
+    // =========================
+    // Password Show / Hide
+    // =========================
     if (togglePassword && passwordInput) {
 
-        togglePassword.addEventListener('click', function () {
+        togglePassword.addEventListener('click', () => {
 
-            const type =
-                passwordInput.type === 'password'
-                    ? 'text'
-                    : 'password';
+            if (passwordInput.type === 'password') {
 
-            passwordInput.type = type;
+                passwordInput.type = 'text';
 
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
+                togglePassword.classList.remove('fa-eye');
+                togglePassword.classList.add('fa-eye-slash');
+
+            } else {
+
+                passwordInput.type = 'password';
+
+                togglePassword.classList.remove('fa-eye-slash');
+                togglePassword.classList.add('fa-eye');
+            }
         });
     }
 
 
-    // ==========================================
-    // ROLE SELECTION
-    // ==========================================
+    // =========================
+    // Login Form
+    // =========================
+    if (!loginForm) {
+        console.error('Login form not found.');
+        return;
+    }
 
-    const roleButtons =
-        document.querySelectorAll('.role-btn');
 
-    let selectedRole = null;
+    loginForm.addEventListener('submit', async (e) => {
 
+        e.preventDefault();
 
-    roleButtons.forEach(button => {
 
-        button.addEventListener('click', function () {
+        // Get email and password only
+        const emailInput = document.getElementById('email');
 
-            // Remove active class from all buttons
-            roleButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
+        const email = emailInput
+            ? emailInput.value.trim()
+            : '';
 
-            // Add active class to selected button
-            this.classList.add('active');
+        const password = passwordInput
+            ? passwordInput.value
+            : '';
 
-            // Get selected role
-            selectedRole =
-                this.getAttribute('data-role');
 
-            console.log(
-                'Selected Role:',
-                selectedRole
-            );
-        });
+        // Check email and password
+        if (!email || !password) {
 
-    });
+            alert('Please enter your email and password.');
 
+            return;
+        }
 
-    // ==========================================
-    // LOGIN FORM
-    // ==========================================
 
-    const loginForm =
-        document.getElementById('loginForm');
+        try {
 
+            // =========================
+            // Prepare Login Data
+            // =========================
+            const formData = new URLSearchParams();
 
-    loginForm.addEventListener(
-        'submit',
-        async function (e) {
+            formData.append('username', email);
+            formData.append('password', password);
 
-            e.preventDefault();
 
+            // =========================
+            // Login API
+            // =========================
+            const response = await fetch(
+                'http://127.0.0.1:8000/api/v1/login',
+                {
+                    method: 'POST',
 
-            const email =
-                document.getElementById('email')
-                    .value.trim();
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded'
+                    },
 
-            const password =
-                document.getElementById('password')
-                    .value;
-
-
-            // ==========================================
-            // CHECK EMAIL & PASSWORD
-            // ==========================================
-
-            if (!email || !password) {
-
-                alert(
-                    'Please fill in all fields.'
-                );
-
-                return;
-            }
-
-
-            // ==========================================
-            // CHECK ROLE
-            // ==========================================
-
-            if (!selectedRole) {
-
-                alert(
-                    'Please select your role.'
-                );
-
-                return;
-            }
-
-
-            try {
-
-                // ==========================================
-                // LOGIN API
-                // ==========================================
-
-                const formData =
-                    new URLSearchParams();
-
-                formData.append(
-                    'username',
-                    email
-                );
-
-                formData.append(
-                    'password',
-                    password
-                );
-
-
-                const response =
-                    await fetch(
-                        'http://127.0.0.1:8000/api/v1/login',
-                        {
-                            method: 'POST',
-
-                            headers: {
-                                'Content-Type':
-                                    'application/x-www-form-urlencoded'
-                            },
-
-                            body: formData
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                // ==========================================
-                // LOGIN SUCCESS
-                // ==========================================
-
-                if (response.ok) {
-
-                    console.log(
-                        'Login Success:',
-                        data
-                    );
-
-
-                    // Save token
-                    localStorage.setItem(
-                        'access_token',
-                        data.access_token
-                    );
-
-                    localStorage.setItem(
-                        'token_type',
-                        data.token_type
-                    );
-
-
-                    // Save selected role
-                    localStorage.setItem(
-                        'userRole',
-                        selectedRole
-                    );
-
-
-                    console.log(
-                        'Selected role:',
-                        selectedRole
-                    );
-
-
-                    alert(
-                        'Login Successful!'
-                    );
-
-
-                    // ==========================================
-                    // REDIRECT
-                    // ==========================================
-
-                    if (selectedRole === 'student') {
-
-                        window.location.href =
-                            'student.html';
-
-                    } else if (
-                        selectedRole === 'teacher'
-                    ) {
-
-                        window.location.href =
-                            'teacher.html';
-
-                    } else if (
-                        selectedRole === 'admin'
-                    ) {
-
-                        // Jodi admin page thake
-                        window.location.href =
-                            'admin.html';
-
-                    }
-
-                } else {
-
-                    alert(
-                        data.detail ||
-                        'Invalid email or password'
-                    );
+                    body: formData
                 }
+            );
 
 
-            } catch (error) {
+            const data = await response.json();
+
+
+            // =========================
+            // Login Failed
+            // =========================
+            if (!response.ok) {
+
+                alert(
+                    data.detail ||
+                    'Invalid email or password.'
+                );
+
+                return;
+            }
+
+
+            // =========================
+            // Save Token
+            // =========================
+            localStorage.setItem(
+                'access_token',
+                data.access_token
+            );
+
+            localStorage.setItem(
+                'token_type',
+                data.token_type || 'bearer'
+            );
+
+
+            // =========================
+            // Get Role From Backend
+            // =========================
+            const role = data.role;
+
+
+            console.log('Login successful.');
+            console.log('Role received from backend:', role);
+
+
+            // If backend did not send role
+            if (!role) {
+
+                alert(
+                    'Role information was not received from the server.'
+                );
+
+                return;
+            }
+
+
+            // Save role
+            localStorage.setItem(
+                'userRole',
+                role
+            );
+
+
+            // =========================
+            // Redirect Automatically
+            // =========================
+
+            if (role === 'student') {
+
+                window.location.replace(
+                    'student.html'
+                );
+
+            }
+
+            else if (role === 'teacher') {
+
+                window.location.replace(
+                    'teacher.html'
+                );
+
+            }
+
+            else if (role === 'admin') {
+
+                window.location.replace(
+                    'admin.html'
+                );
+
+            }
+
+            else {
 
                 console.error(
-                    'Login Error:',
-                    error
+                    'Unknown role received:',
+                    role
                 );
 
-
                 alert(
-                    'Backend server-এর সাথে connection হচ্ছে না!'
+                    'Unknown account role: ' + role
                 );
             }
 
+
+        } catch (error) {
+
+            console.error(
+                'Login Error:',
+                error
+            );
+
+            alert(
+                'Unable to connect to the server.'
+            );
         }
-    );
+
+    });
 
 });
