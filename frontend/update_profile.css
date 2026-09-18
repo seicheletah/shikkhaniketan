@@ -1,0 +1,624 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    background: #f4f8f7;
+    color: #173b3a;
+}
+
+
+/* ================================
+   MAIN PAGE
+================================ */
+
+.update-page {
+    width: min(960px, 92%);
+    margin: auto;
+    padding: 35px 0 55px;
+}
+
+
+/* ================================
+   BACK BUTTON
+================================ */
+
+.top-area {
+    margin-bottom: 25px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 14px;
+
+    border: 1px solid #d8e7e4;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #52716d;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+.back-btn:hover {
+    color: #0f766e;
+    border-color: #b9d9d4;
+    background: #f8fcfb;
+}
+
+.back-btn i {
+    font-size: 11px;
+}
+
+
+/* ================================
+   PAGE INTRO
+================================ */
+
+.page-intro {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    margin-bottom: 28px;
+}
+
+.intro-icon {
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 14px;
+
+    background: #e1f3f0;
+    color: #0f766e;
+
+    font-size: 21px;
+}
+
+.intro-text .eyebrow {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #0f766e;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+}
+
+.intro-text h1 {
+    font-size: 27px;
+    font-weight: 800;
+
+    color: #173b3a;
+}
+
+.intro-text p {
+    margin-top: 5px;
+
+    color: #78908d;
+
+    font-size: 11.5px;
+}
+
+
+/* ================================
+   PROFILE CARD
+================================ */
+
+.profile-card {
+    background: #ffffff;
+
+    border: 1px solid #e0ebe9;
+    border-radius: 16px;
+
+    padding: 30px;
+
+    box-shadow:
+        0 10px 30px rgba(23, 59, 58, 0.05);
+}
+
+
+/* ================================
+   CARD HEADER
+================================ */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding-bottom: 21px;
+    margin-bottom: 25px;
+
+    border-bottom: 1px solid #edf2f1;
+}
+
+.header-icon {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #eaf7f5;
+    color: #0f766e;
+
+    font-size: 14px;
+}
+
+.card-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+
+    color: #234744;
+}
+
+.card-header p {
+    margin-top: 4px;
+
+    color: #849795;
+
+    font-size: 10.5px;
+}
+
+
+/* ================================
+   FORM GRID
+================================ */
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 21px;
+}
+
+.form-group {
+    width: 100%;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+
+/* ================================
+   LABEL
+================================ */
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #3c5a57;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* ================================
+   INPUT FIELD
+================================ */
+
+.field {
+    position: relative;
+
+    width: 100%;
+}
+
+.field > i {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #8aa19e;
+
+    font-size: 12px;
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+
+/* ================================
+   INPUT / SELECT / TEXTAREA
+================================ */
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+
+    border: 1px solid #dce8e6;
+    outline: none;
+
+    background: #fbfdfd;
+    color: #294b48;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 11.5px;
+
+    transition: 0.25s ease;
+}
+
+.field input,
+.field select {
+    height: 46px;
+
+    padding: 0 38px;
+}
+
+.field textarea {
+    min-height: 100px;
+
+    padding: 13px 38px;
+
+    resize: vertical;
+
+    line-height: 1.6;
+}
+
+
+/* ================================
+   FOCUS
+================================ */
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    background: #ffffff;
+
+    border-color: #4da79e;
+
+    box-shadow:
+        0 0 0 3px rgba(15, 118, 110, 0.07);
+}
+
+
+/* ================================
+   PLACEHOLDER
+================================ */
+
+.field input::placeholder,
+.field textarea::placeholder {
+    color: #a3b2b0;
+}
+
+
+/* ================================
+   SELECT
+================================ */
+
+.field select {
+    appearance: none;
+
+    cursor: pointer;
+
+    background-image:
+        linear-gradient(
+            45deg,
+            transparent 50%,
+            #78918f 50%
+        ),
+        linear-gradient(
+            135deg,
+            #78918f 50%,
+            transparent 50%
+        );
+
+    background-position:
+        calc(100% - 16px) 20px,
+        calc(100% - 11px) 20px;
+
+    background-size:
+        5px 5px,
+        5px 5px;
+
+    background-repeat: no-repeat;
+}
+
+
+/* ================================
+   TEXTAREA
+================================ */
+
+.textarea-field {
+    display: block;
+}
+
+.textarea-field > i {
+    top: 15px;
+    transform: none;
+}
+
+
+/* ================================
+   EMAIL
+================================ */
+
+.locked-field input {
+    background: #f2f6f5;
+
+    color: #718885;
+
+    cursor: not-allowed;
+}
+
+.locked-field input:focus {
+    background: #f2f6f5;
+
+    border-color: #dce8e6;
+
+    box-shadow: none;
+}
+
+.lock-icon {
+    position: absolute;
+
+    right: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #9badaa;
+
+    font-size: 10px;
+}
+
+
+/* ================================
+   EMAIL NOTE
+================================ */
+
+.field-note {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    margin-top: 6px;
+
+    color: #94a5a3;
+
+    font-size: 9.5px;
+}
+
+.field-note i {
+    color: #6ca59f;
+    font-size: 9px;
+}
+
+
+/* ================================
+   ACTION BUTTONS
+================================ */
+
+.action-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+
+/* ================================
+   CANCEL BUTTON
+================================ */
+
+.cancel-btn {
+    height: 43px;
+
+    padding: 0 21px;
+
+    border: 1px solid #d6e4e2;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #647c79;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+.cancel-btn:hover {
+    background: #f5f9f8;
+
+    color: #3d5a57;
+
+    border-color: #c5dad6;
+}
+
+
+/* ================================
+   SAVE BUTTON
+================================ */
+
+.save-btn {
+    height: 43px;
+
+    padding: 0 22px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: linear-gradient(
+        135deg,
+        #0f766e,
+        #155e75
+    );
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 18px rgba(15, 118, 110, 0.18);
+
+    transition: 0.25s ease;
+}
+
+.save-btn:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 23px rgba(15, 118, 110, 0.24);
+}
+
+.save-btn:active {
+    transform: translateY(0);
+}
+
+.save-btn:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* ================================
+   TABLET
+================================ */
+
+@media (max-width: 700px) {
+
+    .update-page {
+        width: 92%;
+        padding-top: 28px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width {
+        grid-column: auto;
+    }
+
+    .profile-card {
+        padding: 25px 22px;
+    }
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 500px) {
+
+    .update-page {
+        width: 94%;
+
+        padding-top: 22px;
+    }
+
+    .page-intro {
+        gap: 11px;
+    }
+
+    .intro-icon {
+        width: 45px;
+        height: 45px;
+
+        font-size: 17px;
+    }
+
+    .intro-text h1 {
+        font-size: 22px;
+    }
+
+    .intro-text p {
+        font-size: 10px;
+    }
+
+    .profile-card {
+        padding: 21px 17px;
+
+        border-radius: 13px;
+    }
+
+    .card-header {
+        margin-bottom: 21px;
+    }
+
+    .card-header h2 {
+        font-size: 14px;
+    }
+
+    .card-header p {
+        font-size: 9.5px;
+    }
+
+    .form-grid {
+        gap: 17px;
+    }
+
+    .action-area {
+        flex-direction: column-reverse;
+
+        width: 100%;
+    }
+
+    .cancel-btn,
+    .save-btn {
+        width: 100%;
+    }
+}
