@@ -420,3 +420,38 @@ body {
 .btn-action:hover {
     background-color: var(--teal-dark);
 }
+
+
+/* Update Profile Button */
+.update-profile-option {
+    display: block;
+    margin-left: auto;
+    margin-top: 25px;
+
+    padding: 12px 24px;
+
+    background: #0f766e;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+/* Hover */
+.update-profile-option:hover {
+    background: #115e59;
+    transform: translateY(-1px);
+}
+
+/* Arrow */
+.update-profile-option i {
+    margin-left: 8px;
+}
+
