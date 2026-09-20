@@ -3,12 +3,16 @@
     --teal-dark: #084c46;
     --teal-light: #e6f4f2;
     --page-bg: #edf7f5;
-    
     --text-dark: #0a3d37;
     --text-muted: #5e7e7a;
     --sidebar-width: 250px;
     --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+
+/* =========================================
+   RESET
+========================================= */
 
 * {
     box-sizing: border-box;
@@ -17,18 +21,32 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+
+/* =========================================
+   BODY
+========================================= */
+
 body {
     background-color: var(--page-bg);
     color: var(--text-dark);
     min-height: 100vh;
 }
 
+
+/* =========================================
+   DASHBOARD
+========================================= */
+
 .dashboard-container {
     display: flex;
     min-height: 100vh;
 }
 
-/* SIDEBAR */
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--teal-primary);
@@ -90,13 +108,22 @@ body {
     margin-top: auto;
 }
 
-/* MAIN CONTENT */
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+
 .main-content {
     margin-left: var(--sidebar-width);
     flex: 1;
     display: flex;
     flex-direction: column;
 }
+
+
+/* =========================================
+   TOP BAR
+========================================= */
 
 .top-bar {
     display: flex;
@@ -143,18 +170,31 @@ body {
     font-weight: 700;
 }
 
+
+/* =========================================
+   CONTENT BODY
+========================================= */
+
 .content-body {
     padding: 0 40px 40px 40px;
 }
 
-/* LAYOUT GRID */
+
+/* =========================================
+   COURSE DETAILS LAYOUT
+========================================= */
+
 .course-detail-layout {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 24px;
 }
 
-/* MEDIA VIEWER (DISABLED) */
+
+/* =========================================
+   MEDIA VIEWER
+========================================= */
+
 .media-viewer.disabled {
     background-color: #1a2a28;
     border-radius: 16px;
@@ -181,7 +221,11 @@ body {
     font-size: 15px;
 }
 
-/* OVERVIEW & REVIEWS CARD */
+
+/* =========================================
+   OVERVIEW & REVIEWS CARD
+========================================= */
+
 .overview-review-card {
     background-color: #ffffff;
     border-radius: 16px;
@@ -243,7 +287,11 @@ body {
     color: var(--teal-primary);
 }
 
-/* PURCHASE CARD */
+
+/* =========================================
+   PURCHASE CARD
+========================================= */
+
 .purchase-card {
     background-color: #ffffff;
     border-radius: 16px;
@@ -301,79 +349,28 @@ body {
     background-color: var(--teal-dark);
 }
 
-@media (max-width: 900px) {
-    .course-detail-layout {
-        grid-template-columns: 1fr;
-    }
-}
 
 /* =========================================
-   UPDATE PROFILE BUTTON
-========================================= */
-
-.update-profile-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    width: 220px;
-    margin-top: 25px;
-
-    padding: 12px 18px;
-
-    border: none;
-    border-radius: 8px;
-
-    background: #16a34a;
-    color: #ffffff;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background 0.3s ease,
-        transform 0.2s ease;
-}
-
-
-/* Hover */
-
-.update-profile-option:hover {
-    background: #166534;
-    transform: translateY(-2px);
-}
-
-
-/* Arrow */
-
-.update-profile-option i {
-    font-size: 13px;
-    margin-left: 10px;
-}
-
-/* =================================
    SETTINGS PAGE
-================================= */
+========================================= */
 
 .settings-page {
     width: 100%;
-    min-height: calc(100vh - 70px);
-    padding: 28px;
-    box-sizing: border-box;
-    background: #effcfb;
+    padding: 0;
+    margin: 0;
 }
 
 
-/* Header */
+/* =========================================
+   SETTINGS HEADER
+========================================= */
 
 .settings-header {
     margin-bottom: 26px;
 }
 
 .settings-header h2 {
-    margin: 0 0 8px;
+    margin: 0 0 8px 0;
     font-size: 28px;
     font-weight: 700;
     color: #145a57;
@@ -386,7 +383,9 @@ body {
 }
 
 
-/* Main Card */
+/* =========================================
+   ACCOUNT DETAILS CARD
+========================================= */
 
 .account-details-card {
     width: 100%;
@@ -394,84 +393,87 @@ body {
     background: #ffffff;
     border: 1px solid #cde9e6;
     border-radius: 16px;
-    box-sizing: border-box;
     box-shadow: 0 4px 15px rgba(20, 90, 87, 0.04);
 }
 
 .account-details-card h3 {
-    margin: 0 0 22px;
+    margin: 0 0 22px 0;
     font-size: 21px;
     font-weight: 700;
     color: #145a57;
 }
 
 
-/* Details Grid */
+/* =========================================
+   ACCOUNT DETAILS GRID
+========================================= */
 
 .account-details {
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
 
 
-/* Individual Detail Box */
+/* =========================================
+   DETAIL ROW
+   IMPORTANT:
+   JS uses .detail-row
+========================================= */
 
-.detail-box {
+.detail-row {
     min-height: 70px;
-    padding: 16px;
+    padding: 15px 16px;
     background: #f8fffe;
     border: 1px solid #d4eeeb;
     border-radius: 10px;
-    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.detail-box span {
+
+/* Label */
+
+.detail-row span {
     display: block;
-    margin-bottom: 7px;
-    font-size: 12px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 500;
     color: #45647c;
 }
 
-.detail-box strong {
+
+/* Value */
+
+.detail-row strong {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.5;
     font-weight: 500;
     color: #172b4d;
     word-break: break-word;
 }
 
 
-/* Update Profile Button */
-
-.update-profile-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 25px;
-}
+/* =========================================
+   UPDATE PROFILE BUTTON
+========================================= */
 
 .update-profile-option {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-
-    min-width: 167px;
-    padding: 12px 20px;
-
+    display: block;
+    margin-left: auto;
+    margin-top: 25px;
+    padding: 12px 24px;
+    background: #0f766e;
+    color: #ffffff;
     border: none;
     border-radius: 8px;
-
-    background: #11847d;
-    color: #ffffff;
-
     font-size: 14px;
     font-weight: 600;
-
     cursor: pointer;
-
-    transition: background 0.25s ease,
-                transform 0.2s ease;
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .update-profile-option:hover {
@@ -480,15 +482,27 @@ body {
 }
 
 .update-profile-option i {
-    font-size: 13px;
+    margin-left: 8px;
+}
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .course-detail-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 
-/* Responsive */
-
 @media (max-width: 768px) {
 
-    .settings-page {
+    .content-body {
+        padding: 0 20px 30px 20px;
+    }
+
+    .top-bar {
         padding: 20px;
     }
 
@@ -496,7 +510,39 @@ body {
         grid-template-columns: 1fr;
     }
 
+    .account-details-card {
+        padding: 22px;
+    }
+
     .update-profile-wrapper {
         justify-content: flex-start;
+    }
+
+    .search-box input {
+        width: 220px;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .account-details-card {
+        padding: 20px;
+    }
+
+    .settings-header h2 {
+        font-size: 24px;
+    }
+
+    .account-details-card h3 {
+        font-size: 19px;
+    }
+
+    .update-profile-option {
+        width: 100%;
+    }
+
+    .search-box {
+        display: none;
     }
 }

@@ -1,29 +1,34 @@
+// ========================================
+// COURSE VIEW JS
+// ========================================
+
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* =========================================
-       API & TOKEN
-    ========================================= */
-
-    const API_URL =
-        "http://127.0.0.1:8000/api/v1/students/me";
+    const API_BASE_URL =
+        "http://127.0.0.1:8000/api/v1";
 
     const token =
         localStorage.getItem("access_token");
 
+    const userRole =
+        localStorage.getItem("userRole");
 
-    /* =========================================
-       LOGIN CHECK
-    ========================================= */
+
+    // ========================================
+    // LOGIN CHECK
+    // ========================================
 
     if (!token) {
+
         window.location.href = "login.html";
+
         return;
     }
 
 
-    /* =========================================
-       ELEMENTS
-    ========================================= */
+    // ========================================
+    // ELEMENTS
+    // ========================================
 
     const contentBody =
         document.querySelector(".content-body");
@@ -32,43 +37,169 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".nav-item");
 
 
-    /* =========================================
-       LOAD STUDENT PROFILE
-    ========================================= */
+    // ========================================
+    // SIDEBAR NAVIGATION
+    // ========================================
 
-    async function loadStudentProfile() {
+    navItems.forEach(function (item) {
+
+        item.addEventListener("click", function (event) {
+
+            event.preventDefault();
+
+            const text =
+                item.textContent.trim().toLowerCase();
+
+
+            // ====================================
+            // COURSES
+            // ====================================
+
+            if (text === "courses") {
+
+                navItems.forEach(function (nav) {
+                    nav.classList.remove("active");
+                });
+
+                item.classList.add("active");
+
+                window.location.href =
+                    "course_view.html";
+
+                return;
+            }
+
+
+            // ====================================
+            // SETTINGS
+            // ====================================
+
+            if (text === "settings") {
+
+                navItems.forEach(function (nav) {
+                    nav.classList.remove("active");
+                });
+
+                item.classList.add("active");
+
+                loadAccountDetails();
+
+                return;
+            }
+
+
+            // ====================================
+            // LOGOUT
+            // ====================================
+
+            if (
+                text === "logout" ||
+                item.classList.contains("logout")
+            ) {
+
+                localStorage.removeItem(
+                    "access_token"
+                );
+
+                localStorage.removeItem(
+                    "token_type"
+                );
+
+                localStorage.removeItem(
+                    "userRole"
+                );
+
+                window.location.href =
+                    "login.html";
+
+                return;
+            }
+
+        });
+
+    });
+
+
+    // ========================================
+    // LOAD ACCOUNT DETAILS
+    // ========================================
+
+    async function loadAccountDetails() {
+
+        if (!contentBody) {
+            return;
+        }
+
+
+        // ====================================
+        // API ENDPOINT
+        // ====================================
+
+        let profileEndpoint = "";
+
+        if (userRole === "teacher") {
+
+            profileEndpoint =
+                `${API_BASE_URL}/teachers/me`;
+
+        } else {
+
+            profileEndpoint =
+                `${API_BASE_URL}/students/me`;
+
+        }
+
 
         try {
 
-            console.log("Loading student account details...");
+            console.log(
+                "Loading account details..."
+            );
 
-            const response = await fetch(API_URL, {
 
-                method: "GET",
+            const response =
+                await fetch(
+                    profileEndpoint,
+                    {
+                        method: "GET",
 
-                headers: {
-                    "Authorization": "Bearer " + token,
-                    "Accept": "application/json"
-                }
+                        headers: {
+                            "Authorization":
+                                `Bearer ${token}`,
 
-            });
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
 
 
             console.log(
-                "Student API Status:",
+                "Account API Status:",
                 response.status
             );
 
 
-            /* TOKEN EXPIRED / INVALID */
+            // ====================================
+            // SESSION EXPIRED
+            // ====================================
 
             if (response.status === 401) {
 
-                localStorage.removeItem("access_token");
-                localStorage.removeItem("token_type");
-                localStorage.removeItem("userRole");
+                localStorage.removeItem(
+                    "access_token"
+                );
 
-                window.location.href = "login.html";
+                localStorage.removeItem(
+                    "token_type"
+                );
+
+                localStorage.removeItem(
+                    "userRole"
+                );
+
+                window.location.href =
+                    "login.html";
 
                 return;
             }
@@ -79,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             console.log(
-                "Student account data:",
+                "Account Data:",
                 data
             );
 
@@ -94,48 +225,72 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            /* =====================================
-               GET ACCOUNT DETAILS
-            ===================================== */
+            // ====================================
+            // GET PROFILE VALUES
+            // ====================================
 
             const firstName =
-                data.first_name || "Not provided";
+                data.first_name ||
+                "Not provided";
+
 
             const lastName =
-                data.last_name || "Not provided";
+                data.last_name ||
+                "Not provided";
+
 
             const email =
                 data.user?.email_id ||
                 data.email_id ||
+                data.email ||
                 "Not provided";
+
 
             const phone =
                 data.phone_no ||
                 "Not provided";
 
+
             const gender =
                 data.gender ||
                 "Not provided";
 
-            const dob =
+
+            let dob =
                 data.date_of_birth ||
                 "Not provided";
+
+
+            if (
+                typeof dob === "string" &&
+                dob.includes("T")
+            ) {
+
+                dob =
+                    dob.split("T")[0];
+
+            }
+
 
             const address =
                 data.address ||
                 "Not provided";
+
 
             const about =
                 data.about ||
                 "Not provided";
 
 
-            /* =====================================
-               UPDATE TOP PROFILE NAME
-            ===================================== */
+            // ====================================
+            // UPDATE TOP USER NAME
+            // ====================================
 
             const userName =
-                document.querySelector(".user-name");
+                document.querySelector(
+                    ".user-name"
+                );
+
 
             if (userName) {
 
@@ -145,63 +300,32 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            /* =====================================
-               UPDATE TOP PROFILE IMAGE
-            ===================================== */
-
-            const topProfileImage =
-                document.querySelector(".user-profile img");
-
-
-            if (topProfileImage) {
-
-                if (data.profile_pic) {
-
-                    topProfileImage.src =
-                        data.profile_pic;
-
-                } else {
-
-                    topProfileImage.src =
-                        "https://i.pravatar.cc/150?img=32";
-                }
-
-
-                topProfileImage.onerror =
-                    function () {
-
-                        this.src =
-                            "https://i.pravatar.cc/150?img=32";
-
-                    };
-
-            }
-
-
-            /* =====================================
-               SHOW ACCOUNT DETAILS
-            ===================================== */
+            // ====================================
+            // SHOW SETTINGS
+            // ====================================
 
             showAccountDetails({
 
-                firstName,
-                lastName,
-                email,
-                phone,
-                gender,
-                dob,
-                address,
-                about
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
+                gender: gender,
+                dob: dob,
+                address: address,
+                about: about
 
             });
 
+        }
 
-        } catch (error) {
+        catch (error) {
 
             console.error(
-                "Student profile error:",
+                "Account Details Error:",
                 error
             );
+
 
             showAccountError(
                 "Backend server-এর সাথে connection হচ্ছে না."
@@ -212,16 +336,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =========================================
-       SHOW ACCOUNT DETAILS
-    ========================================= */
+    // ========================================
+    // SHOW ACCOUNT DETAILS
+    // ========================================
 
     function showAccountDetails(profile) {
-
-        if (!contentBody) {
-            return;
-        }
-
 
         contentBody.innerHTML = `
 
@@ -246,105 +365,121 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="account-details">
 
 
-                        <!-- FIRST NAME -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>First Name</span>
+                            <span>
+                                First Name
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.firstName)}
+                                ${escapeHTML(
+                                    profile.firstName
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- LAST NAME -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>Last Name</span>
+                            <span>
+                                Last Name
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.lastName)}
+                                ${escapeHTML(
+                                    profile.lastName
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- EMAIL -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>Email</span>
+                            <span>
+                                Email
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.email)}
+                                ${escapeHTML(
+                                    profile.email
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- PHONE -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>Phone</span>
+                            <span>
+                                Phone
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.phone)}
+                                ${escapeHTML(
+                                    profile.phone
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- GENDER -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>Gender</span>
+                            <span>
+                                Gender
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.gender)}
+                                ${escapeHTML(
+                                    profile.gender
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- DATE OF BIRTH -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>Date of Birth</span>
+                            <span>
+                                Date of Birth
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.dob)}
+                                ${escapeHTML(
+                                    profile.dob
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- ADDRESS -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>Address</span>
+                            <span>
+                                Address
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.address)}
+                                ${escapeHTML(
+                                    profile.address
+                                )}
                             </strong>
 
                         </div>
 
 
-                        <!-- ABOUT -->
+                        <div class="detail-row">
 
-                        <div class="detail-box">
-
-                            <span>About Me</span>
+                            <span>
+                                About Me
+                            </span>
 
                             <strong>
-                                ${escapeHTML(profile.about)}
+                                ${escapeHTML(
+                                    profile.about
+                                )}
                             </strong>
 
                         </div>
@@ -352,8 +487,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     </div>
 
-
-                    <!-- UPDATE PROFILE -->
 
                     <div class="update-profile-wrapper">
 
@@ -378,9 +511,9 @@ document.addEventListener("DOMContentLoaded", function () {
         `;
 
 
-        /* =====================================
-           UPDATE PROFILE BUTTON
-        ===================================== */
+        // ====================================
+        // UPDATE PROFILE BUTTON
+        // ====================================
 
         const updateButton =
             document.getElementById(
@@ -405,35 +538,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =========================================
-       ACCOUNT ERROR
-    ========================================= */
+    // ========================================
+    // ACCOUNT ERROR
+    // ========================================
 
     function showAccountError(message) {
-
-        if (!contentBody) {
-            return;
-        }
-
 
         contentBody.innerHTML = `
 
             <div class="settings-page">
 
-                <div class="settings-header">
-
-                    <h2>Settings</h2>
-
-                    <p>
-                        Manage your account and profile settings.
-                    </p>
-
-                </div>
-
-
                 <div class="account-details-card">
 
-                    <h3>Account Details</h3>
+                    <h3>
+                        Account Details
+                    </h3>
 
                     <p>
                         ${escapeHTML(message)}
@@ -448,322 +567,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =========================================
-       COURSES / SETTINGS / LOGOUT
-    ========================================= */
-
-    navItems.forEach(function (item) {
-
-        item.addEventListener(
-            "click",
-            function (event) {
-
-                const text =
-                    item.textContent
-                        .trim()
-                        .toLowerCase();
-
-
-                /* =============================
-                   COURSES
-                ============================= */
-
-                if (text === "courses") {
-
-                    event.preventDefault();
-
-
-                    navItems.forEach(
-                        function (nav) {
-
-                            nav.classList.remove(
-                                "active"
-                            );
-
-                        }
-                    );
-
-
-                    item.classList.add(
-                        "active"
-                    );
-
-
-                    window.location.href =
-                        "student.html";
-
-
-                    return;
-                }
-
-
-                /* =============================
-                   SETTINGS
-                ============================= */
-
-                if (text === "settings") {
-
-                    event.preventDefault();
-
-
-                    navItems.forEach(
-                        function (nav) {
-
-                            nav.classList.remove(
-                                "active"
-                            );
-
-                        }
-                    );
-
-
-                    item.classList.add(
-                        "active"
-                    );
-
-
-                    loadStudentProfile();
-
-
-                    return;
-                }
-
-
-                /* =============================
-                   LOGOUT
-                ============================= */
-
-                if (
-                    text === "logout" ||
-                    item.classList.contains("logout")
-                ) {
-
-                    event.preventDefault();
-
-                    logout();
-
-                    return;
-                }
-
-            }
-        );
-
-    });
-
-
-    /* =========================================
-       VIDEO / PDF SWITCH
-    ========================================= */
-
-    window.switchMedia = function (type) {
-
-        const videoBox =
-            document.getElementById(
-                "videoPlayerBox"
-            );
-
-        const pdfBox =
-            document.getElementById(
-                "pdfReaderBox"
-            );
-
-        const btns =
-            document.querySelectorAll(
-                ".toggle-btn"
-            );
-
-
-        btns.forEach(function (btn) {
-
-            btn.classList.remove(
-                "active"
-            );
-
-        });
-
-
-        if (type === "video") {
-
-            if (videoBox) {
-
-                videoBox.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-            if (pdfBox) {
-
-                pdfBox.classList.add(
-                    "hidden"
-                );
-
-            }
-
-            if (btns[0]) {
-
-                btns[0].classList.add(
-                    "active"
-                );
-
-            }
-
-        } else {
-
-            if (pdfBox) {
-
-                pdfBox.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-            if (videoBox) {
-
-                videoBox.classList.add(
-                    "hidden"
-                );
-
-            }
-
-            if (btns[1]) {
-
-                btns[1].classList.add(
-                    "active"
-                );
-
-            }
-
-        }
-
-    };
-
-
-    /* =========================================
-       OVERVIEW / REVIEWS SWITCH
-    ========================================= */
-
-    window.switchTab = function (tabName) {
-
-        const overviewTab =
-            document.getElementById(
-                "overviewTab"
-            );
-
-        const reviewsTab =
-            document.getElementById(
-                "reviewsTab"
-            );
-
-        const btns =
-            document.querySelectorAll(
-                ".tabs-header .tab-btn"
-            );
-
-
-        btns.forEach(function (btn) {
-
-            btn.classList.remove(
-                "active"
-            );
-
-        });
-
-
-        if (tabName === "overview") {
-
-            if (overviewTab) {
-
-                overviewTab.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-            if (reviewsTab) {
-
-                reviewsTab.classList.add(
-                    "hidden"
-                );
-
-            }
-
-            if (btns[0]) {
-
-                btns[0].classList.add(
-                    "active"
-                );
-
-            }
-
-        } else {
-
-            if (reviewsTab) {
-
-                reviewsTab.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-            if (overviewTab) {
-
-                overviewTab.classList.add(
-                    "hidden"
-                );
-
-            }
-
-            if (btns[1]) {
-
-                btns[1].classList.add(
-                    "active"
-                );
-
-            }
-
-        }
-
-    };
-
-
-    /* =========================================
-       LOGOUT FUNCTION
-    ========================================= */
-
-    function logout() {
-
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        localStorage.removeItem(
-            "token_type"
-        );
-
-        localStorage.removeItem(
-            "userRole"
-        );
-
-
-        window.location.href =
-            "login.html";
-
-    }
-
-
-    /* =========================================
-       HTML SECURITY
-    ========================================= */
+    // ========================================
+    // ESCAPE HTML
+    // ========================================
 
     function escapeHTML(value) {
 
         return String(value)
 
-            .replace(
-                /&/g,
-                "&amp;"
-            )
+            .replace(/&/g, "&amp;")
 
             .replace(
                 /</g,
@@ -787,13 +599,174 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-    /* =========================================
-       PAGE LOADED
-    ========================================= */
-
-    console.log(
-        "Course View Details JS Loaded"
-    );
-
 });
+
+
+// ========================================
+// MEDIA SWITCHER
+// ========================================
+
+function switchMedia(mediaType) {
+
+    const videoBox =
+        document.getElementById(
+            "videoPlayerBox"
+        );
+
+    const pdfBox =
+        document.getElementById(
+            "pdfReaderBox"
+        );
+
+    const buttons =
+        document.querySelectorAll(
+            ".media-toggle-bar .toggle-btn"
+        );
+
+
+    buttons.forEach(function (btn) {
+
+        btn.classList.remove(
+            "active"
+        );
+
+    });
+
+
+    if (mediaType === "video") {
+
+        if (videoBox) {
+            videoBox.classList.remove(
+                "hidden"
+            );
+        }
+
+        if (pdfBox) {
+            pdfBox.classList.add(
+                "hidden"
+            );
+        }
+
+        if (buttons[0]) {
+            buttons[0].classList.add(
+                "active"
+            );
+        }
+
+    }
+
+
+    if (mediaType === "pdf") {
+
+        if (pdfBox) {
+            pdfBox.classList.remove(
+                "hidden"
+            );
+        }
+
+        if (videoBox) {
+            videoBox.classList.add(
+                "hidden"
+            );
+        }
+
+        if (buttons[1]) {
+            buttons[1].classList.add(
+                "active"
+            );
+        }
+
+    }
+
+}
+
+
+// ========================================
+// OVERVIEW / REVIEWS
+// ========================================
+
+function switchTab(tabName) {
+
+    const overviewTab =
+        document.getElementById(
+            "overviewTab"
+        );
+
+    const reviewsTab =
+        document.getElementById(
+            "reviewsTab"
+        );
+
+    const tabButtons =
+        document.querySelectorAll(
+            ".tabs-header .tab-btn"
+        );
+
+
+    tabButtons.forEach(function (btn) {
+
+        btn.classList.remove(
+            "active"
+        );
+
+    });
+
+
+    if (tabName === "overview") {
+
+        if (overviewTab) {
+
+            overviewTab.classList.remove(
+                "hidden"
+            );
+
+        }
+
+        if (reviewsTab) {
+
+            reviewsTab.classList.add(
+                "hidden"
+            );
+
+        }
+
+        if (tabButtons[0]) {
+
+            tabButtons[0].classList.add(
+                "active"
+            );
+
+        }
+
+    }
+
+
+    if (tabName === "reviews") {
+
+        if (reviewsTab) {
+
+            reviewsTab.classList.remove(
+                "hidden"
+            );
+
+        }
+
+        if (overviewTab) {
+
+            overviewTab.classList.add(
+                "hidden"
+            );
+
+        }
+
+        if (tabButtons[1]) {
+
+            tabButtons[1].classList.add(
+                "active"
+            );
+
+        }
+
+    }
+
+}

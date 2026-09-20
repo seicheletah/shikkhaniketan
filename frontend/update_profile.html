@@ -44,10 +44,9 @@
     <div class="update-page">
 
 
-        
-
-
-        <!-- PAGE INTRO -->
+        <!-- ========================================
+             PAGE INTRO
+        ========================================= -->
 
         <div class="page-intro">
 
@@ -77,12 +76,16 @@
 
 
 
-        <!-- FORM -->
+        <!-- ========================================
+             UPDATE PROFILE FORM
+        ========================================= -->
 
         <form id="updateProfileForm">
 
 
-            <!-- PERSONAL INFORMATION -->
+            <!-- ========================================
+                 PERSONAL INFORMATION
+            ========================================= -->
 
             <section class="profile-card">
 
@@ -113,7 +116,7 @@
 
 
 
-                <!-- FORM -->
+                <!-- FORM GRID -->
 
                 <div class="form-grid">
 
@@ -176,7 +179,7 @@
                             Email Address
                         </label>
 
-                        <div class="field locked-field">
+                        <div class="field">
 
                             <i class="fa-regular fa-envelope"></i>
 
@@ -184,14 +187,8 @@
                                 type="email"
                                 id="email"
                                 name="email"
-                                placeholder="Email address"
-                                readonly>
-
-                            <span class="lock-icon">
-
-                                <i class="fa-solid fa-lock"></i>
-
-                            </span>
+                                placeholder="Enter email address"
+                                required>
 
                         </div>
 
@@ -199,7 +196,7 @@
 
                             <i class="fa-solid fa-circle-info"></i>
 
-                            Email address cannot be changed.
+                            You can change your email address.
 
                         </div>
 
@@ -224,6 +221,14 @@
                                 id="phone"
                                 name="phone_no"
                                 placeholder="Enter phone number">
+
+                        </div>
+
+                        <div class="field-note">
+
+                            <i class="fa-solid fa-circle-info"></i>
+
+                            Phone number must be unique.
 
                         </div>
 
@@ -348,7 +353,162 @@
 
 
 
-            <!-- ACTION AREA -->
+            <!-- ========================================
+                 PASSWORD SECTION
+            ========================================= -->
+
+            <section class="profile-card password-card">
+
+
+                <!-- CARD HEADER -->
+
+                <div class="card-header">
+
+                    <div class="header-icon">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            Change Password
+                        </h2>
+
+                        <p>
+                            Change your account password securely.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="form-grid">
+
+
+                    <!-- CURRENT PASSWORD -->
+
+                    <div class="form-group full-width">
+
+                        <label for="currentPassword">
+                            Current Password
+                        </label>
+
+                        <div class="field">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            <input
+                                type="password"
+                                id="currentPassword"
+                                name="current_password"
+                                placeholder="Enter current password">
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="toggleCurrentPassword"
+                                aria-label="Show or hide password">
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- NEW PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="newPassword">
+                            New Password
+                        </label>
+
+                        <div class="field">
+
+                            <i class="fa-solid fa-key"></i>
+
+                            <input
+                                type="password"
+                                id="newPassword"
+                                name="new_password"
+                                placeholder="Enter new password">
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="toggleNewPassword"
+                                aria-label="Show or hide password">
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- CONFIRM PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="confirmPassword">
+                            Confirm New Password
+                        </label>
+
+                        <div class="field">
+
+                            <i class="fa-solid fa-key"></i>
+
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                name="confirm_password"
+                                placeholder="Confirm new password">
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="toggleConfirmPassword"
+                                aria-label="Show or hide password">
+
+                                <i class="fa-regular fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="field-note password-note">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    Leave the password fields empty if you do not want to change your password.
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- ========================================
+                 ACTION AREA
+            ========================================= -->
 
             <div class="action-area">
 
@@ -361,6 +521,7 @@
                     Cancel
 
                 </button>
+
 
 
                 <button
@@ -385,7 +546,12 @@
 
 
 
+    <!-- ========================================
+         JAVASCRIPT
+    ========================================= -->
+
     <script src="update_profile.js"></script>
+
 
 </body>
 

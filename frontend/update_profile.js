@@ -1,4 +1,3 @@
-
 const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 const token = localStorage.getItem("access_token");
@@ -81,6 +80,14 @@ const cancelBtn =
 
 
 // ========================================
+// STORE ORIGINAL VALUES
+// ========================================
+
+let originalPhoneNumber = "";
+let originalEmail = "";
+
+
+// ========================================
 // SAFE VALUE
 // ========================================
 
@@ -122,6 +129,10 @@ function getSafeValue(value) {
             return value.email_id;
         }
 
+        if (typeof value.email === "string") {
+            return value.email;
+        }
+
         return "";
     }
 
@@ -130,10 +141,91 @@ function getSafeValue(value) {
 
 
 // ========================================
+// NORMALIZE PHONE
+// ========================================
+
+function normalizePhone(value) {
+
+    return getSafeValue(value)
+        .replace(/\s+/g, "")
+        .trim();
+}
+
+
+// ========================================
+// NORMALIZE EMAIL
+// ========================================
+
+function normalizeEmail(value) {
+
+    return getSafeValue(value)
+        .trim()
+        .toLowerCase();
+}
+
+
+// ========================================
+// NORMALIZE GENDER
+// ========================================
+
+function normalizeGender(value) {
+
+    const gender = getSafeValue(value)
+        .toLowerCase()
+        .trim();
+
+    if (
+        gender === "male" ||
+        gender === "m"
+    ) {
+        return "m";
+    }
+
+    if (
+        gender === "female" ||
+        gender === "f"
+    ) {
+        return "f";
+    }
+
+    if (
+        gender === "other" ||
+        gender === "o"
+    ) {
+        return "o";
+    }
+
+    return gender;
+}
+
+
+// ========================================
+// NORMALIZE DATE
+// ========================================
+
+function normalizeDate(value) {
+
+    let dateValue = getSafeValue(value);
+
+    if (dateValue.includes("T")) {
+
+        dateValue =
+            dateValue.split("T")[0];
+    }
+
+    return dateValue;
+}
+
+
+// ========================================
 // LOAD PROFILE
 // ========================================
 
 async function loadProfile() {
+
+    if (!token) {
+        return;
+    }
 
     try {
 
@@ -145,8 +237,11 @@ async function loadProfile() {
                 method: "GET",
 
                 headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/json"
+                    "Authorization":
+                        `Bearer ${token}`,
+
+                    "Accept":
+                        "application/json"
                 }
             }
         );
@@ -193,9 +288,12 @@ async function loadProfile() {
         }
 
 
+        // ========================================
+        // GET PROFILE DATA
+        // ========================================
+
         const data =
             await response.json();
-
 
         console.log(
             "PROFILE DATA:",
@@ -235,33 +333,47 @@ async function loadProfile() {
 
         if (emailInput) {
 
+            let emailValue = "";
+
+
             if (
                 data.user &&
-                typeof data.user === "object" &&
-                typeof data.user.email_id === "string"
+                typeof data.user === "object"
             ) {
 
-                emailInput.value =
-                    data.user.email_id;
-
-            } else if (
-                typeof data.email_id === "string"
-            ) {
-
-                emailInput.value =
-                    data.email_id;
-
-            } else if (
-                typeof data.email === "string"
-            ) {
-
-                emailInput.value =
-                    data.email;
-
-            } else {
-
-                emailInput.value = "";
+                emailValue =
+                    getSafeValue(
+                        data.user.email_id
+                    );
             }
+
+
+            if (!emailValue) {
+
+                emailValue =
+                    getSafeValue(
+                        data.email_id
+                    );
+            }
+
+
+            if (!emailValue) {
+
+                emailValue =
+                    getSafeValue(
+                        data.email
+                    );
+            }
+
+
+            emailInput.value =
+                emailValue;
+
+
+            originalEmail =
+                normalizeEmail(
+                    emailValue
+                );
         }
 
 
@@ -271,9 +383,19 @@ async function loadProfile() {
 
         if (phoneInput) {
 
-            phoneInput.value =
+            const phoneValue =
                 getSafeValue(
                     data.phone_no
+                );
+
+            phoneInput.value =
+                phoneValue;
+
+
+            // SAVE ORIGINAL PHONE
+            originalPhoneNumber =
+                normalizePhone(
+                    phoneValue
                 );
         }
 
@@ -284,35 +406,10 @@ async function loadProfile() {
 
         if (genderInput) {
 
-            let genderValue =
-                getSafeValue(
+            genderInput.value =
+                normalizeGender(
                     data.gender
                 );
-
-            const genderLower =
-                genderValue.toLowerCase();
-
-
-            if (genderLower === "male") {
-
-                genderValue = "m";
-
-            } else if (
-                genderLower === "female"
-            ) {
-
-                genderValue = "f";
-
-            } else if (
-                genderLower === "other"
-            ) {
-
-                genderValue = "o";
-            }
-
-
-            genderInput.value =
-                genderValue;
         }
 
 
@@ -322,21 +419,10 @@ async function loadProfile() {
 
         if (dobInput) {
 
-            let dobValue =
-                getSafeValue(
+            dobInput.value =
+                normalizeDate(
                     data.date_of_birth
                 );
-
-
-            if (dobValue.includes("T")) {
-
-                dobValue =
-                    dobValue.split("T")[0];
-            }
-
-
-            dobInput.value =
-                dobValue;
         }
 
 
@@ -367,9 +453,18 @@ async function loadProfile() {
 
 
         console.log(
-            "Profile loaded successfully."
+            "Original Phone:",
+            originalPhoneNumber
         );
 
+        console.log(
+            "Original Email:",
+            originalEmail
+        );
+
+        console.log(
+            "Profile loaded successfully."
+        );
 
     } catch (error) {
 
@@ -379,9 +474,76 @@ async function loadProfile() {
         );
 
         alert(
+            error.message ||
             "Profile load korte problem hoyeche."
         );
     }
+}
+
+
+// ========================================
+// GET ERROR MESSAGE
+// ========================================
+
+async function getErrorMessage(response) {
+
+    try {
+
+        const errorData =
+            await response.json();
+
+
+        if (
+            typeof errorData.detail ===
+            "string"
+        ) {
+
+            return errorData.detail;
+        }
+
+
+        if (
+            Array.isArray(
+                errorData.detail
+            )
+        ) {
+
+            return errorData.detail
+                .map(error => {
+
+                    if (
+                        typeof error ===
+                        "string"
+                    ) {
+
+                        return error;
+                    }
+
+                    return (
+                        error.msg ||
+                        "Invalid data"
+                    );
+
+                })
+                .join(", ");
+        }
+
+
+        if (errorData.message) {
+
+            return errorData.message;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error reading API error:",
+            error
+        );
+    }
+
+
+    return `Profile update failed. Status: ${response.status}`;
 }
 
 
@@ -399,7 +561,7 @@ if (updateProfileForm) {
 
 
             // ========================================
-            // CHECK TOKEN
+            // TOKEN CHECK
             // ========================================
 
             if (!token) {
@@ -413,6 +575,26 @@ if (updateProfileForm) {
 
                 return;
             }
+
+
+            // ========================================
+            // CURRENT VALUES
+            // ========================================
+
+            const newPhoneNumber =
+                phoneInput
+                    ? normalizePhone(
+                        phoneInput.value
+                    )
+                    : "";
+
+
+            const newEmail =
+                emailInput
+                    ? normalizeEmail(
+                        emailInput.value
+                    )
+                    : "";
 
 
             // ========================================
@@ -446,9 +628,9 @@ if (updateProfileForm) {
                             ? lastNameInput.value.trim()
                             : "",
 
-                    phone_no:
-                        phoneInput
-                            ? phoneInput.value.trim()
+                    email:
+                        emailInput
+                            ? emailInput.value.trim()
                             : "",
 
                     gender:
@@ -473,6 +655,64 @@ if (updateProfileForm) {
                 };
 
 
+                // ========================================
+                // IMPORTANT PHONE LOGIC
+                // ========================================
+
+                /*
+                 * Phone number change না করলে
+                 * phone_no PATCH request-এ পাঠানো হবে না।
+                 *
+                 * তাই:
+                 *
+                 * Old: 9876543210
+                 * New: 9876543210
+                 *
+                 * → phone_no যাবে না
+                 *
+                 * কিন্তু:
+                 *
+                 * Old: 9876543210
+                 * New: 9123456789
+                 *
+                 * → phone_no যাবে
+                 */
+
+                if (
+                    newPhoneNumber &&
+                    newPhoneNumber !==
+                    originalPhoneNumber
+                ) {
+
+                    profileData.phone_no =
+                        newPhoneNumber;
+
+                    console.log(
+                        "Phone number changed. Sending new phone."
+                    );
+
+                } else {
+
+                    console.log(
+                        "Phone number unchanged. Phone field skipped."
+                    );
+                }
+
+
+                // ========================================
+                // LOG DATA
+                // ========================================
+
+                console.log(
+                    "Original Phone:",
+                    originalPhoneNumber
+                );
+
+                console.log(
+                    "New Phone:",
+                    newPhoneNumber
+                );
+
                 console.log(
                     "Sending Profile Data:",
                     profileData
@@ -490,6 +730,7 @@ if (updateProfileForm) {
                             method: "PATCH",
 
                             headers: {
+
                                 "Authorization":
                                     `Bearer ${token}`,
 
@@ -509,28 +750,103 @@ if (updateProfileForm) {
 
 
                 // ========================================
-                // ERROR CHECK
+                // SESSION EXPIRED
+                // ========================================
+
+                if (
+                    response.status === 401
+                ) {
+
+                    alert(
+                        "Session expired. Please login again."
+                    );
+
+                    localStorage.removeItem(
+                        "access_token"
+                    );
+
+                    localStorage.removeItem(
+                        "token_type"
+                    );
+
+                    localStorage.removeItem(
+                        "userRole"
+                    );
+
+                    window.location.href =
+                        "login.html";
+
+                    return;
+                }
+
+
+                // ========================================
+                // UPDATE ERROR
                 // ========================================
 
                 if (!response.ok) {
 
-                    const errorData =
-                        await response
-                            .json()
-                            .catch(
-                                () => ({})
-                            );
-
+                    const message =
+                        await getErrorMessage(
+                            response
+                        );
 
                     console.error(
                         "Profile Update Error:",
-                        errorData
+                        message
                     );
 
 
+                    // ========================================
+                    // PHONE DUPLICATE
+                    // ========================================
+
+                    if (
+                        message
+                            .toLowerCase()
+                            .includes("phone") &&
+                        (
+                            message
+                                .toLowerCase()
+                                .includes("exist") ||
+                            message
+                                .toLowerCase()
+                                .includes("already")
+                        )
+                    ) {
+
+                        throw new Error(
+                            "Phone number already exists."
+                        );
+                    }
+
+
+                    // ========================================
+                    // EMAIL DUPLICATE
+                    // ========================================
+
+                    if (
+                        message
+                            .toLowerCase()
+                            .includes("email") &&
+                        (
+                            message
+                                .toLowerCase()
+                                .includes("exist") ||
+                            message
+                                .toLowerCase()
+                                .includes("already")
+                        )
+                    ) {
+
+                        throw new Error(
+                            "Email already exists."
+                        );
+                    }
+
+
                     throw new Error(
-                        errorData.detail ||
-                        `Profile update failed. Status: ${response.status}`
+                        message
                     );
                 }
 
@@ -539,8 +855,19 @@ if (updateProfileForm) {
                 // UPDATED DATA
                 // ========================================
 
-                const updatedData =
-                    await response.json();
+                let updatedData = null;
+
+                try {
+
+                    updatedData =
+                        await response.json();
+
+                } catch (error) {
+
+                    console.log(
+                        "No JSON response body."
+                    );
+                }
 
 
                 console.log(
@@ -575,7 +902,6 @@ if (updateProfileForm) {
 
                 window.location.href =
                     redirectPage;
-
 
             } catch (error) {
 
@@ -621,7 +947,6 @@ if (cancelBtn) {
 
             window.location.href =
                 redirectPage;
-
         }
     );
 }
@@ -632,4 +957,3 @@ if (cancelBtn) {
 // ========================================
 
 loadProfile();
-

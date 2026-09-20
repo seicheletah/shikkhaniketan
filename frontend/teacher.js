@@ -7,8 +7,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const navItems = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".page-section");
 
-    const profileImage = document.getElementById("teacherProfileImg");
-    const userName = document.getElementById("teacherUserName");
+    const profileImage =
+        document.getElementById("teacherProfileImg");
+
+    const userName =
+        document.getElementById("teacherUserName");
 
 
     // =========================================
@@ -31,17 +34,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
             event.preventDefault();
 
-            const page = item.getAttribute("data-page");
+            const page =
+                item.getAttribute("data-page");
 
 
-            // Logout
-            if (page === "logout") {
-                logout();
+            // =================================
+            // COURSES
+            // =================================
+
+            if (page === "courses") {
+
+                window.location.href = "add_course.html";
+
                 return;
             }
 
 
-            // Remove active class
+            // =================================
+            // LOGOUT
+            // =================================
+
+            if (page === "logout") {
+
+                logout();
+
+                return;
+            }
+
+
+            // =================================
+            // REMOVE ACTIVE CLASS
+            // =================================
+
             navItems.forEach(function (nav) {
                 nav.classList.remove("active");
             });
@@ -51,20 +75,30 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
 
-            // Add active class
+            // =================================
+            // ADD ACTIVE CLASS
+            // =================================
+
             item.classList.add("active");
+
 
             const selectedSection =
                 document.getElementById(page);
+
 
             if (selectedSection) {
                 selectedSection.classList.add("active");
             }
 
 
-            // Load teacher profile when Settings clicked
+            // =================================
+            // SETTINGS
+            // =================================
+
             if (page === "settings") {
+
                 loadTeacherProfile();
+
             }
 
         });
@@ -98,11 +132,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             const response = await fetch(API_URL, {
+
                 method: "GET",
+
                 headers: {
                     "Authorization": "Bearer " + token,
                     "Accept": "application/json"
                 }
+
             });
 
 
@@ -238,10 +275,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     };
 
-
-                console.log(
-                    "Teacher profile picture loaded successfully."
-                );
             }
 
 
@@ -262,12 +295,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             });
 
+
         } catch (error) {
 
             console.error(
                 "Teacher profile error:",
                 error
             );
+
 
             showAccountError(
                 "Backend server-এর সাথে connection হচ্ছে না।"
@@ -300,134 +335,176 @@ document.addEventListener("DOMContentLoaded", function () {
 
         accountDetails.innerHTML = `
 
-            <div class="account-details-card">
+            <div class="settings-page">
 
-                <h3>Account Details</h3>
+                <!-- SETTINGS HEADER -->
+
+                <div class="settings-header">
+
+                    <h2>Account Settings</h2>
+
+                    <p>
+                        Your account information
+                    </p>
+
+                </div>
 
 
-                <div class="account-details">
+                <!-- ACCOUNT DETAILS CARD -->
+
+                <div class="account-details-card">
+
+                    <h3>
+                        Account Details
+                    </h3>
 
 
-                    <!-- FIRST NAME -->
+                    <div class="account-details">
 
-                    <div class="detail-row">
 
-                        <span>First Name</span>
+                        <!-- FIRST NAME -->
 
-                        <strong>
-                            ${escapeHTML(profile.firstName)}
-                        </strong>
+                        <div class="detail-row">
+
+                            <span>
+                                First Name
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.firstName)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- LAST NAME -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                Last Name
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.lastName)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                Email
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.email)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                Phone
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.phone)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- GENDER -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                Gender
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.gender)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- DATE OF BIRTH -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                Date of Birth
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.dob)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                Address
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.address)}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- ABOUT ME -->
+
+                        <div class="detail-row">
+
+                            <span>
+                                About Me
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(profile.about)}
+                            </strong>
+
+                        </div>
+
 
                     </div>
 
 
-                    <!-- LAST NAME -->
+                    <!-- UPDATE PROFILE -->
 
-                    <div class="detail-row">
+                    <div class="update-profile-wrapper">
 
-                        <span>Last Name</span>
+                        <button
+                            type="button"
+                            class="update-profile-option"
+                            id="openUpdateProfile"
+                        >
 
-                        <strong>
-                            ${escapeHTML(profile.lastName)}
-                        </strong>
+                            Update Profile
 
-                    </div>
+                            <i class="fa-solid fa-arrow-right"></i>
 
-
-                    <!-- EMAIL -->
-
-                    <div class="detail-row">
-
-                        <span>Email</span>
-
-                        <strong>
-                            ${escapeHTML(profile.email)}
-                        </strong>
-
-                    </div>
-
-
-                    <!-- PHONE -->
-
-                    <div class="detail-row">
-
-                        <span>Phone</span>
-
-                        <strong>
-                            ${escapeHTML(profile.phone)}
-                        </strong>
-
-                    </div>
-
-
-                    <!-- GENDER -->
-
-                    <div class="detail-row">
-
-                        <span>Gender</span>
-
-                        <strong>
-                            ${escapeHTML(profile.gender)}
-                        </strong>
-
-                    </div>
-
-
-                    <!-- DATE OF BIRTH -->
-
-                    <div class="detail-row">
-
-                        <span>Date of Birth</span>
-
-                        <strong>
-                            ${escapeHTML(profile.dob)}
-                        </strong>
-
-                    </div>
-
-
-                    <!-- ADDRESS -->
-
-                    <div class="detail-row">
-
-                        <span>Address</span>
-
-                        <strong>
-                            ${escapeHTML(profile.address)}
-                        </strong>
-
-                    </div>
-
-
-                    <!-- ABOUT ME -->
-
-                    <div class="detail-row">
-
-                        <span>About Me</span>
-
-                        <strong>
-                            ${escapeHTML(profile.about)}
-                        </strong>
+                        </button>
 
                     </div>
 
 
                 </div>
-
-
-                <!-- UPDATE PROFILE BUTTON -->
-
-                <button
-                    type="button"
-                    class="update-profile-option"
-                    id="openUpdateProfile">
-
-                    Update Profile
-
-                    <i class="fa-solid fa-arrow-right"></i>
-
-                </button>
-
 
             </div>
 
@@ -478,13 +555,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
         accountDetails.innerHTML = `
 
-            <div class="account-details-card">
+            <div class="settings-page">
 
-                <h3>Account Details</h3>
+                <div class="settings-header">
 
-                <p>
-                    ${escapeHTML(message)}
-                </p>
+                    <h2>Account Settings</h2>
+
+                    <p>
+                        Your account information
+                    </p>
+
+                </div>
+
+
+                <div class="account-details-card">
+
+                    <h3>
+                        Account Details
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(message)}
+                    </p>
+
+                </div>
 
             </div>
 
@@ -521,10 +615,13 @@ document.addEventListener("DOMContentLoaded", function () {
     function logout() {
 
         localStorage.removeItem("access_token");
+
         localStorage.removeItem("token_type");
+
         localStorage.removeItem("userRole");
 
-        window.location.href = "login.html";
+        window.location.href =
+            "login.html";
 
     }
 
