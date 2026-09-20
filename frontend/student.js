@@ -7,10 +7,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const navItems = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".page-section");
 
-    const profileImage = document.getElementById("studentProfileImg");
-    const userName = document.getElementById("studentUserName");
+    const profileImage =
+        document.getElementById("studentProfileImg");
 
-    const accountDetails = document.getElementById("accountDetails");
+    const userName =
+        document.getElementById("studentUserName");
 
 
     // =========================================
@@ -24,6 +25,48 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
+    // SHOW SECTION
+    // =========================================
+
+    function showSection(sectionId) {
+
+        sections.forEach(function (section) {
+            section.classList.remove("active");
+            section.hidden = true;
+        });
+
+        const selectedSection =
+            document.getElementById(sectionId);
+
+        if (selectedSection) {
+            selectedSection.hidden = false;
+            selectedSection.classList.add("active");
+        }
+    }
+
+
+    // =========================================
+    // SET ACTIVE SIDEBAR
+    // =========================================
+
+    function setActiveNav(page) {
+
+        navItems.forEach(function (nav) {
+            nav.classList.remove("active");
+        });
+
+        const activeNav =
+            document.querySelector(
+                '.nav-item[data-page="' + page + '"]'
+            );
+
+        if (activeNav) {
+            activeNav.classList.add("active");
+        }
+    }
+
+
+    // =========================================
     // SIDEBAR NAVIGATION
     // =========================================
 
@@ -31,59 +74,295 @@ document.addEventListener("DOMContentLoaded", function () {
 
         item.addEventListener("click", function (event) {
 
-            event.preventDefault();
+            const page =
+                item.getAttribute("data-page");
 
-            const page = item.getAttribute("data-page");
 
+            // =====================================
+            // COURSES
+            // =====================================
+            // Courses link যদি course_details.html হয়,
+            // তাহলে browser-কে normal navigation করতে দাও.
 
-            // =================================
-            // LOGOUT
-            // =================================
+            if (page === "courses") {
 
-            if (page === "logout") {
-                logout();
+                // যদি href="course_details.html" থাকে
+                const href = item.getAttribute("href");
+
+                if (href === "course_details.html") {
+                    return;
+                }
+
+                event.preventDefault();
+
+                showSection("courses");
+                setActiveNav("courses");
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+
                 return;
             }
 
 
-            // =================================
-            // REMOVE ACTIVE CLASS
-            // =================================
+            // =====================================
+            // LOGOUT
+            // =====================================
 
-            navItems.forEach(function (nav) {
-                nav.classList.remove("active");
-            });
+            if (page === "logout") {
 
-            sections.forEach(function (section) {
-                section.classList.remove("active");
-            });
+                event.preventDefault();
 
+                logout();
 
-            // =================================
-            // ADD ACTIVE CLASS
-            // =================================
-
-            item.classList.add("active");
-
-            const selectedSection =
-                document.getElementById(page);
-
-            if (selectedSection) {
-                selectedSection.classList.add("active");
+                return;
             }
 
 
-            // =================================
+            // =====================================
+            // QUIZ
+            // =====================================
+
+            if (page === "quiz") {
+
+                event.preventDefault();
+
+                showSection("quiz");
+                setActiveNav("quiz");
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+
+                return;
+            }
+
+
+            // =====================================
             // SETTINGS
-            // =================================
+            // =====================================
 
             if (page === "settings") {
+
+                event.preventDefault();
+
+                showSection("settings");
+                setActiveNav("settings");
+
                 loadStudentProfile();
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+
+                return;
             }
 
         });
 
     });
+
+
+    // =========================================
+    // OPEN COURSE DETAILS PAGE
+    // =========================================
+
+    function openCourseDetails(courseName) {
+
+        console.log(
+            "Opening Course Details:",
+            courseName
+        );
+
+        if (!courseName) {
+            console.error("Course name not found!");
+            return;
+        }
+
+
+        // Course name URL-এর মধ্যে পাঠানো হচ্ছে
+        const courseURL =
+            "course_details.html?course=" +
+            encodeURIComponent(courseName);
+
+
+        window.location.href = courseURL;
+    }
+
+
+    // =========================================
+    // COURSE CARD CLICK
+    // =========================================
+
+    const courseGrid =
+        document.querySelector(".course-grid");
+
+
+    if (courseGrid) {
+
+        courseGrid.addEventListener(
+            "click",
+            function (event) {
+
+                const card =
+                    event.target.closest(".course-card");
+
+
+                if (!card) {
+                    return;
+                }
+
+
+                const courseName =
+                    card.getAttribute("data-course");
+
+
+                console.log(
+                    "Course card clicked:",
+                    courseName
+                );
+
+
+                openCourseDetails(courseName);
+
+            }
+        );
+
+    } else {
+
+        console.error(
+            "Course grid not found!"
+        );
+
+    }
+
+
+    // =========================================
+    // CONTINUE LEARNING BUTTON
+    // =========================================
+
+    const continueButtons =
+        document.querySelectorAll(".btn-continue");
+
+
+    continueButtons.forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+
+                const courseName =
+                    button.getAttribute("data-course");
+
+
+                console.log(
+                    "Continue button clicked:",
+                    courseName
+                );
+
+
+                openCourseDetails(courseName);
+
+            }
+        );
+
+    });
+
+
+    // =========================================
+    // BACK TO COURSES
+    // =========================================
+
+    const backToCourses =
+        document.getElementById("backToCourses");
+
+
+    if (backToCourses) {
+
+        backToCourses.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                showSection("courses");
+                setActiveNav("courses");
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+
+            }
+        );
+
+    }
+
+
+    // =========================================
+    // COURSE DETAILS TABS
+    // =========================================
+
+    window.switchTab = function (tab) {
+
+        const overviewTab =
+            document.getElementById("overviewTab");
+
+        const reviewsTab =
+            document.getElementById("reviewsTab");
+
+        const tabButtons =
+            document.querySelectorAll(".tab-btn");
+
+
+        tabButtons.forEach(function (button) {
+            button.classList.remove("active");
+        });
+
+
+        if (overviewTab) {
+            overviewTab.classList.add("hidden");
+        }
+
+        if (reviewsTab) {
+            reviewsTab.classList.add("hidden");
+        }
+
+
+        // OVERVIEW
+        if (tab === "overview") {
+
+            if (overviewTab) {
+                overviewTab.classList.remove("hidden");
+            }
+
+            if (tabButtons[0]) {
+                tabButtons[0].classList.add("active");
+            }
+        }
+
+
+        // REVIEWS
+        if (tab === "reviews") {
+
+            if (reviewsTab) {
+                reviewsTab.classList.remove("hidden");
+            }
+
+            if (tabButtons[1]) {
+                tabButtons[1].classList.add("active");
+            }
+        }
+
+    };
 
 
     // =========================================
@@ -97,13 +376,20 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Calling Student API...");
 
 
-            const response = await fetch(API_URL, {
-                method: "GET",
-                headers: {
-                    "Authorization": "Bearer " + token,
-                    "Accept": "application/json"
-                }
-            });
+            const response =
+                await fetch(API_URL, {
+
+                    method: "GET",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token,
+
+                        "Accept":
+                            "application/json"
+                    }
+
+                });
 
 
             console.log(
@@ -113,7 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             // =================================
-            // TOKEN EXPIRED / UNAUTHORIZED
+            // UNAUTHORIZED
             // =================================
 
             if (response.status === 401) {
@@ -122,17 +408,29 @@ document.addEventListener("DOMContentLoaded", function () {
                     "Student token expired or invalid."
                 );
 
-                localStorage.removeItem("access_token");
-                localStorage.removeItem("token_type");
-                localStorage.removeItem("userRole");
 
-                window.location.href = "login.html";
+                localStorage.removeItem(
+                    "access_token"
+                );
+
+                localStorage.removeItem(
+                    "token_type"
+                );
+
+                localStorage.removeItem(
+                    "userRole"
+                );
+
+
+                window.location.href =
+                    "login.html";
 
                 return;
             }
 
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
 
             console.log(
@@ -152,6 +450,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     data
                 );
 
+
                 showAccountError(
                     "Unable to load account details."
                 );
@@ -170,30 +469,44 @@ document.addEventListener("DOMContentLoaded", function () {
             // =================================
 
             const firstName =
-                data.first_name || "Not provided";
+                data.first_name ||
+                "Not provided";
+
 
             const lastName =
-                data.last_name || "Not provided";
+                data.last_name ||
+                "Not provided";
+
 
             const email =
                 data.user?.email_id ||
                 data.email_id ||
                 "Not provided";
 
+
             const phone =
-                data.phone_no || "Not provided";
+                data.phone_no ||
+                "Not provided";
+
 
             const gender =
-                data.gender || "Not provided";
+                data.gender ||
+                "Not provided";
+
 
             const dob =
-                data.date_of_birth || "Not provided";
+                data.date_of_birth ||
+                "Not provided";
+
 
             const address =
-                data.address || "Not provided";
+                data.address ||
+                "Not provided";
+
 
             const about =
-                data.about || "Not provided";
+                data.about ||
+                "Not provided";
 
 
             // =================================
@@ -218,6 +531,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 "Profile pic from API:",
                 data.profile_pic
             );
+
 
             if (profileImage) {
 
@@ -249,29 +563,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             // =================================
-            // ACCOUNT DETAILS
+            // DISPLAY PROFILE
             // =================================
 
             displayStudentProfile({
-                firstName,
-                lastName,
-                email,
-                phone,
-                gender,
-                dob,
-                address,
-                about
+
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
+                gender: gender,
+                dob: dob,
+                address: address,
+                about: about
+
             });
 
-        } catch (error) {
+        }
+
+
+        catch (error) {
 
             console.error(
                 "Student profile error:",
                 error
             );
 
+
             showAccountError(
-                "Backend server-এর সাথে connection হচ্ছে না।"
+                "Backend server-এর সাথে connection হচ্ছে না."
             );
 
         }
@@ -286,7 +606,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function displayStudentProfile(profile) {
 
         const accountDetails =
-            document.getElementById("accountDetails");
+            document.getElementById(
+                "accountDetails"
+            );
 
 
         if (!accountDetails) {
@@ -305,118 +627,66 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 <h3>Account Details</h3>
 
-
                 <div class="account-details">
 
-
-                    <!-- FIRST NAME -->
-
                     <div class="detail-row">
-
                         <span>First Name</span>
-
                         <strong>
                             ${escapeHTML(profile.firstName)}
                         </strong>
-
                     </div>
 
-
-                    <!-- LAST NAME -->
-
                     <div class="detail-row">
-
                         <span>Last Name</span>
-
                         <strong>
                             ${escapeHTML(profile.lastName)}
                         </strong>
-
                     </div>
 
-
-                    <!-- EMAIL -->
-
                     <div class="detail-row">
-
                         <span>Email</span>
-
                         <strong>
                             ${escapeHTML(profile.email)}
                         </strong>
-
                     </div>
 
-
-                    <!-- PHONE -->
-
                     <div class="detail-row">
-
                         <span>Phone</span>
-
                         <strong>
                             ${escapeHTML(profile.phone)}
                         </strong>
-
                     </div>
 
-
-                    <!-- GENDER -->
-
                     <div class="detail-row">
-
                         <span>Gender</span>
-
                         <strong>
                             ${escapeHTML(profile.gender)}
                         </strong>
-
                     </div>
 
-
-                    <!-- DATE OF BIRTH -->
-
                     <div class="detail-row">
-
                         <span>Date of Birth</span>
-
                         <strong>
                             ${escapeHTML(profile.dob)}
                         </strong>
-
                     </div>
 
-
-                    <!-- ADDRESS -->
-
                     <div class="detail-row">
-
                         <span>Address</span>
-
                         <strong>
                             ${escapeHTML(profile.address)}
                         </strong>
-
                     </div>
 
-
-                    <!-- ABOUT ME -->
-
                     <div class="detail-row">
-
                         <span>About Me</span>
-
                         <strong>
                             ${escapeHTML(profile.about)}
                         </strong>
-
                     </div>
-
 
                 </div>
 
-
-                <!-- UPDATE PROFILE BUTTON -->
 
                 <button
                     type="button"
@@ -428,7 +698,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <i class="fa-solid fa-arrow-right"></i>
 
                 </button>
-
 
             </div>
 
@@ -469,7 +738,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function showAccountError(message) {
 
         const accountDetails =
-            document.getElementById("accountDetails");
+            document.getElementById(
+                "accountDetails"
+            );
 
 
         if (!accountDetails) {
@@ -521,11 +792,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function logout() {
 
-        localStorage.removeItem("access_token");
+        localStorage.removeItem(
+            "access_token"
+        );
 
-        localStorage.removeItem("token_type");
+        localStorage.removeItem(
+            "token_type"
+        );
 
-        localStorage.removeItem("userRole");
+        localStorage.removeItem(
+            "userRole"
+        );
+
 
         window.location.href =
             "login.html";
@@ -534,8 +812,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // LOAD PROFILE ON PAGE LOAD
+    // INITIAL LOAD
     // =========================================
+
+    showSection("courses");
+    setActiveNav("courses");
 
     loadStudentProfile();
 

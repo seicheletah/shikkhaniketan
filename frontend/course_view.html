@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Player - SkillHub</title>
+    <link rel="stylesheet" href="course_view.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo-box">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h2 class="brand-name">SkillHub</h2>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="instructor.html" class="nav-item active">
+                    <span>Courses</span>
+                </a>
+                <a href="instructor.html#settings" class="nav-item">
+                    <span>Settings</span>
+                </a>
+                <a href="login.html" class="nav-item logout">
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Search lessons...">
+                </div>
+
+                <div class="top-bar-right">
+                    <div class="user-profile">
+                        <img src="https://i.pravatar.cc/150?img=68" alt="User Profile">
+                        <span class="user-name">Alex Smit</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT BODY -->
+            <div class="content-body">
+
+                <div class="course-player-container">
+                    
+                    <!-- MEDIA VIEWER CONTAINER (VIDEO & PDF) -->
+                    <div class="media-viewer-card">
+                        
+                        <!-- MEDIA TYPE SELECTOR TABS -->
+                        <div class="media-toggle-bar">
+                            <button class="toggle-btn active" onclick="switchMedia('video')">
+                                <i class="fa-solid fa-circle-play"></i> Video Player
+                            </button>
+                            <button class="toggle-btn" onclick="switchMedia('pdf')">
+                                <i class="fa-solid fa-file-pdf"></i> PDF Reader
+                            </button>
+                        </div>
+
+                        <!-- VIDEO PLAYER BOX -->
+                        <div class="media-box" id="videoPlayerBox">
+                            <video controls poster="https://via.placeholder.com/800x450/0d6860/ffffff?text=HTML+%26+CSS+Lecture">
+                                <source src="sample-video.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+
+                        <!-- PDF READER BOX -->
+                        <div class="media-box hidden" id="pdfReaderBox">
+                            <iframe src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" width="100%" height="500px"></iframe>
+                        </div>
+
+                    </div>
+
+                    <!-- OVERVIEW & REVIEWS CARD -->
+                    <div class="overview-review-card">
+                        <div class="tabs-header">
+                            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                            <button class="tab-btn" onclick="switchTab('reviews')">Reviews</button>
+                        </div>
+
+                        <!-- OVERVIEW TAB CONTENT -->
+                        <div class="tab-content" id="overviewTab">
+                            <h3>Full-Stack Web Development Course</h3>
+                            <p>Welcome to the premium course module. Access all video lectures, course slides, and downloadable resource materials directly from this viewer.</p>
+                            
+                            <div class="resource-list">
+                                <h4>Course Resources</h4>
+                                <ul>
+                                    <li><i class="fa-solid fa-file-arrow-down"></i> <a href="#">Lecture_01_Notes.pdf</a></li>
+                                    <li><i class="fa-solid fa-code"></i> <a href="#">Starter_Code_Files.zip</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- REVIEWS TAB CONTENT -->
+                        <div class="tab-content hidden" id="reviewsTab">
+                            <h3>Student Feedback</h3>
+                            <div class="review-item">
+                                <div class="reviewer-header">
+                                    <strong>Priyanka Saha</strong>
+                                    <span class="rating">★★★★★</span>
+                                </div>
+                                <p>Great learning experience! The integrated PDF notes along with video lessons make studying very smooth.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+   
+
+</body>
+
+</html>

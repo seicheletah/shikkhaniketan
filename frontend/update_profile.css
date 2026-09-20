@@ -1,84 +1,104 @@
+/* =========================================
+   ROOT VARIABLES
+========================================= */
+
+:root {
+    --teal-primary: #0f766e;
+    --teal-dark: #0b5f59;
+    --teal-light: #e6f4f2;
+
+    --page-bg: #edf7f5;
+
+    --white: #ffffff;
+
+    --text-dark: #173b37;
+    --text-muted: #64748b;
+
+    --border: #d4e8e5;
+    --border-light: #e2efed;
+
+    --input-bg: #fbfefd;
+
+    --danger: #dc2626;
+
+    --shadow:
+        0 6px 22px rgba(15, 118, 110, 0.06);
+
+    --transition:
+        all 0.25s ease;
+}
+
+
+/* =========================================
+   RESET
+========================================= */
+
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+
+    font-family:
+        'Plus Jakarta Sans',
+        sans-serif;
 }
+
+
+/* =========================================
+   BODY
+========================================= */
 
 body {
     min-height: 100vh;
-    font-family: "Plus Jakarta Sans", sans-serif;
-    background: #f4f8f7;
-    color: #173b3a;
+
+    background:
+        linear-gradient(
+            135deg,
+            #edf7f5 0%,
+            #f7fcfb 50%,
+            #edf7f5 100%
+        );
+
+    color: var(--text-dark);
 }
 
 
-/* ================================
-   MAIN PAGE
-================================ */
+/* =========================================
+   UPDATE PAGE
+========================================= */
 
 .update-page {
-    width: min(960px, 92%);
-    margin: auto;
-    padding: 35px 0 55px;
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 0 auto;
+
+    padding:
+        45px 35px 60px;
 }
 
 
-/* ================================
-   BACK BUTTON
-================================ */
-
-.top-area {
-    margin-bottom: 25px;
-}
-
-.back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-
-    padding: 9px 14px;
-
-    border: 1px solid #d8e7e4;
-    border-radius: 8px;
-
-    background: #ffffff;
-    color: #52716d;
-
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition: 0.25s ease;
-}
-
-.back-btn:hover {
-    color: #0f766e;
-    border-color: #b9d9d4;
-    background: #f8fcfb;
-}
-
-.back-btn i {
-    font-size: 11px;
-}
-
-
-/* ================================
+/* =========================================
    PAGE INTRO
-================================ */
+========================================= */
 
 .page-intro {
     display: flex;
     align-items: center;
-    gap: 16px;
 
-    margin-bottom: 28px;
+    gap: 18px;
+
+    margin-bottom: 32px;
 }
 
+
+/* =========================================
+   INTRO ICON
+========================================= */
+
 .intro-icon {
-    width: 54px;
-    height: 54px;
+    width: 58px;
+    height: 58px;
 
     display: flex;
     align-items: center;
@@ -86,78 +106,120 @@ body {
 
     flex-shrink: 0;
 
+    background:
+        linear-gradient(
+            135deg,
+            #0f766e,
+            #159b91
+        );
+
+    color: #ffffff;
+
     border-radius: 14px;
 
-    background: #e1f3f0;
-    color: #0f766e;
-
-    font-size: 21px;
+    box-shadow:
+        0 6px 15px rgba(
+            15,
+            118,
+            110,
+            0.18
+        );
 }
 
-.intro-text .eyebrow {
+.intro-icon i {
+    font-size: 23px;
+}
+
+
+/* =========================================
+   INTRO TEXT
+========================================= */
+
+.intro-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.eyebrow {
     display: block;
 
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 
-    color: #0f766e;
+    font-size: 11px;
+    font-weight: 700;
 
-    font-size: 9px;
-    font-weight: 800;
+    letter-spacing: 1.2px;
 
-    letter-spacing: 1.4px;
+    color: var(--teal-primary);
 }
 
 .intro-text h1 {
-    font-size: 27px;
+    margin-bottom: 6px;
+
+    font-size: 30px;
+    line-height: 1.2;
+
     font-weight: 800;
 
-    color: #173b3a;
+    color: #145a57;
 }
 
 .intro-text p {
-    margin-top: 5px;
+    font-size: 14px;
+    line-height: 1.6;
 
-    color: #78908d;
-
-    font-size: 11.5px;
+    color: var(--text-muted);
 }
 
 
-/* ================================
+/* =========================================
    PROFILE CARD
-================================ */
+========================================= */
 
 .profile-card {
-    background: #ffffff;
+    width: 100%;
 
-    border: 1px solid #e0ebe9;
+    background: var(--white);
+
+    border:
+        1px solid var(--border);
+
     border-radius: 16px;
 
     padding: 30px;
 
-    box-shadow:
-        0 10px 30px rgba(23, 59, 58, 0.05);
+    margin-bottom: 24px;
+
+    box-shadow: var(--shadow);
 }
 
 
-/* ================================
+/* =========================================
    CARD HEADER
-================================ */
+========================================= */
 
 .card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
 
-    padding-bottom: 21px;
-    margin-bottom: 25px;
+    gap: 14px;
 
-    border-bottom: 1px solid #edf2f1;
+    margin-bottom: 28px;
+
+    padding-bottom: 20px;
+
+    border-bottom:
+        1px solid var(--border-light);
 }
 
+
+/* =========================================
+   HEADER ICON
+========================================= */
+
 .header-icon {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
 
     display: flex;
     align-items: center;
@@ -165,41 +227,60 @@ body {
 
     flex-shrink: 0;
 
+    background: var(--teal-light);
+
+    color: var(--teal-primary);
+
     border-radius: 10px;
-
-    background: #eaf7f5;
-    color: #0f766e;
-
-    font-size: 14px;
 }
 
+.header-icon i {
+    font-size: 17px;
+}
+
+
+/* =========================================
+   CARD HEADER TEXT
+========================================= */
+
 .card-header h2 {
-    font-size: 16px;
+    margin-bottom: 4px;
+
+    font-size: 19px;
+
     font-weight: 700;
 
-    color: #234744;
+    color: #145a57;
 }
 
 .card-header p {
-    margin-top: 4px;
+    font-size: 13px;
 
-    color: #849795;
+    line-height: 1.5;
 
-    font-size: 10.5px;
+    color: var(--text-muted);
 }
 
 
-/* ================================
+/* =========================================
    FORM GRID
-================================ */
+========================================= */
 
 .form-grid {
+    width: 100%;
+
     display: grid;
 
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+        1fr 1fr;
 
-    gap: 21px;
+    gap: 22px 20px;
 }
+
+
+/* =========================================
+   FORM GROUP
+========================================= */
 
 .form-group {
     width: 100%;
@@ -210,43 +291,49 @@ body {
 }
 
 
-/* ================================
+/* =========================================
    LABEL
-================================ */
+========================================= */
 
 .form-group label {
     display: block;
 
-    margin-bottom: 7px;
+    margin-bottom: 8px;
 
-    color: #3c5a57;
+    font-size: 13px;
 
-    font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
+
+    color: #345b57;
 }
 
 
-/* ================================
-   INPUT FIELD
-================================ */
+/* =========================================
+   FIELD
+========================================= */
 
 .field {
     position: relative;
 
     width: 100%;
+
+    display: flex;
+    align-items: center;
 }
+
+
+/* =========================================
+   FIELD ICON
+========================================= */
 
 .field > i {
     position: absolute;
 
-    left: 14px;
-    top: 50%;
+    left: 15px;
 
-    transform: translateY(-50%);
+    color: #6b8d88;
 
-    color: #8aa19e;
-
-    font-size: 12px;
+    font-size: 14px;
 
     pointer-events: none;
 
@@ -254,276 +341,385 @@ body {
 }
 
 
-/* ================================
-   INPUT / SELECT / TEXTAREA
-================================ */
+/* =========================================
+   INPUT
+========================================= */
 
 .field input,
 .field select,
 .field textarea {
     width: 100%;
 
-    border: 1px solid #dce8e6;
+    border:
+        1px solid var(--border);
+
+    border-radius: 9px;
+
+    background: var(--input-bg);
+
+    color: #173b37;
+
     outline: none;
 
-    background: #fbfdfd;
-    color: #294b48;
-
-    border-radius: 8px;
-
-    font-family: inherit;
-    font-size: 11.5px;
-
-    transition: 0.25s ease;
+    transition: var(--transition);
 }
+
+
+/* =========================================
+   INPUT / SELECT
+========================================= */
 
 .field input,
 .field select {
     height: 46px;
 
-    padding: 0 38px;
+    padding:
+        0 15px 0 43px;
+
+    font-size: 13px;
 }
+
+
+/* =========================================
+   TEXTAREA
+========================================= */
 
 .field textarea {
-    min-height: 100px;
+    min-height: 105px;
 
-    padding: 13px 38px;
+    padding:
+        13px 15px 13px 43px;
 
-    resize: vertical;
+    font-size: 13px;
 
     line-height: 1.6;
+
+    resize: vertical;
 }
 
 
-/* ================================
+/* =========================================
+   TEXTAREA ICON
+========================================= */
+
+.textarea-field {
+    align-items: flex-start;
+}
+
+.textarea-field > i {
+    top: 16px;
+}
+
+
+/* =========================================
+   INPUT PLACEHOLDER
+========================================= */
+
+.field input::placeholder,
+.field textarea::placeholder {
+    color: #9aafac;
+}
+
+
+/* =========================================
    FOCUS
-================================ */
+========================================= */
 
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
+    border-color:
+        var(--teal-primary);
+
     background: #ffffff;
 
-    border-color: #4da79e;
-
     box-shadow:
-        0 0 0 3px rgba(15, 118, 110, 0.07);
+        0 0 0 3px
+        rgba(
+            15,
+            118,
+            110,
+            0.08
+        );
 }
 
 
-/* ================================
-   PLACEHOLDER
-================================ */
-
-.field input::placeholder,
-.field textarea::placeholder {
-    color: #a3b2b0;
-}
-
-
-/* ================================
+/* =========================================
    SELECT
-================================ */
+========================================= */
 
 .field select {
-    appearance: none;
-
     cursor: pointer;
 
-    background-image:
-        linear-gradient(
-            45deg,
-            transparent 50%,
-            #78918f 50%
-        ),
-        linear-gradient(
-            135deg,
-            #78918f 50%,
-            transparent 50%
-        );
-
-    background-position:
-        calc(100% - 16px) 20px,
-        calc(100% - 11px) 20px;
-
-    background-size:
-        5px 5px,
-        5px 5px;
-
-    background-repeat: no-repeat;
+    appearance: auto;
 }
 
 
-/* ================================
-   TEXTAREA
-================================ */
+/* =========================================
+   EMAIL / NORMAL EDITABLE FIELD
+========================================= */
 
-.textarea-field {
-    display: block;
-}
-
-.textarea-field > i {
-    top: 15px;
-    transform: none;
+#email {
+    padding-right: 15px;
 }
 
 
-/* ================================
-   EMAIL
-================================ */
-
-.locked-field input {
-    background: #f2f6f5;
-
-    color: #718885;
-
-    cursor: not-allowed;
-}
-
-.locked-field input:focus {
-    background: #f2f6f5;
-
-    border-color: #dce8e6;
-
-    box-shadow: none;
-}
-
-.lock-icon {
-    position: absolute;
-
-    right: 14px;
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: #9badaa;
-
-    font-size: 10px;
-}
-
-
-/* ================================
-   EMAIL NOTE
-================================ */
+/* =========================================
+   FIELD NOTE
+========================================= */
 
 .field-note {
     display: flex;
     align-items: center;
-    gap: 5px;
 
-    margin-top: 6px;
+    gap: 6px;
 
-    color: #94a5a3;
+    margin-top: 7px;
 
-    font-size: 9.5px;
+    font-size: 11px;
+
+    line-height: 1.5;
+
+    color: #708b87;
 }
 
 .field-note i {
-    color: #6ca59f;
-    font-size: 9px;
+    font-size: 11px;
+
+    color: var(--teal-primary);
 }
 
 
-/* ================================
-   ACTION BUTTONS
-================================ */
+/* =========================================
+   PASSWORD CARD
+========================================= */
 
-.action-area {
+.password-card {
+    margin-top: 0;
+}
+
+
+/* =========================================
+   PASSWORD INPUT
+========================================= */
+
+#currentPassword,
+#newPassword,
+#confirmPassword {
+    padding-right: 48px;
+}
+
+
+/* =========================================
+   PASSWORD TOGGLE
+========================================= */
+
+.password-toggle {
+    position: absolute;
+
+    right: 8px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 34px;
+    height: 34px;
+
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
 
-    gap: 10px;
+    border: none;
 
-    margin-top: 20px;
+    background: transparent;
+
+    color: #718b87;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    transition: var(--transition);
+
+    z-index: 3;
+}
+
+.password-toggle:hover {
+    background: var(--teal-light);
+
+    color: var(--teal-primary);
+}
+
+.password-toggle i {
+    font-size: 14px;
 }
 
 
-/* ================================
+/* =========================================
+   PASSWORD NOTE
+========================================= */
+
+.password-note {
+    margin-top: 20px;
+
+    padding:
+        11px 13px;
+
+    background: #f4faf9;
+
+    border:
+        1px solid #dceeea;
+
+    border-radius: 8px;
+}
+
+
+/* =========================================
+   ACTION AREA
+========================================= */
+
+.action-area {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 8px;
+}
+
+
+/* =========================================
    CANCEL BUTTON
-================================ */
+========================================= */
 
 .cancel-btn {
-    height: 43px;
+    min-width: 105px;
 
-    padding: 0 21px;
+    height: 44px;
 
-    border: 1px solid #d6e4e2;
-    border-radius: 8px;
+    padding:
+        0 20px;
 
     background: #ffffff;
 
-    color: #647c79;
+    color: #526b67;
 
-    font-family: inherit;
-    font-size: 11px;
+    border:
+        1px solid #cddfdd;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+
     font-weight: 600;
 
     cursor: pointer;
 
-    transition: 0.25s ease;
+    transition: var(--transition);
 }
 
 .cancel-btn:hover {
-    background: #f5f9f8;
+    background: #f3f8f7;
 
-    color: #3d5a57;
+    border-color:
+        #b9d3cf;
 
-    border-color: #c5dad6;
+    color: #294d48;
 }
 
 
-/* ================================
-   SAVE BUTTON
-================================ */
+/* =========================================
+   SAVE / UPDATE BUTTON
+========================================= */
 
 .save-btn {
-    height: 43px;
+    min-width: 160px;
 
-    padding: 0 22px;
+    height: 44px;
+
+    padding:
+        0 22px;
 
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
-    gap: 7px;
+    gap: 8px;
 
-    border: none;
-    border-radius: 8px;
-
-    background: linear-gradient(
-        135deg,
-        #0f766e,
-        #155e75
-    );
+    background:
+        linear-gradient(
+            135deg,
+            #0f766e,
+            #159b91
+        );
 
     color: #ffffff;
 
-    font-family: inherit;
-    font-size: 11px;
+    border: none;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+
     font-weight: 700;
 
     cursor: pointer;
 
     box-shadow:
-        0 7px 18px rgba(15, 118, 110, 0.18);
+        0 5px 12px
+        rgba(
+            15,
+            118,
+            110,
+            0.16
+        );
 
-    transition: 0.25s ease;
+    transition:
+        background 0.25s ease,
+        transform 0.2s ease,
+        box-shadow 0.25s ease;
 }
+
+
+/* =========================================
+   UPDATE BUTTON HOVER
+========================================= */
 
 .save-btn:hover {
-    transform: translateY(-1px);
+    background:
+        linear-gradient(
+            135deg,
+            #0b5f59,
+            #0f766e
+        );
+
+    transform:
+        translateY(-1px);
 
     box-shadow:
-        0 10px 23px rgba(15, 118, 110, 0.24);
+        0 7px 16px
+        rgba(
+            15,
+            118,
+            110,
+            0.22
+        );
 }
 
-.save-btn:active {
-    transform: translateY(0);
-}
+
+/* =========================================
+   DISABLED BUTTON
+========================================= */
 
 .save-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
 
     cursor: not-allowed;
 
@@ -533,83 +729,183 @@ body {
 }
 
 
-/* ================================
-   TABLET
-================================ */
+/* =========================================
+   RESPONSIVE - 900px
+========================================= */
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
 
     .update-page {
-        width: 92%;
-        padding-top: 28px;
+        max-width: 850px;
+
+        padding:
+            35px 25px 50px;
     }
+
+    .profile-card {
+        padding: 26px;
+    }
+
+}
+
+
+/* =========================================
+   RESPONSIVE - 768px
+========================================= */
+
+@media (max-width: 768px) {
+
+    .update-page {
+        padding:
+            30px 20px 45px;
+    }
+
+
+    .page-intro {
+        margin-bottom: 26px;
+    }
+
+
+    .intro-text h1 {
+        font-size: 27px;
+    }
+
 
     .form-grid {
         grid-template-columns: 1fr;
+
+        gap: 19px;
     }
+
 
     .form-group.full-width {
         grid-column: auto;
     }
 
+
     .profile-card {
-        padding: 25px 22px;
+        padding: 23px;
+
+        border-radius: 14px;
     }
+
+
+    .card-header {
+        margin-bottom: 23px;
+    }
+
+
+    .action-area {
+        margin-top: 5px;
+    }
+
 }
 
 
-/* ================================
-   MOBILE
-================================ */
+/* =========================================
+   RESPONSIVE - 500px
+========================================= */
 
 @media (max-width: 500px) {
 
     .update-page {
-        width: 94%;
-
-        padding-top: 22px;
+        padding:
+            25px 15px 40px;
     }
+
 
     .page-intro {
-        gap: 11px;
+        align-items: flex-start;
+
+        gap: 13px;
     }
+
 
     .intro-icon {
-        width: 45px;
-        height: 45px;
+        width: 48px;
+        height: 48px;
 
-        font-size: 17px;
+        border-radius: 11px;
     }
 
-    .intro-text h1 {
-        font-size: 22px;
+
+    .intro-icon i {
+        font-size: 19px;
     }
 
-    .intro-text p {
+
+    .eyebrow {
         font-size: 10px;
     }
 
-    .profile-card {
-        padding: 21px 17px;
 
-        border-radius: 13px;
+    .intro-text h1 {
+        font-size: 23px;
     }
+
+
+    .intro-text p {
+        font-size: 12px;
+    }
+
+
+    .profile-card {
+        padding: 19px;
+
+        border-radius: 12px;
+    }
+
 
     .card-header {
-        margin-bottom: 21px;
+        gap: 11px;
+
+        padding-bottom: 17px;
     }
+
+
+    .header-icon {
+        width: 39px;
+        height: 39px;
+    }
+
+
+    .header-icon i {
+        font-size: 15px;
+    }
+
 
     .card-header h2 {
-        font-size: 14px;
+        font-size: 17px;
     }
 
+
     .card-header p {
-        font-size: 9.5px;
+        font-size: 11px;
     }
+
 
     .form-grid {
         gap: 17px;
     }
+
+
+    .form-group label {
+        font-size: 12px;
+    }
+
+
+    .field input,
+    .field select {
+        height: 44px;
+
+        font-size: 12px;
+    }
+
+
+    .field textarea {
+        font-size: 12px;
+    }
+
 
     .action-area {
         flex-direction: column-reverse;
@@ -617,8 +913,10 @@ body {
         width: 100%;
     }
 
+
     .cancel-btn,
     .save-btn {
         width: 100%;
     }
+
 }

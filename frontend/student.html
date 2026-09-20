@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,145 +18,567 @@
 
 <body>
 
-    <div class="dashboard-container">
+<div class="dashboard-container">
 
-        <!-- ================= SIDEBAR ================= -->
+    <!-- ================= SIDEBAR ================= -->
 
-        <aside class="sidebar">
+    <aside class="sidebar">
 
-            <div class="brand">
+        <div class="brand">
 
-                <div class="brand-logo-box">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
+            <div class="brand-logo-box">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
 
-                <h2 class="brand-name">SkillHub</h2>
+            <h2 class="brand-name">
+                SkillHub
+            </h2>
+
+        </div>
+
+
+        <!-- ================= SIDEBAR MENU ================= -->
+
+        <nav class="nav-menu">
+
+            <!-- COURSES -->
+
+            <a href="course_details.html"
+               class="nav-item active"
+               data-page="courses">
+
+                <span>Courses</span>
+
+            </a>
+
+
+            <!-- QUIZ -->
+
+            <a href="#"
+               class="nav-item"
+               data-page="quiz">
+
+                <span>Quiz</span>
+
+            </a>
+
+
+            <!-- SETTINGS -->
+
+            <a href="#"
+               class="nav-item"
+               data-page="settings">
+
+                <span>Settings</span>
+
+            </a>
+
+
+            <!-- LOGOUT -->
+
+            <a href="#"
+               class="nav-item logout"
+               data-page="logout">
+
+                <span>Logout</span>
+
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="main-content">
+
+
+        <!-- ================= TOP BAR ================= -->
+
+        <div class="top-bar">
+
+            <div class="search-box">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    placeholder="Search your courses...">
 
             </div>
 
 
-            <!-- SIDEBAR MENU -->
+            <div class="top-bar-right">
 
-            <nav class="nav-menu">
+                <div class="user-profile">
 
-                <a href="#"
-                   class="nav-item active"
-                   data-page="courses">
-                    <span>Courses</span>
-                </a>
+                    <img
+                        id="studentProfileImg"
+                        src="https://i.pravatar.cc/150?img=32"
+                        alt="Student Profile">
 
-                <a href="#"
-                   class="nav-item"
-                   data-page="quiz">
-                    <span>Quiz</span>
-                </a>
+                    <span
+                        class="user-name"
+                        id="studentUserName">
 
-                <a href="#"
-                   class="nav-item"
-                   data-page="settings">
-                    <span>Settings</span>
-                </a>
+                        Student
 
-                <a href="#"
-                   class="nav-item logout"
-                   data-page="logout">
-                    <span>Logout</span>
-                </a>
-
-            </nav>
-
-        </aside>
-
-
-        <!-- ================= MAIN CONTENT ================= -->
-
-        <main class="main-content">
-
-
-            <!-- ================= TOP BAR ================= -->
-
-            <div class="top-bar">
-
-                <div class="search-box">
-
-                    <i class="fa-solid fa-magnifying-glass"></i>
-
-                    <input
-                        type="text"
-                        placeholder="Search your courses...">
-
-                </div>
-
-
-                <div class="top-bar-right">
-
-                    <div class="user-profile">
-
-                        <img
-                            id="studentProfileImg"
-                            src="https://i.pravatar.cc/150?img=32"
-                            alt="Student Profile">
-
-                        <span
-                            class="user-name"
-                            id="studentUserName">
-                            Student
-                        </span>
-
-                    </div>
+                    </span>
 
                 </div>
 
             </div>
 
-
-            <!-- ================= CONTENT BODY ================= -->
-
-            <div class="content-body">
+        </div>
 
 
-                <!-- ================= COURSES ================= -->
+        <!-- ================= CONTENT BODY ================= -->
 
-                <section
-                    class="page-section active"
-                    id="courses">
+        <div class="content-body">
 
-                    <div class="section-title-wrapper">
 
-                        <h2>Enrolled Courses</h2>
+            <!-- ================================================= -->
+            <!-- COURSES SECTION -->
+            <!-- ================================================= -->
+
+            <section
+                class="page-section active"
+                id="courses">
+
+
+                <div class="section-title-wrapper">
+
+                    <h2>
+                        Enrolled Courses
+                    </h2>
+
+                </div>
+
+
+                <div class="course-grid">
+
+
+                    <!-- ================= COURSE 1 ================= -->
+
+                    <div
+                        class="course-card"
+                        data-course="HTML & CSS Fundamentals">
+
+                        <div class="card-body">
+
+                            <h4>
+                                HTML & CSS Fundamentals
+                            </h4>
+
+
+                            <div class="progress-info">
+
+                                <span>
+                                    Progress
+                                </span>
+
+                                <span class="percentage">
+                                    60%
+                                </span>
+
+                            </div>
+
+
+                            <div class="progress-bar">
+
+                                <div
+                                    class="progress"
+                                    style="width: 60%;">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="btn-continue"
+                            data-course="HTML & CSS Fundamentals">
+
+                            Continue Learning
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
 
                     </div>
 
 
-                    <div class="course-grid">
+                    <!-- ================= COURSE 2 ================= -->
+
+                    <div
+                        class="course-card"
+                        data-course="Modern JavaScript ES6+">
+
+                        <div class="card-body">
+
+                            <h4>
+                                Modern JavaScript ES6+
+                            </h4>
 
 
-                        <!-- COURSE 1 -->
+                            <div class="progress-info">
 
-                        <div class="course-card">
+                                <span>
+                                    Progress
+                                </span>
 
-                            <div class="card-body">
+                                <span class="percentage">
+                                    40%
+                                </span>
 
-                                <h4>
-                                    HTML & CSS Fundamentals
-                                </h4>
+                            </div>
 
-                                <div class="progress-info">
 
-                                    <span>Progress</span>
+                            <div class="progress-bar">
 
-                                    <span class="percentage">
-                                        60%
+                                <div
+                                    class="progress"
+                                    style="width: 40%;">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="btn-continue"
+                            data-course="Modern JavaScript ES6+">
+
+                            Continue Learning
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- ================= COURSE 3 ================= -->
+
+                    <div
+                        class="course-card"
+                        data-course="React JS Masterclass">
+
+                        <div class="card-body">
+
+                            <h4>
+                                React JS Masterclass
+                            </h4>
+
+
+                            <div class="progress-info">
+
+                                <span>
+                                    Progress
+                                </span>
+
+                                <span class="percentage">
+                                    25%
+                                </span>
+
+                            </div>
+
+
+                            <div class="progress-bar">
+
+                                <div
+                                    class="progress"
+                                    style="width: 25%;">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="btn-continue"
+                            data-course="React JS Masterclass">
+
+                            Continue Learning
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- ================= COURSE 4 ================= -->
+
+                    <div
+                        class="course-card"
+                        data-course="Python for Beginners">
+
+                        <div class="card-body">
+
+                            <h4>
+                                Python for Beginners
+                            </h4>
+
+
+                            <div class="progress-info">
+
+                                <span>
+                                    Progress
+                                </span>
+
+                                <span class="percentage">
+                                    75%
+                                </span>
+
+                            </div>
+
+
+                            <div class="progress-bar">
+
+                                <div
+                                    class="progress"
+                                    style="width: 75%;">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="btn-continue"
+                            data-course="Python for Beginners">
+
+                            Continue Learning
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- COURSE DETAILS SECTION -->
+            <!-- ================================================= -->
+
+            <section
+                class="page-section"
+                id="course-details">
+
+
+                <div class="course-detail-layout">
+
+
+                    <!-- ================= LEFT COLUMN ================= -->
+
+                    <div class="left-column">
+
+
+                        <!-- MEDIA VIEWER -->
+
+                        <div class="media-viewer disabled">
+
+                            <div class="disabled-overlay">
+
+                                <i class="fa-solid fa-lock"></i>
+
+                                <p>
+                                    Media viewer disabled
+                                    (Purchase to unlock)
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- OVERVIEW & REVIEWS -->
+
+                        <div class="overview-review-card">
+
+
+                            <div class="tabs-header">
+
+                                <button
+                                    type="button"
+                                    class="tab-btn active"
+                                    onclick="switchTab('overview')">
+
+                                    Overview
+
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="tab-btn"
+                                    onclick="switchTab('reviews')">
+
+                                    Reviews
+
+                                </button>
+
+                            </div>
+
+
+                            <!-- OVERVIEW -->
+
+                            <div
+                                class="tab-content"
+                                id="overviewTab">
+
+                                <h3>
+                                    Course Overview
+                                </h3>
+
+
+                                <p>
+                                    Master full-stack web development
+                                    with hands-on projects. Learn HTML,
+                                    CSS, JavaScript, Node.js, and
+                                    PostgreSQL from scratch.
+                                </p>
+
+
+                                <ul class="course-highlights">
+
+                                    <li>
+
+                                        <i class="fa-solid fa-check"></i>
+
+                                        12 Hours of HD Video Content
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <i class="fa-solid fa-check"></i>
+
+                                        Full Lifetime Access
+
+                                    </li>
+
+
+                                    <li>
+
+                                        <i class="fa-solid fa-check"></i>
+
+                                        Certificate of Completion
+
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+
+                            <!-- REVIEWS -->
+
+                            <div
+                                class="tab-content hidden"
+                                id="reviewsTab">
+
+                                <h3>
+                                    Student Reviews
+                                </h3>
+
+
+                                <div class="review-item">
+
+                                    <strong>
+                                        Rahul Das
+                                    </strong>
+
+
+                                    <span class="rating">
+                                        ★★★★★
                                     </span>
+
+
+                                    <p>
+                                        Excellent course!
+                                        Very clear explanation
+                                        and structured code examples.
+                                    </p>
 
                                 </div>
 
-                                <div class="progress-bar">
+                            </div>
 
-                                    <div
-                                        class="progress"
-                                        style="width: 60%;">
-                                    </div>
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= RIGHT COLUMN ================= -->
+
+                    <div class="right-column">
+
+                        <div class="purchase-card">
+
+
+                            <h3 class="course-title">
+                                Full-Stack Web Development
+                            </h3>
+
+
+                            <div class="price-breakdown">
+
+
+                                <div class="price-row">
+
+                                    <span>
+                                        Course Price:
+                                    </span>
+
+                                    <strong>
+                                        ₹2,999
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="price-row">
+
+                                    <span>
+                                        Tax (18% GST):
+                                    </span>
+
+                                    <strong>
+                                        ₹540
+                                    </strong>
+
+                                </div>
+
+
+                                <hr class="divider">
+
+
+                                <div class="price-row total">
+
+                                    <span>
+                                        Total Price:
+                                    </span>
+
+                                    <strong>
+                                        ₹3,539
+                                    </strong>
 
                                 </div>
 
@@ -166,213 +587,97 @@
 
                             <button
                                 type="button"
-                                class="btn-continue">
+                                class="btn-purchase">
 
-                                Continue Learning
-
-                                <i class="fa-solid fa-arrow-right"></i>
+                                Purchase
 
                             </button>
 
                         </div>
-
-
-                        <!-- COURSE 2 -->
-
-                        <div class="course-card">
-
-                            <div class="card-body">
-
-                                <h4>
-                                    Modern JavaScript ES6+
-                                </h4>
-
-                                <div class="progress-info">
-
-                                    <span>Progress</span>
-
-                                    <span class="percentage">
-                                        40%
-                                    </span>
-
-                                </div>
-
-                                <div class="progress-bar">
-
-                                    <div
-                                        class="progress"
-                                        style="width: 40%;">
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                class="btn-continue">
-
-                                Continue Learning
-
-                                <i class="fa-solid fa-arrow-right"></i>
-
-                            </button>
-
-                        </div>
-
-
-                        <!-- COURSE 3 -->
-
-                        <div class="course-card">
-
-                            <div class="card-body">
-
-                                <h4>
-                                    React JS Masterclass
-                                </h4>
-
-                                <div class="progress-info">
-
-                                    <span>Progress</span>
-
-                                    <span class="percentage">
-                                        25%
-                                    </span>
-
-                                </div>
-
-                                <div class="progress-bar">
-
-                                    <div
-                                        class="progress"
-                                        style="width: 25%;">
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                class="btn-continue">
-
-                                Continue Learning
-
-                                <i class="fa-solid fa-arrow-right"></i>
-
-                            </button>
-
-                        </div>
-
-
-                        <!-- COURSE 4 -->
-
-                        <div class="course-card">
-
-                            <div class="card-body">
-
-                                <h4>
-                                    Python for Beginners
-                                </h4>
-
-                                <div class="progress-info">
-
-                                    <span>Progress</span>
-
-                                    <span class="percentage">
-                                        75%
-                                    </span>
-
-                                </div>
-
-                                <div class="progress-bar">
-
-                                    <div
-                                        class="progress"
-                                        style="width: 75%;">
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                class="btn-continue">
-
-                                Continue Learning
-
-                                <i class="fa-solid fa-arrow-right"></i>
-
-                            </button>
-
-                        </div>
-
 
                     </div>
 
-                </section>
+                </div>
 
 
-                <!-- ================= QUIZ ================= -->
+                <!-- BACK TO COURSES -->
 
-                <section
-                    class="page-section"
-                    id="quiz">
+                <button
+                    type="button"
+                    class="back-to-courses"
+                    id="backToCourses">
 
-                    <div class="section-title-wrapper">
+                    <i class="fa-solid fa-arrow-left"></i>
 
-                        <h2>Available Quizzes</h2>
+                    Back to Courses
 
-                        <p>
-                            Evaluate your skills with ongoing assessments.
-                        </p>
+                </button>
 
-                    </div>
-
-                </section>
+            </section>
 
 
-                <!-- ================= SETTINGS ================= -->
+            <!-- ================================================= -->
+            <!-- QUIZ SECTION -->
+            <!-- ================================================= -->
 
-                <section
-                    class="page-section"
-                    id="settings">
-
-                    <div class="section-title-wrapper">
-
-                        <h2>Settings</h2>
-
-                        <p>
-                            Manage your account and profile settings.
-                        </p>
-
-                    </div>
-
-                    <!--
-                        Account details will be loaded here
-                        by student.js from:
-                        /api/v1/students/me
-                    -->
-
-                    <div id="accountDetails"></div>
-
-                </section>
+            <section
+                class="page-section"
+                id="quiz">
 
 
-            </div>
+                <div class="section-title-wrapper">
 
-        </main>
+                    <h2>
+                        Pending
+                    </h2>
 
-    </div>
+                    
+
+                </div>
+
+            </section>
 
 
-    <!-- ================= JAVASCRIPT ================= -->
+            <!-- ================================================= -->
+            <!-- SETTINGS SECTION -->
+            <!-- ================================================= -->
 
-    <script src="student.js"></script>
+            <section
+                class="page-section"
+                id="settings">
+
+
+                <div class="section-title-wrapper">
+
+                    <h2>
+                        Settings
+                    </h2>
+
+                    <p>
+                        Manage your account and profile settings.
+                    </p>
+
+                </div>
+
+
+                <!-- ACCOUNT DETAILS -->
+
+                <div id="accountDetails"></div>
+
+
+            </section>
+
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script src="student.js"></script>
 
 </body>
 
