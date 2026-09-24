@@ -1,912 +1,238 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
-    /* =====================================================
-       API & TOKEN
-    ===================================================== */
+  const API_BASE = "http://127.0.0.1:8000/api/v1";
+  const token = localStorage.getItem("access_token");
 
-    const API_URL = "http://127.0.0.1:8000/api/v1/teachers/me";
+  if (!token) {
+    window.location.href = "login.html";
+    return;
+  }
 
-    const token = localStorage.getItem("access_token");
+  const jsonHeaders = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    Accept: "application/json"
+  };
 
+  // ===== Top Bar =====
+  const teacherProfileImg = document.getElementById("teacherProfileImg");
+  const teacherUserName = document.getElementById("teacherUserName");
 
-    /* =====================================================
-       ELEMENTS
-    ===================================================== */
+  // ===== Navigation =====
+  const coursesLink = document.querySelector('[data-page="courses"]');
+  const settingsLink = document.querySelector('[data-page="settings"]');
+  const logoutLink = document.querySelector('[data-page="logout"]');
 
-    const navItems = document.querySelectorAll(".nav-item");
+  const coursesSection = document.getElementById("courses");
+  const settingsSection = document.getElementById("settings");
 
-    const sections = document.querySelectorAll(".page-section");
+  // ===== Settings =====
+  const teacherFirstName = document.getElementById("teacherFirstName");
+  const teacherLastName = document.getElementById("teacherLastName");
+  const teacherEmail = document.getElementById("teacherEmail");
+  const teacherPhone = document.getElementById("teacherPhone");
+  const teacherGender = document.getElementById("teacherGender");
+  const teacherDob = document.getElementById("teacherDob");
+  const teacherAddress = document.getElementById("teacherAddress");
+  const teacherAbout = document.getElementById("teacherAbout");
 
-    const profileImage =
-        document.getElementById("teacherProfileImg");
+  // ===== Form =====
+  const addCourseForm = document.getElementById("addCourseForm");
+  const courseNameInput = document.getElementById("courseName");
+  const courseDetailsInput = document.getElementById("courseDetails");
+  const languageInput = document.getElementById("language");
+  const courseTypeInput = document.getElementById("courseType");
+  const priceInput = document.getElementById("price");
+  const thumbnailInput = document.getElementById("thumbnailInput");
+  const fileInput = document.getElementById("fileInput");
 
-    const userName =
-        document.getElementById("teacherUserName");
+  // ===== Section =====
+  function showSection(section) {
+    if (coursesSection)
+      coursesSection.style.display = section === "courses" ? "block" : "none";
 
+    if (settingsSection)
+      settingsSection.style.display = section === "settings" ? "block" : "none";
 
-    /* =====================================================
-       TOKEN CHECK
-    ===================================================== */
+    if (section === "settings") loadTeacherProfile();
+  }
 
-    if (!token) {
+  coursesLink?.addEventListener("click", e => {
+    e.preventDefault();
+    showSection("courses");
+  });
 
+  settingsLink?.addEventListener("click", e => {
+    e.preventDefault();
+    showSection("settings");
+  });
+
+  // ===== Profile =====
+  async function loadTeacherProfile() {
+    try {
+      const response = await fetch(`${API_BASE}/teachers/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json"
+        }
+      });
+
+      if (response.status === 401) {
+        localStorage.clear();
         window.location.href = "login.html";
-
         return;
+      }
 
+      if (!response.ok) throw new Error("Profile load failed");
+
+      const data = await response.json();
+      const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+
+      teacherUserName.textContent = fullName || "Teacher";
+      teacherProfileImg.src = data.profile_pic || "https://i.pravatar.cc/150?img=47";
+
+      teacherFirstName.textContent = data.first_name || "-";
+      teacherLastName.textContent = data.last_name || "-";
+      teacherEmail.textContent = data.user?.email_id || "-";
+      teacherPhone.textContent = data.phone_no || "-";
+      teacherGender.textContent = data.gender || "-";
+      teacherDob.textContent = data.date_of_birth || "-";
+      teacherAddress.textContent = data.address || "-";
+      teacherAbout.textContent = data.about || "-";
+    } catch (err) {
+      console.error(err);
     }
+  }
 
+  // ===== Logout =====
+  logoutLink?.addEventListener("click", e => {
+    e.preventDefault();
+    localStorage.clear();
+    window.location.href = "login.html";
+  });
 
-    /* =====================================================
-       SIDEBAR NAVIGATION
-    ===================================================== */
+  // ===== Price =====
+  window.togglePriceField = value => {
+    if (value === "paid") {
+      priceInput.disabled = false;
+      priceInput.required = true;
+    } else {
+      priceInput.disabled = true;
+      priceInput.required = false;
+      priceInput.value = "";
+    }
+  };
 
-    navItems.forEach(function (item) {
+  // ===== File Name =====
+  window.updateFileName = input => {
+    if (input.files.length)
+      console.log(input.files[0].name);
+  };
 
-        item.addEventListener("click", function (event) {
+  const ext = file => file.name.split(".").pop().toLowerCase();
+  const nameOnly = file => file.name.replace(/\.[^/.]+$/, "");
 
-            event.preventDefault();
-
-            const page =
-                item.getAttribute("data-page");
-
-
-            /* ---------------- COURSES ---------------- */
-
-            if (page === "courses") {
-
-                showSection("courses");
-
-                return;
-
-            }
-
-
-            /* ---------------- SETTINGS ---------------- */
-
-            if (page === "settings") {
-
-                showSection("settings");
-
-                loadTeacherProfile();
-
-                return;
-
-            }
-
-
-            /* ---------------- LOGOUT ---------------- */
-
-            if (page === "logout") {
-
-                logout();
-
-                return;
-
-            }
-
-        });
-
+  // ===== Upload =====
+  async function uploadToS3(url, file) {
+    const r = await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file
     });
 
+    if (!r.ok) throw new Error("Upload failed");
+  }
 
-    /* =====================================================
-       SHOW SECTION
-    ===================================================== */
+  async function markReady(courseId, mediaId) {
+    await fetch(`${API_BASE}/courses/${courseId}/media/${mediaId}/status`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
 
-    function showSection(page) {
+  // ===== Create Course =====
+  async function createCourse() {
+    const body = {
+      course_name: courseNameInput.value.trim(),
+      course_details: courseDetailsInput.value.trim(),
+      course_language: languageInput.value,
+      course_paid: courseTypeInput.value === "paid",
+      course_price: courseTypeInput.value === "paid" ? Number(priceInput.value) : 0,
+      course_price_currency: "INR"
+    };
 
-        /* Remove active from all nav items */
+    const res = await fetch(`${API_BASE}/courses/`, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify(body)
+    });
 
-        navItems.forEach(function (nav) {
+    if (!res.ok) throw new Error("Course create failed");
+    return await res.json();
+  }
 
-            nav.classList.remove("active");
+  // ===== Thumbnail =====
+  async function uploadThumbnail(courseId, file) {
+    const res = await fetch(`${API_BASE}/courses/${courseId}/media/thumbnail/upload`, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        category: "thumbnail",
+        media_type: "image",
+        file_name: nameOnly(file),
+        file_extension: ext(file)
+      })
+    });
 
-        });
+    const data = await res.json();
+    await uploadToS3(data.upload_url, file);
+    await markReady(courseId, data.media_id);
+  }
 
+  // ===== Resource =====
+  async function uploadResource(courseId, file) {
+    const mediaType = file.type.startsWith("video/") ? "video" : "document";
 
-        /* Hide all sections */
+    const res = await fetch(`${API_BASE}/courses/${courseId}/media/resource/upload`, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        category: "resource",
+        media_type: mediaType,
+        file_name: nameOnly(file),
+        file_extension: ext(file)
+      })
+    });
 
-        sections.forEach(function (section) {
+    const data = await res.json();
+    await uploadToS3(data.upload_url, file);
+    await markReady(courseId, data.media_id);
+  }
 
-            section.classList.remove("active");
+  // ===== Submit =====
+  addCourseForm?.addEventListener("submit", async e => {
+    e.preventDefault();
 
-        });
+    try {
+      const course = await createCourse();
 
+      if (thumbnailInput.files.length)
+        await uploadThumbnail(course.id, thumbnailInput.files[0]);
 
-        /* Active navigation */
+      if (fileInput.files.length)
+        await uploadResource(course.id, fileInput.files[0]);
 
-        const selectedNav =
-            document.querySelector(
-                '.nav-item[data-page="' + page + '"]'
-            );
-
-
-        if (selectedNav) {
-
-            selectedNav.classList.add("active");
-
-        }
-
-
-        /* Show selected section */
-
-        const selectedSection =
-            document.getElementById(page);
-
-
-        if (selectedSection) {
-
-            selectedSection.classList.add("active");
-
-        }
-
+      alert("Course created successfully");
+      addCourseForm.reset();
+      priceInput.disabled = true;
+    } catch (err) {
+      alert(err.message);
     }
-
-
-    /* =====================================================
-       LOAD TEACHER PROFILE
-    ===================================================== */
-
-    async function loadTeacherProfile() {
-
-        const accountDetails =
-            document.getElementById("accountDetails");
-
-
-        if (!accountDetails) {
-
-            console.error(
-                "accountDetails element not found."
-            );
-
-            return;
-
-        }
-
-
-        /* Loading */
-
-        accountDetails.innerHTML = `
-
-            <div class="settings-page">
-
-                <div class="settings-header">
-
-                    <h2>
-                        Account Settings
-                    </h2>
-
-                    <p>
-                        Your account information
-                    </p>
-
-                </div>
-
-
-                <div class="account-details-card">
-
-                    <h3>
-                        Account Details
-                    </h3>
-
-                    <p>
-                        Loading profile information...
-                    </p>
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        try {
-
-            const response =
-                await fetch(API_URL, {
-
-                    method: "GET",
-
-                    headers: {
-
-                        "Authorization":
-                            "Bearer " + token,
-
-                        "Accept":
-                            "application/json"
-
-                    }
-
-                });
-
-
-            /* =================================================
-               UNAUTHORIZED
-            ================================================= */
-
-            if (response.status === 401) {
-
-                localStorage.removeItem(
-                    "access_token"
-                );
-
-                localStorage.removeItem(
-                    "token_type"
-                );
-
-                localStorage.removeItem(
-                    "userRole"
-                );
-
-                window.location.href =
-                    "login.html";
-
-                return;
-
-            }
-
-
-            /* =================================================
-               RESPONSE
-            ================================================= */
-
-            const data =
-                await response.json();
-
-
-            console.log(
-                "Teacher profile API response:",
-                data
-            );
-
-
-            if (!response.ok) {
-
-                showAccountError(
-                    "Unable to load account details."
-                );
-
-                return;
-
-            }
-
-
-            /* =================================================
-               PROFILE DATA
-            ================================================= */
-
-            const firstName =
-                data.first_name ||
-                "Not provided";
-
-
-            const lastName =
-                data.last_name ||
-                "Not provided";
-
-
-            const email =
-                data.user?.email_id ||
-                data.email_id ||
-                "Not provided";
-
-
-            const phone =
-                data.phone_no ||
-                "Not provided";
-
-
-            const gender =
-                data.gender ||
-                "Not provided";
-
-
-            const dob =
-                data.date_of_birth ||
-                "Not provided";
-
-
-            const address =
-                data.address ||
-                "Not provided";
-
-
-            const about =
-                data.about ||
-                "Not provided";
-
-
-            /* =================================================
-               TOP BAR NAME
-            ================================================= */
-
-            if (userName) {
-
-                const fullName =
-                    `${firstName} ${lastName}`.trim();
-
-
-                userName.textContent =
-                    fullName || "Teacher";
-
-            }
-
-
-            /* =================================================
-               PROFILE IMAGE
-            ================================================= */
-
-            if (profileImage) {
-
-                if (data.profile_pic) {
-
-                    profileImage.src =
-                        data.profile_pic;
-
-                } else {
-
-                    profileImage.src =
-                        "https://i.pravatar.cc/150?img=47";
-
-                }
-
-
-                profileImage.onerror =
-                    function () {
-
-                        this.src =
-                            "https://i.pravatar.cc/150?img=47";
-
-                    };
-
-            }
-
-
-            /* =================================================
-               DISPLAY ACCOUNT DETAILS
-            ================================================= */
-
-            displayTeacherProfile({
-
-                firstName: firstName,
-
-                lastName: lastName,
-
-                email: email,
-
-                phone: phone,
-
-                gender: gender,
-
-                dob: dob,
-
-                address: address,
-
-                about: about
-
-            });
-
-        }
-
-
-        catch (error) {
-
-            console.error(
-                "Teacher profile error:",
-                error
-            );
-
-
-            showAccountError(
-                "Backend server-এর সাথে connection হচ্ছে না."
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       DISPLAY TEACHER PROFILE
-    ===================================================== */
-
-    function displayTeacherProfile(profile) {
-
-        const accountDetails =
-            document.getElementById(
-                "accountDetails"
-            );
-
-
-        if (!accountDetails) {
-
-            return;
-
-        }
-
-
-        accountDetails.innerHTML = `
-
-            <div class="settings-page">
-
-
-                <!-- HEADER -->
-
-                <div class="settings-header">
-
-                    <h2>
-                        Account Settings
-                    </h2>
-
-                    <p>
-                        Your account information
-                    </p>
-
-                </div>
-
-
-
-                <!-- ACCOUNT CARD -->
-
-                <div class="account-details-card">
-
-
-                    <h3>
-                        Account Details
-                    </h3>
-
-
-
-                    <div class="account-details">
-
-
-                        <!-- FIRST NAME -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                First Name
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.firstName)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- LAST NAME -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                Last Name
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.lastName)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- EMAIL -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                Email
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.email)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- PHONE -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                Phone
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.phone)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- GENDER -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                Gender
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.gender)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- DOB -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                Date of Birth
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.dob)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- ADDRESS -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                Address
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.address)}
-                            </strong>
-
-                        </div>
-
-
-
-                        <!-- ABOUT -->
-
-                        <div class="detail-row">
-
-                            <span>
-                                About Me
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(profile.about)}
-                            </strong>
-
-                        </div>
-
-
-                    </div>
-
-
-
-                    <!-- UPDATE PROFILE BUTTON -->
-
-                    <div class="update-profile-wrapper">
-
-                        <button
-                            type="button"
-                            class="update-profile-option"
-                            id="openUpdateProfile"
-                        >
-
-                            Update Profile
-
-                            <i class="fa-solid fa-arrow-right"></i>
-
-                        </button>
-
-                    </div>
-
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        /* =================================================
-           UPDATE PROFILE
-        ================================================= */
-
-        const updateButton =
-            document.getElementById(
-                "openUpdateProfile"
-            );
-
-
-        if (updateButton) {
-
-            updateButton.addEventListener(
-                "click",
-                function () {
-
-                    window.location.href =
-                        "update_profile.html";
-
-                }
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       ACCOUNT ERROR
-    ===================================================== */
-
-    function showAccountError(message) {
-
-        const accountDetails =
-            document.getElementById(
-                "accountDetails"
-            );
-
-
-        if (!accountDetails) {
-
-            return;
-
-        }
-
-
-        accountDetails.innerHTML = `
-
-            <div class="settings-page">
-
-
-                <div class="settings-header">
-
-                    <h2>
-                        Account Settings
-                    </h2>
-
-                    <p>
-                        Your account information
-                    </p>
-
-                </div>
-
-
-
-                <div class="account-details-card">
-
-                    <h3>
-                        Account Details
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(message)}
-                    </p>
-
-                </div>
-
-
-            </div>
-
-        `;
-
-    }
-
-
-    /* =====================================================
-       ESCAPE HTML
-    ===================================================== */
-
-    function escapeHTML(value) {
-
-        return String(value)
-
-            .replace(/&/g, "&amp;")
-
-            .replace(/</g, "&lt;")
-
-            .replace(/>/g, "&gt;")
-
-            .replace(/"/g, "&quot;")
-
-            .replace(/'/g, "&#039;");
-
-    }
-
-
-    /* =====================================================
-       LOGOUT
-    ===================================================== */
-
-    function logout() {
-
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        localStorage.removeItem(
-            "token_type"
-        );
-
-        localStorage.removeItem(
-            "userRole"
-        );
-
-        window.location.href =
-            "login.html";
-
-    }
-
-
-    /* =====================================================
-       UPDATE FILE NAME
-    ===================================================== */
-
-    window.updateFileName =
-        function (input, textId) {
-
-            const text =
-                document.getElementById(
-                    textId
-                );
-
-
-            if (!text) {
-
-                return;
-
-            }
-
-
-            if (
-                input &&
-                input.files &&
-                input.files.length > 0
-            ) {
-
-                text.textContent =
-                    input.files[0].name;
-
-            }
-
-        };
-
-
-    /* =====================================================
-       PAID / FREE PRICE FIELD
-    ===================================================== */
-
-    window.togglePriceField =
-        function (value) {
-
-            const priceGroup =
-                document.getElementById(
-                    "priceGroup"
-                );
-
-
-            const priceInput =
-                document.getElementById(
-                    "price"
-                );
-
-
-            if (
-                !priceGroup ||
-                !priceInput
-            ) {
-
-                return;
-
-            }
-
-
-            if (value === "free") {
-
-                priceGroup.style.display =
-                    "none";
-
-                priceInput.value = "";
-
-            }
-
-            else {
-
-                priceGroup.style.display =
-                    "flex";
-
-            }
-
-        };
-
-
-    /* =====================================================
-       COURSE FORM
-    ===================================================== */
-
-    const courseForm =
-        document.getElementById(
-            "addCourseForm"
-        );
-
-
-    if (courseForm) {
-
-        courseForm.addEventListener(
-            "submit",
-            function (event) {
-
-                event.preventDefault();
-
-
-                const courseName =
-                    document.getElementById(
-                        "courseName"
-                    )?.value.trim();
-
-
-                const courseDetails =
-                    document.getElementById(
-                        "courseDetails"
-                    )?.value.trim();
-
-
-                const language =
-                    document.getElementById(
-                        "language"
-                    )?.value;
-
-
-                const courseType =
-                    document.getElementById(
-                        "courseType"
-                    )?.value;
-
-
-                /* ================= VALIDATION ================= */
-
-                if (
-                    !courseName ||
-                    !courseDetails ||
-                    !language ||
-                    !courseType
-                ) {
-
-                    alert(
-                        "Please fill all required fields."
-                    );
-
-                    return;
-
-                }
-
-
-                /* ================= TEMP ================= */
-
-                alert(
-                    "Course details ready to submit."
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       INITIAL PAGE
-    ===================================================== */
-
-    showSection("courses");
+  });
+
+  // ===== Init =====
+  showSection("courses");
+  loadTeacherProfile();
 
 });

@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,17 +8,13 @@
 
     <title>Teacher Dashboard - SkillHub</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="teacher.css">
 
-    <!-- Font Awesome -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet">
-
 </head>
 
 <body>
@@ -28,7 +25,6 @@
 
         <aside class="sidebar">
 
-            <!-- BRAND -->
             <div class="brand">
 
                 <div class="brand-logo-box">
@@ -41,40 +37,29 @@
 
             </div>
 
-
-            <!-- NAVIGATION -->
-
             <nav class="nav-menu">
 
                 <a href="add_course.html"
                    class="nav-item active"
                    data-page="courses">
 
-                    <span>
-                        Courses
-                    </span>
+                    <span>Courses</span>
 
                 </a>
-
 
                 <a href="#"
                    class="nav-item"
                    data-page="settings">
 
-                    <span>
-                        Settings
-                    </span>
+                    <span>Settings</span>
 
                 </a>
-
 
                 <a href="#"
                    class="nav-item logout"
                    data-page="logout">
 
-                    <span>
-                        Logout
-                    </span>
+                    <span>Logout</span>
 
                 </a>
 
@@ -87,7 +72,6 @@
 
         <main class="main-content">
 
-
             <!-- ================= TOP BAR ================= -->
 
             <div class="top-bar">
@@ -98,10 +82,10 @@
 
                     <input
                         type="text"
+                        id="courseSearch"
                         placeholder="Search your courses...">
 
                 </div>
-
 
                 <div class="top-bar-right">
 
@@ -138,9 +122,6 @@
                     class="page-section active"
                     id="courses">
 
-
-                    <!-- ANALYTICS HEADER -->
-
                     <div class="analytics-header">
 
                         <div class="header-left">
@@ -151,10 +132,10 @@
 
                         </div>
 
-
                         <button
                             type="button"
-                            class="btn-publish">
+                            class="btn-publish"
+                            id="publishCourseBtn">
 
                             <i class="fa-solid fa-plus"></i>
 
@@ -169,17 +150,11 @@
 
                     <div class="stats-grid">
 
-
-                        <!-- CARD 1 -->
-
                         <div class="stat-card">
 
                             <div class="stat-icon">
-
                                 <i class="fa-solid fa-users"></i>
-
                             </div>
-
 
                             <div class="stat-details">
 
@@ -187,16 +162,13 @@
                                     Total Purchased
                                 </span>
 
-                                <h3 class="stat-value">
-                                    1,248
+                                <h3 class="stat-value"
+                                    id="totalPurchased">
+                                    0
                                 </h3>
 
                                 <span class="stat-meta positive">
-
-                                    <i class="fa-solid fa-arrow-up"></i>
-
-                                    +12% this month
-
+                                    Course purchases
                                 </span>
 
                             </div>
@@ -204,16 +176,11 @@
                         </div>
 
 
-                        <!-- CARD 2 -->
-
                         <div class="stat-card">
 
                             <div class="stat-icon star">
-
                                 <i class="fa-solid fa-star"></i>
-
                             </div>
-
 
                             <div class="stat-details">
 
@@ -221,22 +188,13 @@
                                     Total Rating Reviews
                                 </span>
 
-                                <h3 class="stat-value">
-
-                                    4.8
-
-                                    <span class="sub-text">
-                                        (342 reviews)
-                                    </span>
-
+                                <h3 class="stat-value"
+                                    id="totalRating">
+                                    0
                                 </h3>
 
                                 <span class="stat-meta positive">
-
-                                    <i class="fa-solid fa-arrow-up"></i>
-
-                                    98% positive
-
+                                    Based on available reviews
                                 </span>
 
                             </div>
@@ -244,16 +202,11 @@
                         </div>
 
 
-                        <!-- CARD 3 -->
-
                         <div class="stat-card">
 
                             <div class="stat-icon wallet">
-
                                 <i class="fa-solid fa-wallet"></i>
-
                             </div>
-
 
                             <div class="stat-details">
 
@@ -261,22 +214,18 @@
                                     Total Earnings
                                 </span>
 
-                                <h3 class="stat-value">
-                                    ₹84,500
+                                <h3 class="stat-value"
+                                    id="totalEarnings">
+                                    ₹0
                                 </h3>
 
                                 <span class="stat-meta positive">
-
-                                    <i class="fa-solid fa-arrow-up"></i>
-
-                                    +18% increase
-
+                                    Course revenue
                                 </span>
 
                             </div>
 
                         </div>
-
 
                     </div>
 
@@ -284,7 +233,6 @@
                     <!-- ================= PUBLISHED COURSES ================= -->
 
                     <div class="published-courses-wrapper">
-
 
                         <div class="section-title">
 
@@ -295,31 +243,32 @@
                         </div>
 
 
-                        <div class="instructor-course-list">
+                        <div
+                            class="instructor-course-list"
+                            id="courseList">
 
+                            <!-- Course 1 -->
 
-                            <!-- COURSE 1 -->
-
-                            <div class="instructor-course-card">
-
+                            <div
+                                class="instructor-course-card course-card"
+                                data-course-card>
 
                                 <div class="course-info">
 
                                     <div class="course-icon-box">
 
-                                        <i class="fa-brands fa-html5"></i>
+                                        <i class="fa-solid fa-book"></i>
 
                                     </div>
 
-
                                     <div>
 
-                                        <h4>
-                                            HTML & CSS Fundamentals
+                                        <h4 data-course-name>
+                                            Course Name
                                         </h4>
 
-                                        <p>
-                                            Created on Aug 12, 2026
+                                        <p data-course-details>
+                                            Course details
                                         </p>
 
                                     </div>
@@ -332,11 +281,11 @@
                                     <div class="metric">
 
                                         <span>
-                                            Purchases
+                                            Price
                                         </span>
 
-                                        <strong>
-                                            520
+                                        <strong data-course-price>
+                                            Free
                                         </strong>
 
                                     </div>
@@ -345,11 +294,11 @@
                                     <div class="metric">
 
                                         <span>
-                                            Rating
+                                            Language
                                         </span>
 
-                                        <strong>
-                                            4.9 ★
+                                        <strong data-course-language>
+                                            -
                                         </strong>
 
                                     </div>
@@ -361,7 +310,8 @@
 
                                     <button
                                         type="button"
-                                        class="btn-action">
+                                        class="btn-action"
+                                        data-edit-course>
 
                                         Edit Course
 
@@ -372,28 +322,28 @@
                             </div>
 
 
-                            <!-- COURSE 2 -->
+                            <!-- Course 2 -->
 
-                            <div class="instructor-course-card">
-
+                            <div
+                                class="instructor-course-card course-card"
+                                data-course-card>
 
                                 <div class="course-info">
 
                                     <div class="course-icon-box">
 
-                                        <i class="fa-brands fa-js"></i>
+                                        <i class="fa-solid fa-book"></i>
 
                                     </div>
 
-
                                     <div>
 
-                                        <h4>
-                                            Modern JavaScript ES6+
+                                        <h4 data-course-name>
+                                            Course Name
                                         </h4>
 
-                                        <p>
-                                            Created on Jul 25, 2026
+                                        <p data-course-details>
+                                            Course details
                                         </p>
 
                                     </div>
@@ -406,11 +356,11 @@
                                     <div class="metric">
 
                                         <span>
-                                            Purchases
+                                            Price
                                         </span>
 
-                                        <strong>
-                                            410
+                                        <strong data-course-price>
+                                            Free
                                         </strong>
 
                                     </div>
@@ -419,11 +369,11 @@
                                     <div class="metric">
 
                                         <span>
-                                            Rating
+                                            Language
                                         </span>
 
-                                        <strong>
-                                            4.7 ★
+                                        <strong data-course-language>
+                                            -
                                         </strong>
 
                                     </div>
@@ -435,7 +385,8 @@
 
                                     <button
                                         type="button"
-                                        class="btn-action">
+                                        class="btn-action"
+                                        data-edit-course>
 
                                         Edit Course
 
@@ -450,7 +401,6 @@
 
                     </div>
 
-
                 </section>
 
 
@@ -460,34 +410,167 @@
                     class="page-section"
                     id="settings">
 
-                    <!--
-                        Teacher.js will dynamically insert:
+                    <div class="settings-page">
 
-                        Account Settings
-                        Your account information
-                        Account Details
-                        Profile information
-                        Update Profile button
-                    -->
+                        <div class="settings-header">
 
-                    <div id="accountDetails"></div>
+                            <h2>
+                                Account Settings
+                            </h2>
+
+                            <p>
+                                Your account information
+                            </p>
+
+                        </div>
+
+
+                        <div class="account-details-card">
+
+                            <h3>
+                                Account Details
+                            </h3>
+
+
+                            <div class="account-details">
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        First Name
+                                    </span>
+
+                                    <strong id="teacherFirstName">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        Last Name
+                                    </span>
+
+                                    <strong id="teacherLastName">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        Email
+                                    </span>
+
+                                    <strong id="teacherEmail">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        Phone
+                                    </span>
+
+                                    <strong id="teacherPhone">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        Gender
+                                    </span>
+
+                                    <strong id="teacherGender">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        Date of Birth
+                                    </span>
+
+                                    <strong id="teacherDob">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        Address
+                                    </span>
+
+                                    <strong id="teacherAddress">
+                                        -
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-row">
+
+                                    <span>
+                                        About Me
+                                    </span>
+
+                                    <strong id="teacherAbout">
+                                        -
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="update-profile-wrapper">
+
+                                <button
+                                    type="button"
+                                    class="update-profile-option"
+                                    id="openUpdateProfile">
+
+                                    Update Profile
+
+                                    <i class="fa-solid fa-arrow-right"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 </section>
 
-
             </div>
-
 
         </main>
 
-
     </div>
 
-
-    <!-- ================= JAVASCRIPT ================= -->
 
     <script src="teacher.js"></script>
 
 </body>
 
 </html>
+```
