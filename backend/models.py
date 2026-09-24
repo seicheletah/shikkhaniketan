@@ -301,7 +301,13 @@ class Course(CourseBase, table=True):
 
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
-    pass
+    @model_validator(mode="after")
+    def check_valid_price(self):
+        if self.course_paid == True and self.course_price <= 0:
+            raise ValueError("paid course price needs to be more than 0")
+        elif self.course_paid == False and self.course_price > 0:
+            raise ValueError("free course price needs to be 0")
+        return self
 
 
 # update course model with pydantic vlidation
