@@ -266,7 +266,9 @@ class CourseBase(SQLModel):
     course_name: str
     course_details: str
     course_language: str
-    course_resource_type: CourseResourceType = Field(sa_column=Column(String))
+    course_resource_type: CourseResourceType = Field(
+        sa_column=Column(String, nullable=False)
+    )
     course_paid: bool
     course_price: int = Field(ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
