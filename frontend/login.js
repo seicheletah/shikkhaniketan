@@ -1,211 +1,78 @@
+document.addEventListener("DOMContentLoaded", () => {
 
-document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById("loginForm");
+    const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("togglePassword");
 
-    const loginForm = document.getElementById('loginForm');
-    const passwordInput = document.getElementById('password');
-    const togglePassword = document.getElementById('togglePassword');
-
-    // =========================
-    // Password Show / Hide
-    // =========================
+    // Show / Hide Password
     if (togglePassword && passwordInput) {
-
-        togglePassword.addEventListener('click', () => {
-
-            if (passwordInput.type === 'password') {
-
-                passwordInput.type = 'text';
-
-                togglePassword.classList.remove('fa-eye');
-                togglePassword.classList.add('fa-eye-slash');
-
+        togglePassword.addEventListener("click", () => {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                togglePassword.classList.replace("fa-eye", "fa-eye-slash");
             } else {
-
-                passwordInput.type = 'password';
-
-                togglePassword.classList.remove('fa-eye-slash');
-                togglePassword.classList.add('fa-eye');
+                passwordInput.type = "password";
+                togglePassword.classList.replace("fa-eye-slash", "fa-eye");
             }
         });
     }
 
+    if (!loginForm) return;
 
-    // =========================
-    // Login Form
-    // =========================
-    if (!loginForm) {
-        console.error('Login form not found.');
-        return;
-    }
-
-
-    loginForm.addEventListener('submit', async (e) => {
-
+    loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        const email = document.getElementById("email").value.trim();
+        const password = passwordInput.value;
 
-        // Get email and password only
-        const emailInput = document.getElementById('email');
-
-        const email = emailInput
-            ? emailInput.value.trim()
-            : '';
-
-        const password = passwordInput
-            ? passwordInput.value
-            : '';
-
-
-        // Check email and password
         if (!email || !password) {
-
-            alert('Please enter your email and password.');
-
+            alert("Please enter your email and password.");
             return;
         }
 
-
         try {
-
-            // =========================
-            // Prepare Login Data
-            // =========================
             const formData = new URLSearchParams();
+            formData.append("username", email);
+            formData.append("password", password);
 
-            formData.append('username', email);
-            formData.append('password', password);
-
-
-            // =========================
-            // Login API
-            // =========================
-            const response = await fetch(
-                'http://127.0.0.1:8000/api/v1/login',
-                {
-                    method: 'POST',
-
-                    headers: {
-                        'Content-Type':
-                            'application/x-www-form-urlencoded'
-                    },
-
-                    body: formData
-                }
-            );
-
+            const response = await fetch("http://127.0.0.1:8000/api/v1/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData
+            });
 
             const data = await response.json();
 
-
-            // =========================
-            // Login Failed
-            // =========================
             if (!response.ok) {
-
-                alert(
-                    data.detail ||
-                    'Invalid email or password.'
-                );
-
+                alert(data.detail || "Invalid email or password.");
                 return;
             }
 
-
-            // =========================
             // Save Token
-            // =========================
-            localStorage.setItem(
-                'access_token',
-                data.access_token
-            );
+            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("token_type", data.token_type || "bearer");
+            localStorage.setItem("userRole", data.role);
 
-            localStorage.setItem(
-                'token_type',
-                data.token_type || 'bearer'
-            );
+            console.log("Token Saved:", localStorage.getItem("access_token"));
+            console.log("Role:", localStorage.getItem("userRole"));
 
-
-            // =========================
-            // Get Role From Backend
-            // =========================
-            const role = data.role;
-
-
-            console.log('Login successful.');
-            console.log('Role received from backend:', role);
-
-
-            // If backend did not send role
-            if (!role) {
-
-                alert(
-                    'Role information was not received from the server.'
-                );
-
-                return;
+            // Redirect
+            if (data.role === "student") {
+                window.location.href = "student.html";
+            } else if (data.role === "teacher") {
+                window.location.href = "teacher.html";
+            } else if (data.role === "admin") {
+                window.location.href = "admin.html";
+            } else {
+                alert("Unknown account role.");
             }
-
-
-            // Save role
-            localStorage.setItem(
-                'userRole',
-                role
-            );
-
-
-            // =========================
-            // Redirect Automatically
-            // =========================
-
-            if (role === 'student') {
-
-                window.location.replace(
-                    'student.html'
-                );
-
-            }
-
-            else if (role === 'teacher') {
-
-                window.location.replace(
-                    'teacher.html'
-                );
-
-            }
-
-            else if (role === 'admin') {
-
-                window.location.replace(
-                    'admin.html'
-                );
-
-            }
-
-            else {
-
-                console.error(
-                    'Unknown role received:',
-                    role
-                );
-
-                alert(
-                    'Unknown account role: ' + role
-                );
-            }
-
 
         } catch (error) {
-
-            console.error(
-                'Login Error:',
-                error
-            );
-
-            alert(
-                'Unable to connect to the server.'
-            );
+            console.error("Login Error:", error);
+            alert("Unable to connect to the server.");
         }
-
     });
 
 });

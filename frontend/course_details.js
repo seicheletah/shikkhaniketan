@@ -1,7 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    const API_URL =
-        "http://127.0.0.1:8000/api/v1/students/me";
+    // =========================================
+    // API
+    // =========================================
+
+    const API_BASE_URL =
+        "http://127.0.0.1:8000/api/v1";
+
+    const STUDENT_API_URL =
+        `${API_BASE_URL}/students/me`;
 
     const token =
         localStorage.getItem("access_token");
@@ -29,18 +36,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // COURSE PAGE
+    // GET COURSE ID FROM URL
     // =========================================
 
-    function showCoursePage() {
+    const urlParams =
+        new URLSearchParams(window.location.search);
 
-        // Course Details page already has
-        // the original HTML content.
-        // So reload the original page content.
-
-        window.location.reload();
-
-    }
+    const courseId =
+        urlParams.get("course");
 
 
     // =========================================
@@ -69,7 +72,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 item.classList.add("active");
 
-                showCoursePage();
+                if (courseId) {
+                    loadCourseDetails(courseId);
+                } else {
+                    window.location.href = "student.html";
+                }
 
                 return;
             }
@@ -117,6 +124,231 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
+    // LOAD COURSE DETAILS
+    // =========================================
+
+    async function loadCourseDetails(id) {
+
+        try {
+
+            console.log("Loading course details...");
+            console.log("Course ID:", id);
+
+
+            const response =
+                await fetch(
+                    `${API_BASE_URL}/courses/${id}`,
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Authorization":
+                                "Bearer " + token,
+
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            console.log(
+                "Course API Status:",
+                response.status
+            );
+
+
+            // =====================================
+            // UNAUTHORIZED
+            // =====================================
+
+            if (response.status === 401) {
+
+                logout();
+
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                "Course API Response:",
+                data
+            );
+
+
+            // =====================================
+            // API ERROR
+            // =====================================
+
+            if (!response.ok) {
+
+                console.error(
+                    "Course API Error:",
+                    data
+                );
+
+                alert(
+                    data.detail ||
+                    "Unable to load course details."
+                );
+
+                return;
+            }
+
+
+            // =====================================
+            // SHOW COURSE DATA
+            // =====================================
+
+            showCourseDetails(data);
+
+        }
+
+
+        catch (error) {
+
+            console.error(
+                "Course API Error:",
+                error
+            );
+
+            alert(
+                "Backend server-এর সাথে connection হচ্ছে না."
+            );
+
+        }
+
+    }
+
+
+    // =========================================
+    // SHOW COURSE DETAILS
+    // =========================================
+
+    function showCourseDetails(course) {
+
+        console.log(
+            "Course data received:",
+            course
+        );
+
+
+        // =====================================
+        // COURSE TITLE
+        // =====================================
+
+        const courseTitle =
+            document.querySelector(".course-title");
+
+        if (courseTitle) {
+
+            courseTitle.textContent =
+                course.name ||
+                course.title ||
+                course.course_name ||
+                "Course";
+
+        }
+
+
+        // =====================================
+        // COURSE OVERVIEW
+        // =====================================
+
+        const overviewText =
+            document.querySelector("#overviewTab p");
+
+        if (overviewText) {
+
+            overviewText.textContent =
+                course.description ||
+                course.details ||
+                course.course_description ||
+                "No course description available.";
+
+        }
+
+
+        // =====================================
+        // COURSE PRICE
+        // =====================================
+
+        const priceRows =
+            document.querySelectorAll(".price-row");
+
+
+        if (priceRows.length > 0) {
+
+            const price =
+                Number(course.price || 0);
+
+
+            // Course Price
+
+            if (priceRows[0]) {
+
+                const priceValue =
+                    priceRows[0].querySelector("strong");
+
+                if (priceValue) {
+
+                    priceValue.textContent =
+                        `₹${price}`;
+
+                }
+
+            }
+
+
+            // GST
+
+            if (priceRows[1]) {
+
+                const gstValue =
+                    priceRows[1].querySelector("strong");
+
+                if (gstValue) {
+
+                    const gst =
+                        price * 0.18;
+
+                    gstValue.textContent =
+                        `₹${gst.toFixed(2)}`;
+
+                }
+
+            }
+
+
+            // Total
+
+            if (priceRows[2]) {
+
+                const totalValue =
+                    priceRows[2].querySelector("strong");
+
+                if (totalValue) {
+
+                    const total =
+                        price + (price * 0.18);
+
+                    totalValue.textContent =
+                        `₹${total.toFixed(2)}`;
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    // =========================================
     // COURSE DETAILS TABS
     // =========================================
 
@@ -133,12 +365,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         // Remove active
+
         tabButtons.forEach(function (button) {
             button.classList.remove("active");
         });
 
 
-        // Hide all
+        // Hide tabs
+
         if (overviewTab) {
             overviewTab.classList.add("hidden");
         }
@@ -148,7 +382,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        // Overview
+        // =====================================
+        // OVERVIEW
+        // =====================================
+
         if (tabName === "overview") {
 
             if (overviewTab) {
@@ -162,7 +399,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        // Reviews
+        // =====================================
+        // REVIEWS
+        // =====================================
+
         if (tabName === "reviews") {
 
             if (reviewsTab) {
@@ -192,21 +432,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             const response =
-                await fetch(API_URL, {
+                await fetch(
+                    STUDENT_API_URL,
+                    {
+                        method: "GET",
 
-                    method: "GET",
+                        headers: {
+                            "Authorization":
+                                "Bearer " + token,
 
-                    headers: {
-
-                        "Authorization":
-                            "Bearer " + token,
-
-                        "Accept":
-                            "application/json"
-
+                            "Accept":
+                                "application/json"
+                        }
                     }
-
-                });
+                );
 
 
             console.log(
@@ -221,20 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (response.status === 401) {
 
-                localStorage.removeItem(
-                    "access_token"
-                );
-
-                localStorage.removeItem(
-                    "token_type"
-                );
-
-                localStorage.removeItem(
-                    "userRole"
-                );
-
-                window.location.href =
-                    "login.html";
+                logout();
 
                 return;
             }
@@ -265,7 +491,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             // =====================================
-            // ACCOUNT DETAILS
+            // ACCOUNT DATA
             // =====================================
 
             const firstName =
@@ -318,7 +544,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             // =====================================
-            // SHOW ACCOUNT DETAILS
+            // SHOW SETTINGS
             // =====================================
 
             showAccountDetails({
@@ -387,108 +613,86 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     <div class="account-details">
 
-
                         <div class="detail-row">
-
                             <span>First Name</span>
-
                             <strong>
                                 ${escapeHTML(profile.firstName)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>Last Name</span>
-
                             <strong>
                                 ${escapeHTML(profile.lastName)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>Email</span>
-
                             <strong>
                                 ${escapeHTML(profile.email)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>Phone</span>
-
                             <strong>
                                 ${escapeHTML(profile.phone)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>Gender</span>
-
                             <strong>
                                 ${escapeHTML(profile.gender)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>Date of Birth</span>
-
                             <strong>
                                 ${escapeHTML(profile.dob)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>Address</span>
-
                             <strong>
                                 ${escapeHTML(profile.address)}
                             </strong>
-
                         </div>
 
 
                         <div class="detail-row">
-
                             <span>About Me</span>
-
                             <strong>
                                 ${escapeHTML(profile.about)}
                             </strong>
-
                         </div>
-
 
                     </div>
 
 
-                    <button
-                        type="button"
-                        class="update-profile-option"
-                        id="openUpdateProfile">
+                    <div class="update-profile-wrapper">
 
-                        Update Profile
+                        <button
+                            type="button"
+                            class="update-profile-option"
+                            id="openUpdateProfile">
 
-                        <i class="fa-solid fa-arrow-right"></i>
+                            Update Profile
 
-                    </button>
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
+
+                    </div>
 
 
                 </div>
@@ -499,7 +703,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         // =====================================
-        // UPDATE PROFILE
+        // UPDATE PROFILE BUTTON
         // =====================================
 
         const updateButton =
@@ -526,7 +730,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // ERROR
+    // ACCOUNT ERROR
     // =========================================
 
     function showAccountError(message) {
@@ -584,17 +788,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function logout() {
 
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        localStorage.removeItem(
-            "token_type"
-        );
-
-        localStorage.removeItem(
-            "userRole"
-        );
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("token_type");
+        localStorage.removeItem("userRole");
 
         window.location.href =
             "login.html";
@@ -603,15 +799,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =========================================
-    // INITIAL LOAD
+    // INITIAL COURSE LOAD
     // =========================================
 
     console.log(
         "Course Details page loaded."
     );
 
+
+    if (courseId) {
+
+        loadCourseDetails(courseId);
+
+    } else {
+
+        console.log(
+            "No course ID found in URL."
+        );
+
+    }
+
 });
 
+
+// =========================================
+// OPEN COURSE VIEW
+// =========================================
+
 function openCourseView() {
-    window.location.href = "course_view.html";
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const courseId =
+        params.get("course");
+
+
+    if (courseId) {
+
+        window.location.href =
+            `course_view.html?course=${encodeURIComponent(courseId)}`;
+
+    } else {
+
+        window.location.href =
+            "course_view.html";
+
+    }
+
 }
