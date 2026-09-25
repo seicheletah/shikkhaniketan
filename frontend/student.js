@@ -8,202 +8,173 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // ================= ELEMENTS =================
     const userName = document.getElementById("studentUserName");
     const profileImg = document.getElementById("studentProfileImg");
     const accountDetails = document.getElementById("accountDetails");
-
-    const courseGrid = document.querySelector(".course-grid");
+    const courseGrid = document.getElementById("courseGrid");
     const searchInput = document.querySelector(".search-box input");
 
-    // Sidebar buttons
-    const homeBtn = document.getElementById("homeBtn");
-    const coursesBtn = document.getElementById("coursesBtn");
-    const quizBtn = document.getElementById("quizBtn");
-    const settingsBtn = document.getElementById("settingsBtn");
-
-    // Sections
-    const homeSection = document.getElementById("homeSection");
-    const coursesSection = document.getElementById("coursesSection");
-    const quizSection = document.getElementById("quizSection");
-    const settingsSection = document.getElementById("settingsSection");
-
     let allCourses = [];
-
-    // ================= SHOW SECTION =================
-    function showSection(section) {
-
-        [homeSection, coursesSection, quizSection, settingsSection].forEach(sec => {
-            if (sec) sec.style.display = "none";
-        });
-
-        if (section) section.style.display = "block";
-    }
 
     // ================= PROFILE =================
     async function loadStudentProfile() {
 
-        try {
-
-            const res = await fetch(`${API_BASE}/students/me`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    Accept: "application/json"
-                }
-            });
-
-            if (res.status === 401) {
-                localStorage.clear();
-                location.href = "login.html";
-                return;
+        const res = await fetch(`${API_BASE}/students/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
             }
+        });
 
-            const data = await res.json();
+        const data = await res.json();
 
-            const fullName =
-                `${data.first_name || ""} ${data.last_name || ""}`.trim();
+        const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
 
-            if (userName) userName.textContent = fullName;
+        userName.textContent = fullName;
 
-            if (profileImg && data.profile_pic)
-                profileImg.src = data.profile_pic;
-
-            if (accountDetails) {
-
-                accountDetails.innerHTML = `
-                    <div><b>Name:</b> ${fullName}</div>
-                    <div><b>Email:</b> ${data.user?.email_id || ""}</div>
-                    <div><b>Phone:</b> ${data.phone_no || ""}</div>
-                    <div><b>Gender:</b> ${data.gender || ""}</div>
-                    <div><b>DOB:</b> ${data.date_of_birth || ""}</div>
-                    <div><b>Address:</b> ${data.address || ""}</div>
-                    <div><b>About:</b> ${data.about || ""}</div>
-                `;
-            }
-
-        } catch (err) {
-            console.error(err);
+        if (data.profile_pic) {
+            profileImg.src = data.profile_pic;
         }
+
+        accountDetails.innerHTML = `
+            <div><b>Name:</b> ${fullName}</div>
+            <div><b>Email:</b> ${data.user?.email_id || ""}</div>
+            <div><b>Phone:</b> ${data.phone_no || ""}</div>
+            <div><b>Gender:</b> ${data.gender || ""}</div>
+            <div><b>Date of Birth:</b> ${data.date_of_birth || ""}</div>
+            <div><b>Address:</b> ${data.address || ""}</div>
+            <div><b>About:</b> ${data.about || ""}</div>
+        `;
     }
 
-    // ================= LOAD COURSES =================
+    // ================= ENROLLED COURSES =================
     async function loadCourses() {
 
-        try {
+        const res = await fetch(`${API_BASE}/students/me/enrolled-courses`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            }
+        });
 
-            const res = await fetch(`${API_BASE}/courses/search?q=&limit=50&offset=0`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    Accept: "application/json"
-                }
-            });
-
-            console.log("Course Status:", res.status);
-
-            if (!res.ok) return;
-
-            const data = await res.json();
-
-            allCourses = Array.isArray(data) ? data : [];
-
-            renderCourses(allCourses);
-
-        } catch (err) {
-            console.error(err);
+        if (!res.ok) {
+            courseGrid.innerHTML = "<p>No enrolled courses.</p>";
+            return;
         }
+
+        const data = await res.json();
+
+        allCourses = Array.isArray(data) ? data : (data.courses || []);
+
+        renderCourses(allCourses);
     }
 
-    // ================= RENDER COURSES =================
+    // ================= RENDER =================
     function renderCourses(courses) {
-
-        if (!courseGrid) return;
 
         courseGrid.innerHTML = "";
 
         if (courses.length === 0) {
-            courseGrid.innerHTML = "<p>No course found.</p>";
+            courseGrid.innerHTML = "<p>No enrolled courses.</p>";
             return;
         }
 
         courses.forEach(course => {
+
+            const progress = course.progress || 0;
+            const thumbnail = course.thumbnail_url || "images/test_thumbnail.jpg";
 
             const card = document.createElement("div");
             card.className = "course-card";
 
             card.innerHTML = `
                 <div class="course-image">
-                    <img src="https://placehold.co/300x180?text=Course" alt="">
+                    <img src="${thumbnail}" alt="Course">
                 </div>
 
-                <div class="course-content">
+                <div class="card-body">
+                    <h4>${course.course_name}</h4>
 
-                    <h3>${course.course_name}</h3>
-
-                    <p>${course.course_details}</p>
-
-                    <span>${course.course_language}</span>
-
-                    <div class="price">
-                        ${course.course_paid ? `₹${course.course_price}` : "Free"}
+                    <div class="progress-info">
+                        <span>Progress</span>
+                        <span class="percentage">${progress}%</span>
                     </div>
 
-                    <button class="btn-continue">
-                        Continue Learning
-                    </button>
-
+                    <div class="progress-bar">
+                        <div class="progress" style="width:${progress}%"></div>
+                    </div>
                 </div>
+
+                <button class="btn-continue">
+                    Continue Learning
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
             `;
 
-            // Whole card click
-            card.addEventListener("click", () => {
-                window.location.href = `course_details.html?id=${course.id}`;
-            });
-
-            // Button click
-            card.querySelector(".btn-continue").addEventListener("click", (e) => {
-                e.stopPropagation();
-                window.location.href = `course_details.html?id=${course.id}`;
-            });
+            card.querySelector(".btn-continue").onclick = () => {
+                window.location.href = `course_view.html?course=${course.id}`;
+            };
 
             courseGrid.appendChild(card);
-
         });
     }
 
     // ================= SEARCH =================
-    if (searchInput) {
+    searchInput.addEventListener("input", () => {
 
-        searchInput.addEventListener("input", () => {
+        const value = searchInput.value.toLowerCase();
 
-            const value = searchInput.value.toLowerCase();
+        const filtered = allCourses.filter(course =>
+            (course.course_name || "").toLowerCase().includes(value)
+        );
 
-            const filtered = allCourses.filter(course =>
-                (course.course_name || "").toLowerCase().includes(value)
-            );
+        renderCourses(filtered);
+    });
 
-            renderCourses(filtered);
+    // ================= SIDEBAR =================
+    document.querySelectorAll(".nav-item").forEach(item => {
+
+        item.addEventListener("click", e => {
+
+            e.preventDefault();
+
+            const page = item.dataset.page;
+
+            document.querySelectorAll(".page-section").forEach(sec => {
+                sec.classList.remove("active");
+            });
+
+            document.querySelectorAll(".nav-item").forEach(nav => {
+                nav.classList.remove("active");
+            });
+
+            item.classList.add("active");
+
+            if (page === "courses") {
+                document.getElementById("courses").classList.add("active");
+                loadCourses();
+            }
+
+            if (page === "quiz") {
+                document.getElementById("quiz").classList.add("active");
+            }
+
+            if (page === "settings") {
+                document.getElementById("settings").classList.add("active");
+                loadStudentProfile();
+            }
+
+            if (page === "logout") {
+                localStorage.clear();
+                window.location.href = "login.html";
+            }
 
         });
 
-    }
+    });
 
-    // ================= SIDEBAR =================
-    if (homeBtn)
-        homeBtn.onclick = () => showSection(homeSection);
+    // Initial Load
+    loadStudentProfile();
+    loadCourses();
 
-    if (coursesBtn)
-        coursesBtn.onclick = () => {
-            showSection(coursesSection);
-            loadCourses();
-        };
-
-    if (quizBtn)
-        quizBtn.onclick = () => showSection(quizSection);
-
-    if (settingsBtn)
-        settingsBtn.onclick = () => {
-            showSection(settingsSection);
-            loadStudentProfile();
-        };
-
-    
+});

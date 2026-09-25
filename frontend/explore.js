@@ -1,132 +1,110 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const API_URL = "http://127.0.0.1:8000/api/v1/courses/";
-
-    // Login token
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-        alert("Please login first.");
-        window.location.href = "login.html";
-        return;
-    }
+    const API_BASE = "http://127.0.0.1:8000/api/v1";
 
     const searchInput = document.querySelector(".search-box input");
     const sortSelect = document.getElementById("sort");
-    const cards = document.querySelectorAll(".cards-grid .card");
+    const courseGrid = document.getElementById("courseGrid");
 
     let allCourses = [];
     let filteredCourses = [];
 
-    // =========================
-    // LOAD COURSES
-    // =========================
     async function loadCourses() {
-
         try {
-
-            console.log("Token:", token);
-
-            const response = await fetch(API_URL, {
+            const res = await fetch(`${API_BASE}/courses/`, {
                 method: "GET",
                 headers: {
-                    "Authorization": `Bearer ${token}`,
                     "Accept": "application/json"
                 }
             });
 
-            console.log("Status:", response.status);
-
-            if (response.status === 401) {
-                alert("Session expired. Please login again.");
-                localStorage.removeItem("access_token");
-                window.location.href = "login.html";
+            if (!res.ok) {
+                courseGrid.innerHTML = "<p>No courses available.</p>";
                 return;
             }
 
-            const data = await response.json();
-
-            console.log("Courses:", data);
-
-            allCourses = Array.isArray(data)
-                ? data
-                : (data.courses || []);
-
+            const data = await res.json();
+            allCourses = Array.isArray(data) ? data : (data.courses || []);
             filteredCourses = [...allCourses];
-
             renderCourses(filteredCourses);
 
         } catch (err) {
             console.error(err);
+            courseGrid.innerHTML = "<p>Failed to load courses.</p>";
         }
     }
 
-    // =========================
-    // RENDER COURSES
-    // =========================
     function renderCourses(courses) {
 
-        cards.forEach((card, index) => {
+        courseGrid.innerHTML = "";
 
-            if (index >= courses.length) {
-                card.style.display = "none";
-                return;
-            }
+        if (courses.length === 0) {
+            courseGrid.innerHTML = "<p>No courses found.</p>";
+            return;
+        }
 
-            const c = courses[index];
+        courses.forEach(course => {
 
-            card.style.display = "block";
+            const card = document.createElement("div");
+            card.className = "card";
+
+            const thumbnail = course.thumbnail_url
+                ? course.thumbnail_url
+                : "/frontend/images/test_thumbnail.jpg";
 
             card.innerHTML = `
-                <h3>${c.course_name}</h3>
-                <p>${c.course_details}</p>
-                <small>${c.course_language}</small><br>
-                <strong>${c.course_paid ? "₹" + c.course_price : "Free"}</strong>
+                <img class="course-thumb" src="${thumbnail}" alt="Thumbnail">
+
+                <div class="course-body">
+                    <h3>${course.course_name}</h3>
+                    <p>${course.course_details}</p>
+
+                    <div class="course-meta">
+                        <span>${course.course_language}</span>
+                        <strong>${course.course_paid ? "₹" + course.course_price : "Free"}</strong>
+                    </div>
+                </div>
             `;
 
+            // LOGIN CHECK
             card.onclick = () => {
-                window.location.href = `course_details.html?id=${c.id}`;
+                const token = localStorage.getItem("access_token");
+
+                if (token) {
+                    window.location.href = `course_details.html?id=${course.id}`;
+                } else {
+                    window.location.href = "sign_up.html";
+                }
             };
+
+            courseGrid.appendChild(card);
         });
     }
 
-    // =========================
-    // SEARCH
-    // =========================
-    if (searchInput) {
-        searchInput.addEventListener("input", () => {
+    searchInput.addEventListener("input", () => {
+        const value = searchInput.value.toLowerCase();
 
-            const value = searchInput.value.toLowerCase();
+        filteredCourses = allCourses.filter(course =>
+            (course.course_name || "").toLowerCase().includes(value)
+        );
 
-            filteredCourses = allCourses.filter(course =>
-                (course.course_name || "").toLowerCase().includes(value)
+        renderCourses(filteredCourses);
+    });
+
+    sortSelect.addEventListener("change", () => {
+
+        if (sortSelect.value === "newest") {
+            filteredCourses.sort((a, b) =>
+                new Date(b.created_at || 0) - new Date(a.created_at || 0)
             );
+        } else {
+            filteredCourses.sort((a, b) =>
+                (a.course_name || "").localeCompare(b.course_name || "")
+            );
+        }
 
-            renderCourses(filteredCourses);
-        });
-    }
+        renderCourses(filteredCourses);
+    });
 
-    // =========================
-    // SORT
-    // =========================
-    if (sortSelect) {
-        sortSelect.addEventListener("change", () => {
-
-            if (sortSelect.value === "newest") {
-                filteredCourses.sort((a, b) =>
-                    new Date(b.created_at) - new Date(a.created_at)
-                );
-            } else {
-                filteredCourses.sort((a, b) =>
-                    (a.course_name || "").localeCompare(b.course_name || "")
-                );
-            }
-
-            renderCourses(filteredCourses);
-        });
-    }
-
-    // Initial Load
     loadCourses();
-
 });

@@ -1,772 +1,244 @@
-// ========================================
-// COURSE VIEW JS
-// ========================================
+document.addEventListener("DOMContentLoaded", async () => {
 
-document.addEventListener("DOMContentLoaded", function () {
-
-    const API_BASE_URL =
-        "http://127.0.0.1:8000/api/v1";
-
-    const token =
-        localStorage.getItem("access_token");
-
-    const userRole =
-        localStorage.getItem("userRole");
-
-
-    // ========================================
-    // LOGIN CHECK
-    // ========================================
+    const API = "http://127.0.0.1:8000/api/v1";
+    const token = localStorage.getItem("access_token");
 
     if (!token) {
-
         window.location.href = "login.html";
-
         return;
     }
 
+    const courseId = new URLSearchParams(window.location.search).get("course");
 
-    // ========================================
-    // ELEMENTS
-    // ========================================
+    const video = document.querySelector("#videoPlayerBox video");
+    const pdf = document.querySelector("#pdfReaderBox iframe");
+    const overview = document.querySelector("#overviewTab p");
+    const title = document.querySelector("#overviewTab h3");
+    const reviewBox = document.getElementById("reviewsTab");
+    const userName = document.querySelector(".user-name");
+    const contentBody = document.querySelector(".content-body");
 
-    const contentBody =
-        document.querySelector(".content-body");
+    // ========= STUDENT PROFILE =========
+    const meRes = await fetch(`${API}/students/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
 
-    const navItems =
-        document.querySelectorAll(".nav-item");
+    const me = await meRes.json();
+    userName.textContent = `${me.first_name} ${me.last_name}`;
 
+    // ========= LOAD COURSE =========
+    async function loadCourse() {
 
-    // ========================================
-    // SIDEBAR NAVIGATION
-    // ========================================
+        const res = await fetch(`${API}/courses/${courseId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-    navItems.forEach(function (item) {
+        const course = await res.json();
 
-        item.addEventListener("click", function (event) {
+        title.textContent = course.course_name;
+        overview.textContent = course.course_details;
 
-            event.preventDefault();
+        loadMedia();
+        loadReviews();
+    }
 
-            const text =
-                item.textContent.trim().toLowerCase();
+    // ========= VIDEO & PDF =========
+    async function loadMedia() {
 
+        const res = await fetch(`${API}/courses/${courseId}/media/resource/access`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
 
-            // ====================================
-            // COURSES
-            // ====================================
+        const media = await res.json();
+
+        media.forEach(item => {
+
+            if (item.media_type === "video") {
+                video.src = item.access_url;
+            }
+
+            if (item.media_type === "document") {
+                pdf.src = item.access_url;
+            }
+
+        });
+
+    }
+
+    // ========= REVIEWS =========
+    async function loadReviews() {
+
+        const res = await fetch(`${API}/courses/${courseId}/review`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const reviews = await res.json();
+
+        reviewBox.innerHTML = `<h3>Student Feedback</h3>`;
+
+        if (reviews.length === 0) {
+            reviewBox.innerHTML += `<p>No reviews yet.</p>`;
+        }
+
+        reviews.forEach(r => {
+
+            reviewBox.innerHTML += `
+                <div class="review-item">
+                    <div class="reviewer-header">
+                        <strong>${r.student_name || "Student"}</strong>
+                        <span class="rating">⭐ ${r.rating}/5</span>
+                    </div>
+                    <p>${r.review}</p>
+                </div>
+            `;
+
+        });
+
+        reviewBox.innerHTML += `
+            <div style="margin-top:20px">
+                <textarea id="reviewText"
+                    placeholder="Write your review"
+                    style="width:100%;height:90px;padding:10px"></textarea>
+
+                <input id="rating"
+                    type="number"
+                    min="1"
+                    max="5"
+                    value="5"
+                    style="width:80px;margin-top:10px">
+
+                <button id="submitReviewBtn"
+                    style="padding:10px 20px;margin-left:10px;background:#0f766e;color:#fff;border:none;border-radius:8px">
+                    Submit
+                </button>
+            </div>
+        `;
+
+        document
+            .getElementById("submitReviewBtn")
+            .addEventListener("click", submitReview);
+
+    }
+
+    // ========= SUBMIT REVIEW =========
+    async function submitReview() {
+
+        const review = document.getElementById("reviewText").value;
+        const rating = Number(document.getElementById("rating").value);
+
+        await fetch(`${API}/courses/${courseId}/review`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                review,
+                rating
+            })
+        });
+
+        alert("Review submitted");
+        loadReviews();
+
+    }
+
+    // ========= SETTINGS =========
+    async function showSettings() {
+
+        const res = await fetch(`${API}/students/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        contentBody.innerHTML = `
+            <div class="settings-page">
+                <h2>My Profile</h2>
+
+                <div class="account-card">
+                    <p><b>First Name :</b> ${data.first_name}</p>
+                    <p><b>Last Name :</b> ${data.last_name}</p>
+                    <p><b>Email :</b> ${data.user.email_id}</p>
+                    <p><b>Phone :</b> ${data.phone_no}</p>
+                    <p><b>Gender :</b> ${data.gender}</p>
+                    <p><b>DOB :</b> ${data.date_of_birth}</p>
+                    <p><b>Address :</b> ${data.address}</p>
+                    <p><b>About :</b> ${data.about}</p>
+                </div>
+            </div>
+        `;
+
+    }
+
+    // ========= SIDEBAR =========
+    document.querySelectorAll(".nav-item").forEach(item => {
+
+        item.addEventListener("click", e => {
+
+            e.preventDefault();
+
+            const text = item.textContent.trim().toLowerCase();
 
             if (text === "courses") {
-
-                navItems.forEach(function (nav) {
-                    nav.classList.remove("active");
-                });
-
-                item.classList.add("active");
-
-                window.location.href =
-                    "course_view.html";
-
-                return;
+                location.reload();
             }
-
-
-            // ====================================
-            // SETTINGS
-            // ====================================
 
             if (text === "settings") {
-
-                navItems.forEach(function (nav) {
-                    nav.classList.remove("active");
-                });
-
-                item.classList.add("active");
-
-                loadAccountDetails();
-
-                return;
+                showSettings();
             }
 
-
-            // ====================================
-            // LOGOUT
-            // ====================================
-
-            if (
-                text === "logout" ||
-                item.classList.contains("logout")
-            ) {
-
-                localStorage.removeItem(
-                    "access_token"
-                );
-
-                localStorage.removeItem(
-                    "token_type"
-                );
-
-                localStorage.removeItem(
-                    "userRole"
-                );
-
-                window.location.href =
-                    "login.html";
-
-                return;
+            if (text === "logout") {
+                localStorage.clear();
+                location.href = "login.html";
             }
 
         });
 
     });
 
-
-    // ========================================
-    // LOAD ACCOUNT DETAILS
-    // ========================================
-
-    async function loadAccountDetails() {
-
-        if (!contentBody) {
-            return;
-        }
-
-
-        // ====================================
-        // API ENDPOINT
-        // ====================================
-
-        let profileEndpoint = "";
-
-        if (userRole === "teacher") {
-
-            profileEndpoint =
-                `${API_BASE_URL}/teachers/me`;
-
-        } else {
-
-            profileEndpoint =
-                `${API_BASE_URL}/students/me`;
-
-        }
-
-
-        try {
-
-            console.log(
-                "Loading account details..."
-            );
-
-
-            const response =
-                await fetch(
-                    profileEndpoint,
-                    {
-                        method: "GET",
-
-                        headers: {
-                            "Authorization":
-                                `Bearer ${token}`,
-
-                            "Accept":
-                                "application/json"
-                        }
-                    }
-                );
-
-
-            console.log(
-                "Account API Status:",
-                response.status
-            );
-
-
-            // ====================================
-            // SESSION EXPIRED
-            // ====================================
-
-            if (response.status === 401) {
-
-                localStorage.removeItem(
-                    "access_token"
-                );
-
-                localStorage.removeItem(
-                    "token_type"
-                );
-
-                localStorage.removeItem(
-                    "userRole"
-                );
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            const data =
-                await response.json();
-
-
-            console.log(
-                "Account Data:",
-                data
-            );
-
-
-            if (!response.ok) {
-
-                showAccountError(
-                    "Unable to load account details."
-                );
-
-                return;
-            }
-
-
-            // ====================================
-            // GET PROFILE VALUES
-            // ====================================
-
-            const firstName =
-                data.first_name ||
-                "Not provided";
-
-
-            const lastName =
-                data.last_name ||
-                "Not provided";
-
-
-            const email =
-                data.user?.email_id ||
-                data.email_id ||
-                data.email ||
-                "Not provided";
-
-
-            const phone =
-                data.phone_no ||
-                "Not provided";
-
-
-            const gender =
-                data.gender ||
-                "Not provided";
-
-
-            let dob =
-                data.date_of_birth ||
-                "Not provided";
-
-
-            if (
-                typeof dob === "string" &&
-                dob.includes("T")
-            ) {
-
-                dob =
-                    dob.split("T")[0];
-
-            }
-
-
-            const address =
-                data.address ||
-                "Not provided";
-
-
-            const about =
-                data.about ||
-                "Not provided";
-
-
-            // ====================================
-            // UPDATE TOP USER NAME
-            // ====================================
-
-            const userName =
-                document.querySelector(
-                    ".user-name"
-                );
-
-
-            if (userName) {
-
-                userName.textContent =
-                    `${firstName} ${lastName}`.trim();
-
-            }
-
-
-            // ====================================
-            // SHOW SETTINGS
-            // ====================================
-
-            showAccountDetails({
-
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                phone: phone,
-                gender: gender,
-                dob: dob,
-                address: address,
-                about: about
-
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Account Details Error:",
-                error
-            );
-
-
-            showAccountError(
-                "Backend server-এর সাথে connection হচ্ছে না."
-            );
-
-        }
-
-    }
-
-
-    // ========================================
-    // SHOW ACCOUNT DETAILS
-    // ========================================
-
-    function showAccountDetails(profile) {
-
-        contentBody.innerHTML = `
-
-            <div class="settings-page">
-
-                <div class="settings-header">
-
-                    <h2>Settings</h2>
-
-                    <p>
-                        Manage your account and profile settings.
-                    </p>
-
-                </div>
-
-
-                <div class="account-details-card">
-
-                    <h3>Account Details</h3>
-
-
-                    <div class="account-details">
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                First Name
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.firstName
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                Last Name
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.lastName
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                Email
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.email
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                Phone
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.phone
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                Gender
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.gender
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                Date of Birth
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.dob
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                Address
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.address
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="detail-row">
-
-                            <span>
-                                About Me
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    profile.about
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                    </div>
-
-
-                    <div class="update-profile-wrapper">
-
-                        <button
-                            type="button"
-                            class="update-profile-option"
-                            id="openUpdateProfile">
-
-                            Update Profile
-
-                            <i class="fa-solid fa-arrow-right"></i>
-
-                        </button>
-
-                    </div>
-
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        // ====================================
-        // UPDATE PROFILE BUTTON
-        // ====================================
-
-        const updateButton =
-            document.getElementById(
-                "openUpdateProfile"
-            );
-
-
-        if (updateButton) {
-
-            updateButton.addEventListener(
-                "click",
-                function () {
-
-                    window.location.href =
-                        "update_profile.html";
-
-                }
-            );
-
-        }
-
-    }
-
-
-    // ========================================
-    // ACCOUNT ERROR
-    // ========================================
-
-    function showAccountError(message) {
-
-        contentBody.innerHTML = `
-
-            <div class="settings-page">
-
-                <div class="account-details-card">
-
-                    <h3>
-                        Account Details
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(message)}
-                    </p>
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // ========================================
-    // ESCAPE HTML
-    // ========================================
-
-    function escapeHTML(value) {
-
-        return String(value)
-
-            .replace(/&/g, "&amp;")
-
-            .replace(
-                /</g,
-                "&lt;"
-            )
-
-            .replace(
-                />/g,
-                "&gt;"
-            )
-
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-
-            .replace(
-                /'/g,
-                "&#039;"
-            );
-
-    }
+    loadCourse();
 
 });
 
+// ========= VIDEO / PDF TAB =========
+function switchMedia(type) {
 
-// ========================================
-// MEDIA SWITCHER
-// ========================================
+    document
+        .getElementById("videoPlayerBox")
+        .classList.toggle("hidden", type !== "video");
 
-function switchMedia(mediaType) {
+    document
+        .getElementById("pdfReaderBox")
+        .classList.toggle("hidden", type !== "pdf");
 
-    const videoBox =
-        document.getElementById(
-            "videoPlayerBox"
-        );
+    document
+        .querySelectorAll(".toggle-btn")
+        .forEach(btn => btn.classList.remove("active"));
 
-    const pdfBox =
-        document.getElementById(
-            "pdfReaderBox"
-        );
-
-    const buttons =
-        document.querySelectorAll(
-            ".media-toggle-bar .toggle-btn"
-        );
-
-
-    buttons.forEach(function (btn) {
-
-        btn.classList.remove(
-            "active"
-        );
-
-    });
-
-
-    if (mediaType === "video") {
-
-        if (videoBox) {
-            videoBox.classList.remove(
-                "hidden"
-            );
-        }
-
-        if (pdfBox) {
-            pdfBox.classList.add(
-                "hidden"
-            );
-        }
-
-        if (buttons[0]) {
-            buttons[0].classList.add(
-                "active"
-            );
-        }
-
-    }
-
-
-    if (mediaType === "pdf") {
-
-        if (pdfBox) {
-            pdfBox.classList.remove(
-                "hidden"
-            );
-        }
-
-        if (videoBox) {
-            videoBox.classList.add(
-                "hidden"
-            );
-        }
-
-        if (buttons[1]) {
-            buttons[1].classList.add(
-                "active"
-            );
-        }
-
-    }
+    document
+        .querySelectorAll(".toggle-btn")[type === "video" ? 0 : 1]
+        .classList.add("active");
 
 }
 
+// ========= OVERVIEW / REVIEW TAB =========
+function switchTab(tab) {
 
-// ========================================
-// OVERVIEW / REVIEWS
-// ========================================
+    document
+        .getElementById("overviewTab")
+        .classList.toggle("hidden", tab !== "overview");
 
-function switchTab(tabName) {
+    document
+        .getElementById("reviewsTab")
+        .classList.toggle("hidden", tab !== "reviews");
 
-    const overviewTab =
-        document.getElementById(
-            "overviewTab"
-        );
+    document
+        .querySelectorAll(".tab-btn")
+        .forEach(btn => btn.classList.remove("active"));
 
-    const reviewsTab =
-        document.getElementById(
-            "reviewsTab"
-        );
-
-    const tabButtons =
-        document.querySelectorAll(
-            ".tabs-header .tab-btn"
-        );
-
-
-    tabButtons.forEach(function (btn) {
-
-        btn.classList.remove(
-            "active"
-        );
-
-    });
-
-
-    if (tabName === "overview") {
-
-        if (overviewTab) {
-
-            overviewTab.classList.remove(
-                "hidden"
-            );
-
-        }
-
-        if (reviewsTab) {
-
-            reviewsTab.classList.add(
-                "hidden"
-            );
-
-        }
-
-        if (tabButtons[0]) {
-
-            tabButtons[0].classList.add(
-                "active"
-            );
-
-        }
-
-    }
-
-
-    if (tabName === "reviews") {
-
-        if (reviewsTab) {
-
-            reviewsTab.classList.remove(
-                "hidden"
-            );
-
-        }
-
-        if (overviewTab) {
-
-            overviewTab.classList.add(
-                "hidden"
-            );
-
-        }
-
-        if (tabButtons[1]) {
-
-            tabButtons[1].classList.add(
-                "active"
-            );
-
-        }
-
-    }
+    document
+        .querySelectorAll(".tab-btn")[tab === "overview" ? 0 : 1]
+        .classList.add("active");
 
 }

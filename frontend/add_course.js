@@ -68,42 +68,45 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Profile =====
-  async function loadTeacherProfile() {
-    try {
-      const response = await fetch(`${API_BASE}/teachers/me`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json"
-        }
-      });
-
-      if (response.status === 401) {
-        localStorage.clear();
-        window.location.href = "login.html";
-        return;
+async function loadTeacherProfile() {
+  try {
+    const response = await fetch(`${API_BASE}/teachers/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json"
       }
+    });
 
-      if (!response.ok) throw new Error("Profile load failed");
+    if (response.status === 401) {
+      localStorage.clear();
+      window.location.href = "login.html";
+      return;
+    }
 
-      const data = await response.json();
-      const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+    if (!response.ok) throw new Error("Profile load failed");
 
-      teacherUserName.textContent = fullName || "Teacher";
+    const data = await response.json();
+
+    const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+
+    if (teacherUserName) teacherUserName.textContent = fullName || "Teacher";
+    if (teacherProfileImg)
       teacherProfileImg.src = data.profile_pic || "https://i.pravatar.cc/150?img=47";
 
-      teacherFirstName.textContent = data.first_name || "-";
-      teacherLastName.textContent = data.last_name || "-";
-      teacherEmail.textContent = data.user?.email_id || "-";
-      teacherPhone.textContent = data.phone_no || "-";
-      teacherGender.textContent = data.gender || "-";
-      teacherDob.textContent = data.date_of_birth || "-";
-      teacherAddress.textContent = data.address || "-";
-      teacherAbout.textContent = data.about || "-";
-    } catch (err) {
-      console.error(err);
-    }
+    if (teacherFirstName) teacherFirstName.textContent = data.first_name || "-";
+    if (teacherLastName) teacherLastName.textContent = data.last_name || "-";
+    if (teacherEmail) teacherEmail.textContent = data.user?.email_id || "-";
+    if (teacherPhone) teacherPhone.textContent = data.phone_no || "-";
+    if (teacherGender) teacherGender.textContent = data.gender || "-";
+    if (teacherDob) teacherDob.textContent = data.date_of_birth || "-";
+    if (teacherAddress) teacherAddress.textContent = data.address || "-";
+    if (teacherAbout) teacherAbout.textContent = data.about || "-";
+
+  } catch (err) {
+    console.error("Profile Error:", err);
   }
+}
 
   // ===== Logout =====
   logoutLink?.addEventListener("click", e => {
@@ -151,44 +154,72 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== Create Course =====
   async function createCourse() {
-    const body = {
-      course_name: courseNameInput.value.trim(),
-      course_details: courseDetailsInput.value.trim(),
-      course_language: languageInput.value,
-      course_paid: courseTypeInput.value === "paid",
-      course_price: courseTypeInput.value === "paid" ? Number(priceInput.value) : 0,
-      course_price_currency: "INR"
+    const courseData = {
+        course_name: courseNameInput.value.trim(),
+        course_details: courseDetailsInput.value.trim(),
+        course_language: languageInput.value,
+        course_paid: courseTypeInput.value === "paid",
+        course_price: courseTypeInput.value === "paid"
+            ? Number(priceInput.value)
+            : 0,
+        course_price_currency: "INR",
+
+        // NEW FIELD
+        course_resource_type: fileInput.files.length > 0 &&
+            fileInput.files[0].type.startsWith("video/")
+            ? "video"
+            : "document"
     };
 
-    const res = await fetch(`${API_BASE}/courses/`, {
-      method: "POST",
-      headers: jsonHeaders,
-      body: JSON.stringify(body)
+    console.log("Sending:", courseData);
+
+    const response = await fetch(`${API_BASE}/courses/`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify(courseData)
     });
 
-    if (!res.ok) throw new Error("Course create failed");
-    return await res.json();
-  }
+    const data = await response.json();
 
+    if (!response.ok) {
+        console.log("422 ERROR:", data);
+        alert(`Field: ${data.detail[0].loc[1]}\nMessage: ${data.detail[0].msg}`);
+        throw new Error(data.detail[0].msg);
+    }
+
+    return data;
+}
   // ===== Thumbnail =====
   async function uploadThumbnail(courseId, file) {
-    const res = await fetch(`${API_BASE}/courses/${courseId}/media/thumbnail/upload`, {
-      method: "POST",
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        category: "thumbnail",
-        media_type: "image",
-        file_name: nameOnly(file),
-        file_extension: ext(file)
-      })
-    });
 
-    const data = await res.json();
+    const response = await fetch(
+        `${API_BASE}/courses/${courseId}/media/thumbnail/upload`,
+        {
+            method: "POST",
+            headers: jsonHeaders,
+            body: JSON.stringify({
+                category: "thumbnail",
+                media_type: "image",
+                file_name: nameOnly(file),
+                file_extension: ext(file)
+            })
+        }
+    );
+
+    const data = await response.json();
+    console.log("Thumbnail Response:", data);
+
+    if (!response.ok) {
+        alert(
+            `Field: ${data.detail[0].loc[1]}\nMessage: ${data.detail[0].msg}`
+        );
+        throw new Error(data.detail[0].msg);
+    }
+
     await uploadToS3(data.upload_url, file);
     await markReady(courseId, data.media_id);
-  }
+}
 
   // ===== Resource =====
   async function uploadResource(courseId, file) {
@@ -236,3 +267,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTeacherProfile();
 
 });
+
+
