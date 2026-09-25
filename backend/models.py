@@ -353,9 +353,10 @@ class MediaUploadCategory(str, Enum):
 
 # course media upload type
 class MediaUploadType(str, Enum):
-    document = "document"
-    video = "video"
-    image = "image"
+    document_pdf = "application/pdf"
+    video_mp4 = "video/mp4"
+    image_jpeg = "image/jpeg"
+    image_png = "image/png"
 
 
 # course media upload file type

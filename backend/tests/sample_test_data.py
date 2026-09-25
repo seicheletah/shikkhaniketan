@@ -165,6 +165,7 @@ class CourseSampleData:
         "course_name": "Mastering Docker & Kubernetes",
         "course_details": "A comprehensive guide to containerization and orchestration.",
         "course_language": "English",
+        "course_resource_type": "video",
         "course_paid": True,
         "course_price": 899,
     }
@@ -191,6 +192,6 @@ class CourseSampleData:
 
 
 class ReviewSampleData:
-    request_body_review_create = {"comment": "hello", "rate": 1}
+    request_body_review_create = {"comment": "bad", "rate": 1}
 
-    request_body_review_update = {"comment": "bye", "rate": 5}
+    request_body_review_update = {"comment": "good", "rate": 5}

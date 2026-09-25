@@ -20,12 +20,15 @@ s3_client = boto3.client(
 
 
 # for generating presigned media upload url
-def generate_upload_presigned_url(s3_key: str, expires_in: int = 1200) -> str:
+def generate_upload_presigned_url(
+    s3_key: str, content_type: str, expires_in: int = 1200
+) -> str:
     return s3_client.generate_presigned_url(
         ClientMethod="put_object",
         Params={
             "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
             "Key": s3_key,
+            "ContentType": content_type,
         },
         ExpiresIn=expires_in,
     )
