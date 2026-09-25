@@ -16,4 +16,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+<<<<<<< HEAD
 )
+=======
+)
+>>>>>>> 57011892e813d33ea678d05cf189db0051c0e23a
