@@ -255,11 +255,20 @@ class TeacherPublicResponse(SQLModel):
     user: UserPublicResponse
 
 
+# course resource type model
+class CourseResourceType(str, Enum):
+    document = "document"
+    video = "video"
+
+
 # course base model
 class CourseBase(SQLModel):
     course_name: str
     course_details: str
     course_language: str
+    course_resource_type: CourseResourceType = Field(
+        sa_column=Column(String, nullable=False)
+    )
     course_paid: bool
     course_price: int = Field(ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
@@ -292,7 +301,13 @@ class Course(CourseBase, table=True):
 
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
-    pass
+    @model_validator(mode="after")
+    def check_valid_price(self):
+        if self.course_paid == True and self.course_price <= 0:
+            raise ValueError("paid course price needs to be more than 0")
+        elif self.course_paid == False and self.course_price > 0:
+            raise ValueError("free course price needs to be 0")
+        return self
 
 
 # update course model with pydantic vlidation

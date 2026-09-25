@@ -5,7 +5,7 @@ from fastapi import Depends
 from backend.core.config import settings
 
 # for creating db engine
-db_engine = create_engine(settings.DATABASE_URL)
+db_engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True, pool_recycle=180)
 
 
 # for creaing session objects with Depends()

@@ -74,10 +74,10 @@ def get_course(id: uuid.UUID, db_session: SessionDep):
     return course
 
 
-@api_router.get("/", response_model=list[CourseResponse])
-def get_courses(current_user: AdminDep, db_session: SessionDep):
+@api_router.get("/", response_model=list[CoursePublicResponse])
+def get_courses(db_session: SessionDep):
     """
-    Get all existing courses details (admin access).
+    Get all existing courses details.
     """
     return db_session.exec(select(Course)).all()
 
