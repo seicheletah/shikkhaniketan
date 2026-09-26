@@ -610,3 +610,11 @@ body {
         justify-content: flex-end;
     }
 }
+
+.top-bar.hide-search .search-box{
+    display:none;
+}
+
+.top-bar.hide-search{
+    justify-content:flex-end;
+}

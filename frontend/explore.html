@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- Search Bar -->
+  <!-- Search -->
   <section class="search-section">
     <div class="search-box">
       <svg class="search-icon" xmlns="http://www.w3.org/2000/svg"
@@ -42,17 +42,19 @@
 
       <div class="controls-bar">
 
+        <!-- Video / Document Tabs -->
         <div class="tabs">
-          <button class="tab-btn active">Videos</button>
+          <button id="videoTab" class="tab-btn active">Videos</button>
           <span class="divider">|</span>
-          <button class="tab-btn">Documents</button>
+          <button id="documentTab" class="tab-btn">Documents</button>
         </div>
 
+        <!-- Sort -->
         <div class="sort-box">
           <label for="sort">Sort</label>
 
           <select id="sort">
-            <option value="data">Data</option>
+            <option value="data">Date</option>
             <option value="popular">Popularity</option>
             <option value="newest">Newest</option>
           </select>
@@ -60,10 +62,8 @@
 
       </div>
 
-      <!-- Dynamic Courses -->
-      <div class="cards-grid" id="courseGrid">
-        <!-- explore.js automatically course card insert korbe -->
-      </div>
+      <!-- Backend Courses -->
+      <div class="cards-grid" id="courseGrid"></div>
 
     </main>
 

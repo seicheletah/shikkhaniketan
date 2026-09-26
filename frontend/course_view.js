@@ -10,28 +10,52 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const courseId = new URLSearchParams(window.location.search).get("course");
 
-    const video = document.querySelector("#videoPlayerBox video");
-    const pdf = document.querySelector("#pdfReaderBox iframe");
-    const overview = document.querySelector("#overviewTab p");
-    const title = document.querySelector("#overviewTab h3");
-    const reviewBox = document.getElementById("reviewsTab");
-    const userName = document.querySelector(".user-name");
+    const topBar = document.querySelector(".top-bar");
     const contentBody = document.querySelector(".content-body");
 
-    // ========= STUDENT PROFILE =========
-    const meRes = await fetch(`${API}/students/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const video = document.querySelector("#videoPlayerBox video");
+    const pdf = document.querySelector("#pdfReaderBox iframe");
 
-    const me = await meRes.json();
-    userName.textContent = `${me.first_name} ${me.last_name}`;
+    const title = document.querySelector(".course-title");
+    const overview = document.querySelector("#overviewTab p");
+    const reviewBox = document.getElementById("reviewsTab");
 
-    // ========= LOAD COURSE =========
+    const userName = document.querySelector(".user-name");
+    const userImg = document.querySelector(".user-profile img");
+
+    // ================= STUDENT =================
+    async function loadStudent() {
+
+        const res = await fetch(`${API}/students/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            }
+        });
+
+        if (!res.ok) return;
+
+        const me = await res.json();
+
+        userName.textContent =
+            `${me.first_name || ""} ${me.last_name || ""}`.trim();
+
+        if (me.profile_pic) {
+            userImg.src = me.profile_pic;
+        }
+    }
+
+    // ================= COURSE =================
     async function loadCourse() {
 
         const res = await fetch(`${API}/courses/${courseId}`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            }
         });
+
+        if (!res.ok) return;
 
         const course = await res.json();
 
@@ -42,14 +66,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadReviews();
     }
 
-    // ========= VIDEO & PDF =========
+    // ================= MEDIA =================
     async function loadMedia() {
 
-        const res = await fetch(`${API}/courses/${courseId}/media/resource/access`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch(
+            `${API}/courses/${courseId}/media/resource/access`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json"
+                }
+            }
+        );
+
+        if (!res.ok) return;
 
         const media = await res.json();
+
+        if (!Array.isArray(media)) return;
 
         media.forEach(item => {
 
@@ -62,22 +96,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
         });
-
     }
 
-    // ========= REVIEWS =========
+    // ================= REVIEWS =================
     async function loadReviews() {
 
         const res = await fetch(`${API}/courses/${courseId}/review`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            }
         });
+
+        if (!res.ok) return;
 
         const reviews = await res.json();
 
-        reviewBox.innerHTML = `<h3>Student Feedback</h3>`;
+        reviewBox.innerHTML = "<h3>Student Reviews</h3>";
 
         if (reviews.length === 0) {
-            reviewBox.innerHTML += `<p>No reviews yet.</p>`;
+            reviewBox.innerHTML += "<p>No reviews yet.</p>";
         }
 
         reviews.forEach(r => {
@@ -88,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <strong>${r.student_name || "Student"}</strong>
                         <span class="rating">⭐ ${r.rating}/5</span>
                     </div>
-                    <p>${r.review}</p>
+                    <p>${r.review || ""}</p>
                 </div>
             `;
 
@@ -98,7 +136,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div style="margin-top:20px">
                 <textarea id="reviewText"
                     placeholder="Write your review"
-                    style="width:100%;height:90px;padding:10px"></textarea>
+                    style="width:100%;height:90px;padding:10px;border-radius:8px"></textarea>
 
                 <input id="rating"
                     type="number"
@@ -117,10 +155,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         document
             .getElementById("submitReviewBtn")
             .addEventListener("click", submitReview);
-
     }
 
-    // ========= SUBMIT REVIEW =========
+    // ================= SUBMIT REVIEW =================
     async function submitReview() {
 
         const review = document.getElementById("reviewText").value;
@@ -140,38 +177,103 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         alert("Review submitted");
         loadReviews();
-
     }
 
-    // ========= SETTINGS =========
+    // ================= SETTINGS =================
     async function showSettings() {
 
+        // Hide Search Bar
+        topBar.style.display = "none";
+
         const res = await fetch(`${API}/students/me`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json"
+            }
         });
+
+        if (!res.ok) {
+            contentBody.innerHTML = "<h2>Unable to load profile</h2>";
+            return;
+        }
 
         const data = await res.json();
 
         contentBody.innerHTML = `
-            <div class="settings-page">
-                <h2>My Profile</h2>
+            <section class="settings-page">
+
+                <h2 style="margin-bottom:20px;">Account Details</h2>
 
                 <div class="account-card">
-                    <p><b>First Name :</b> ${data.first_name}</p>
-                    <p><b>Last Name :</b> ${data.last_name}</p>
-                    <p><b>Email :</b> ${data.user.email_id}</p>
-                    <p><b>Phone :</b> ${data.phone_no}</p>
-                    <p><b>Gender :</b> ${data.gender}</p>
-                    <p><b>DOB :</b> ${data.date_of_birth}</p>
-                    <p><b>Address :</b> ${data.address}</p>
-                    <p><b>About :</b> ${data.about}</p>
-                </div>
-            </div>
-        `;
 
+                    <div style="display:flex;align-items:center;gap:20px;margin-bottom:25px;">
+
+                        <img src="${data.profile_pic || "https://i.pravatar.cc/150?img=32"}"
+                             style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+
+                        <div>
+                            <h3>${data.first_name || "-"} ${data.last_name || ""}</h3>
+                            <p>${data.user?.email_id || "-"}</p>
+                        </div>
+
+                    </div>
+
+                    <div class="profile-grid">
+
+                        <div class="input-box">
+                            <label>First Name</label>
+                            <p>${data.first_name || "-"}</p>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Last Name</label>
+                            <p>${data.last_name || "-"}</p>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Email</label>
+                            <p>${data.user?.email_id || "-"}</p>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Phone</label>
+                            <p>${data.phone_no || "-"}</p>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Gender</label>
+                            <p>${data.gender || "-"}</p>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Date of Birth</label>
+                            <p>${data.date_of_birth || "-"}</p>
+                        </div>
+
+                        <div class="input-box full">
+                            <label>Address</label>
+                            <p>${data.address || "-"}</p>
+                        </div>
+
+                        <div class="input-box full">
+                            <label>About Me</label>
+                            <p>${data.about || "-"}</p>
+                        </div>
+
+                    </div>
+
+                    <button onclick="location.href='update_profile.html'"
+                        style="margin-top:25px;padding:12px 24px;background:#0f766e;color:#fff;border:none;border-radius:10px;cursor:pointer;">
+                        Update Profile
+                    </button>
+
+                </div>
+
+            </section>
+        `;
     }
 
-    // ========= SIDEBAR =========
+    // ================= SIDEBAR =================
     document.querySelectorAll(".nav-item").forEach(item => {
 
         item.addEventListener("click", e => {
@@ -197,11 +299,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     });
 
+    loadStudent();
     loadCourse();
 
 });
 
-// ========= VIDEO / PDF TAB =========
+// ================= VIDEO / PDF =================
 function switchMedia(type) {
 
     document
@@ -219,10 +322,9 @@ function switchMedia(type) {
     document
         .querySelectorAll(".toggle-btn")[type === "video" ? 0 : 1]
         .classList.add("active");
-
 }
 
-// ========= OVERVIEW / REVIEW TAB =========
+// ================= OVERVIEW / REVIEW =================
 function switchTab(tab) {
 
     document
@@ -240,5 +342,4 @@ function switchTab(tab) {
     document
         .querySelectorAll(".tab-btn")[tab === "overview" ? 0 : 1]
         .classList.add("active");
-
 }

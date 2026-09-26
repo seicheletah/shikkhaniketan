@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
+
             const formData = new URLSearchParams();
             formData.append("username", email);
             formData.append("password", password);
@@ -50,15 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Save Token
+            // SAVE TOKEN
             localStorage.setItem("access_token", data.access_token);
             localStorage.setItem("token_type", data.token_type || "bearer");
             localStorage.setItem("userRole", data.role);
 
-            console.log("Token Saved:", localStorage.getItem("access_token"));
-            console.log("Role:", localStorage.getItem("userRole"));
-
-            // Redirect
+            // Redirect by role
             if (data.role === "student") {
                 window.location.href = "student.html";
             } else if (data.role === "teacher") {

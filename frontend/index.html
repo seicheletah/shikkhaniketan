@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Shikkhaniketan</title>
+    <title>SkillHub</title>
 
     <link rel="stylesheet" href="index.css">
 
@@ -20,85 +18,62 @@
 
     <header class="navbar">
 
-        <!-- SkillHub Logo -->
         <div class="logo">
-
             <span class="logo-icon">
                 <i class="fa-solid fa-graduation-cap"></i>
             </span>
-
-            <span class="logo-text">
-                SkillHub
-            </span>
-
+            <span class="logo-text">SkillHub</span>
         </div>
 
-
-        <!-- Explore -->
         <a href="explore.html" class="explore-btn">
             Explore
         </a>
 
-
-        <!-- Search -->
         <div class="search-box">
-
             <i class="fa-solid fa-magnifying-glass"></i>
-
-            <input type="text"
-                   placeholder="Search courses">
-
+            <input type="text" placeholder="Search courses">
         </div>
 
-
-        <!-- Login / Sign Up -->
         <div class="auth-buttons">
-
-            <a href="login.html" class="login-btn">
-                Log In
-            </a>
-
-            <a href="sign_up.html" class="signup-btn">
-                Sign Up
-            </a>
-
+            <a href="login.html" class="login-btn">Log In</a>
+            <a href="sign_up.html" class="signup-btn">Sign Up</a>
         </div>
 
     </header>
 
-
-
-    <!-- ================= HERO SECTION ================= -->
+    <!-- ================= HERO ================= -->
 
     <section class="hero">
 
         <div class="hero-content">
-
             <h1>
                 Learn. Grow.<br>
                 Succeed.
             </h1>
-
-            <!--
-            <p>
-                Interactive lessons and quizzes<br>
-                to help you learn better every day.
-            </p>
-            -->
-
         </div>
 
-
         <div class="hero-image">
-
-            <img src="picture.jpeg"
-                 alt="Online Learning">
-
+            <img src="picture.jpeg" alt="Online Learning">
         </div>
 
     </section>
 
+    <!-- ================= POPULAR COURSES ================= -->
 
+    <section class="popular-courses">
+
+        <div class="section-header">
+            <h2>Popular Courses</h2>
+
+            <a href="explore.html" class="view-all-btn">
+                View All
+            </a>
+        </div>
+
+        <!-- JS এখানে সর্বোচ্চ ৮টি Course দেখাবে -->
+        <div class="course-grid" id="homeCourseGrid"></div>
+
+    </section>
 
     <!-- ================= FOOTER ================= -->
 
@@ -106,97 +81,48 @@
 
         <div class="footer-content">
 
-
-            <!-- Footer Brand -->
             <div class="footer-brand">
-
-                <div class="footer-logo">
-                    SkillHub
-                </div>
+                <div class="footer-logo">SkillHub</div>
 
                 <p>
                     Learn new skills, expand your knowledge,
                     and build a better future with SkillHub.
                 </p>
-
             </div>
 
-
-
-            <!-- Footer Links -->
             <div class="footer-links">
 
-
-                <!-- Learn -->
                 <div class="footer-column">
-
                     <h4>Learn</h4>
-
-                    <a href="explore.html">
-                        Courses
-                    </a>
-
-                    <a href="explore.html">
-                        Explore
-                    </a>
-
+                    <a href="explore.html">Courses</a>
+                    <a href="explore.html">Explore</a>
                 </div>
 
-
-
-                <!-- SkillHub -->
                 <div class="footer-column">
-
                     <h4>SkillHub</h4>
-
-                    <a href="#">
-                        About Us
-                    </a>
-
-                    <a href="#">
-                        Contact
-                    </a>
-
+                    <a href="#">About Us</a>
+                    <a href="#">Contact</a>
                 </div>
 
-
-
-                <!-- Support -->
                 <div class="footer-column">
-
                     <h4>Support</h4>
-
-                    <a href="#">
-                        Help Center
-                    </a>
-
-                    <a href="#">
-                        Privacy Policy
-                    </a>
-
+                    <a href="#">Help Center</a>
+                    <a href="#">Privacy Policy</a>
                 </div>
 
             </div>
 
         </div>
 
-
-
-        <!-- Copyright -->
         <div class="copyright">
-
-            <span>
-                © 2026 SkillHub. All rights reserved.
-            </span>
-
-            <span>
-                Learn. Grow. Succeed.
-            </span>
-
+            <span>© 2026 SkillHub. All rights reserved.</span>
+            <span>Learn. Grow. Succeed.</span>
         </div>
 
     </footer>
 
-</body>
+    <!-- ================= JS ================= -->
+    <script src="index.js"></script>
 
+</body>
 </html>

@@ -3,14 +3,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const API = "http://127.0.0.1:8000/api/v1";
     const token = localStorage.getItem("access_token");
 
-    if (!token) {
-        window.location.href = "login.html";
-        return;
-    }
-
     const courseId =
         new URLSearchParams(window.location.search).get("id") ||
         new URLSearchParams(window.location.search).get("course");
+
+    if (!courseId) {
+        alert("Course not found!");
+        return;
+    }
 
     // ---------- TAB ----------
     window.switchTab = function (tab) {
@@ -33,6 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---------- STUDENT ----------
     async function loadStudent() {
 
+        if (!token) return;
+
         try {
 
             const res = await fetch(`${API}/students/me`, {
@@ -45,13 +47,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const student = await res.json();
 
-            document.querySelector(".user-name").textContent =
-                `${student.first_name} ${student.last_name}`;
+            const name = document.querySelector(".user-name");
+
+            if (name) {
+                name.textContent =
+                    `${student.first_name} ${student.last_name}`;
+            }
 
         } catch (e) {
             console.log(e);
         }
-
     }
 
     // ---------- COURSE ----------
@@ -59,11 +64,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
+            const headers = { Accept: "application/json" };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
             const res = await fetch(`${API}/courses/${courseId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers
             });
+
+            if (!res.ok) {
+                alert("Course load failed");
+                return;
+            }
 
             const course = await res.json();
 
@@ -78,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const total = price + gst;
 
             const rows = document.querySelectorAll(".price-row strong");
+
             rows[0].textContent = `₹${price}`;
             rows[1].textContent = `₹${gst.toFixed(2)}`;
             rows[2].textContent = `₹${total.toFixed(2)}`;
@@ -86,9 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (e) {
             console.log(e);
-            alert("Course load failed");
         }
-
     }
 
     // ---------- REVIEWS ----------
@@ -96,11 +109,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
+            const headers = { Accept: "application/json" };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
             const res = await fetch(`${API}/courses/${courseId}/review`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers
             });
+
+            if (!res.ok) return;
 
             const reviews = await res.json();
 
@@ -127,14 +146,18 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
             console.log(e);
         }
-
     }
 
     // ---------- PURCHASE ----------
     window.openCourseView = function () {
 
-        window.location.href =
-            `course_view.html?course=${courseId}`;
+        const accessToken = localStorage.getItem("access_token");
+
+        if (accessToken) {
+            window.location.href = `course_view.html?course=${courseId}`;
+        } else {
+            window.location.href = "sign_up.html";
+        }
 
     };
 
@@ -149,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
+    // ---------- INIT ----------
     loadStudent();
     loadCourse();
 

@@ -6,15 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const sortSelect = document.getElementById("sort");
     const courseGrid = document.getElementById("courseGrid");
 
-    let allCourses = [];
-    let filteredCourses = [];
+    const videoTab = document.getElementById("videoTab");
+    const documentTab = document.getElementById("documentTab");
 
+    let allCourses = [];
+    let currentType = "video";
+
+    // ================= LOAD COURSES =================
     async function loadCourses() {
         try {
             const res = await fetch(`${API_BASE}/courses/`, {
-                method: "GET",
                 headers: {
-                    "Accept": "application/json"
+                    Accept: "application/json"
                 }
             });
 
@@ -24,9 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const data = await res.json();
-            allCourses = Array.isArray(data) ? data : (data.courses || []);
-            filteredCourses = [...allCourses];
-            renderCourses(filteredCourses);
+
+            allCourses = Array.isArray(data)
+                ? data
+                : (data.courses || []);
+
+            applyFilters();
 
         } catch (err) {
             console.error(err);
@@ -34,6 +40,42 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // ================= FILTER =================
+    function applyFilters() {
+
+        let courses = [...allCourses];
+
+        // Video / Document Filter
+        courses = courses.filter(course =>
+            (course.course_resource_type || "video") === currentType
+        );
+
+        // Search
+        const text = searchInput.value.toLowerCase();
+
+        courses = courses.filter(course =>
+            (course.course_name || "")
+                .toLowerCase()
+                .includes(text)
+        );
+
+        // Sort
+        if (sortSelect.value === "newest") {
+            courses.sort((a, b) =>
+                new Date(b.created_at || 0) -
+                new Date(a.created_at || 0)
+            );
+        } else {
+            courses.sort((a, b) =>
+                (a.course_name || "")
+                    .localeCompare(b.course_name || "")
+            );
+        }
+
+        renderCourses(courses);
+    }
+
+    // ================= RENDER =================
     function renderCourses(courses) {
 
         courseGrid.innerHTML = "";
@@ -47,64 +89,74 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const card = document.createElement("div");
             card.className = "card";
+            card.style.cursor = "pointer";
 
-            const thumbnail = course.thumbnail_url
-                ? course.thumbnail_url
-                : "/frontend/images/test_thumbnail.jpg";
+            // Same thumbnail for every course
+            const thumbnail = "image/myyy.png";
 
             card.innerHTML = `
-                <img class="course-thumb" src="${thumbnail}" alt="Thumbnail">
+                <img class="course-thumb"
+                     src="${thumbnail}"
+                     alt="Course Thumbnail">
 
                 <div class="course-body">
                     <h3>${course.course_name}</h3>
+
                     <p>${course.course_details}</p>
 
                     <div class="course-meta">
                         <span>${course.course_language}</span>
-                        <strong>${course.course_paid ? "₹" + course.course_price : "Free"}</strong>
+
+                        <strong>
+                            ${course.course_paid
+                                ? "₹" + course.course_price
+                                : "Free"}
+                        </strong>
                     </div>
                 </div>
             `;
 
-            // LOGIN CHECK
-            card.onclick = () => {
-                const token = localStorage.getItem("access_token");
-
-                if (token) {
-                    window.location.href = `course_details.html?id=${course.id}`;
-                } else {
-                    window.location.href = "sign_up.html";
-                }
-            };
+            // CLICK → COURSE DETAILS
+            card.addEventListener("click", () => {
+                localStorage.setItem("selected_course_id", course.id);
+                window.location.href = `course_details.html?id=${course.id}`;
+            });
 
             courseGrid.appendChild(card);
         });
     }
 
-    searchInput.addEventListener("input", () => {
-        const value = searchInput.value.toLowerCase();
+    // ================= SEARCH =================
+    if (searchInput) {
+        searchInput.addEventListener("input", applyFilters);
+    }
 
-        filteredCourses = allCourses.filter(course =>
-            (course.course_name || "").toLowerCase().includes(value)
-        );
+    // ================= SORT =================
+    if (sortSelect) {
+        sortSelect.addEventListener("change", applyFilters);
+    }
 
-        renderCourses(filteredCourses);
-    });
+    // ================= VIDEO TAB =================
+    if (videoTab) {
+        videoTab.addEventListener("click", () => {
+            currentType = "video";
+            videoTab.classList.add("active");
+            documentTab?.classList.remove("active");
+            applyFilters();
+        });
+    }
 
-    sortSelect.addEventListener("change", () => {
+    // ================= DOCUMENT TAB =================
+    if (documentTab) {
+        documentTab.addEventListener("click", () => {
+            currentType = "document";
+            documentTab.classList.add("active");
+            videoTab?.classList.remove("active");
+            applyFilters();
+        });
+    }
 
-        if (sortSelect.value === "newest") {
-            filteredCourses.sort((a, b) =>
-                new Date(b.created_at || 0) - new Date(a.created_at || 0)
-            );
-        } else {
-            filteredCourses.sort((a, b) =>
-                (a.course_name || "").localeCompare(b.course_name || "")
-            );
-        }
-
-        renderCourses(filteredCourses);
-    });
-
+    // ================= INIT =================
     loadCourses();
+
 });
