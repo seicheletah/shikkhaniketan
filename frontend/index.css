@@ -940,3 +940,29 @@ body {
     font-size:15px;
 }
 
+
+
+/* Search করা course highlight */
+.search-highlight{
+    border:2px solid #0f766e;
+    box-shadow:0 0 20px rgba(15,118,110,.35);
+    transform:translateY(-6px) scale(1.03);
+    transition:.3s;
+}
+
+
+.search-highlight{
+    border:2px solid #0f766e;
+    transform:translateY(-6px) scale(1.03);
+    box-shadow:0 16px 32px rgba(15,118,110,.22);
+    background:#ffffff;
+}
+
+.search-highlight .course-thumb{
+    filter:brightness(1.08);
+}
+
+.search-highlight:hover{
+    transform:translateY(-8px) scale(1.04);
+}
+

@@ -12,19 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let allCourses = [];
     let currentType = "video";
 
-    // ================= LOAD COURSES =================
+    // LOAD
     async function loadCourses() {
         try {
             const res = await fetch(`${API_BASE}/courses/`, {
-                headers: {
-                    Accept: "application/json"
-                }
+                headers: { Accept: "application/json" }
             });
-
-            if (!res.ok) {
-                courseGrid.innerHTML = "<p>No courses available.</p>";
-                return;
-            }
 
             const data = await res.json();
 
@@ -35,52 +28,59 @@ document.addEventListener("DOMContentLoaded", () => {
             applyFilters();
 
         } catch (err) {
-            console.error(err);
+            console.log(err);
             courseGrid.innerHTML = "<p>Failed to load courses.</p>";
         }
     }
 
-    // ================= FILTER =================
+    // FILTER
     function applyFilters() {
 
         let courses = [...allCourses];
 
-        // Video / Document Filter
-        courses = courses.filter(course =>
-            (course.course_resource_type || "video") === currentType
+        // Video / Document
+        courses = courses.filter(c =>
+            (c.course_resource_type || "video") === currentType
         );
 
         // Search
-        const text = searchInput.value.toLowerCase();
+        const text = searchInput.value.toLowerCase().trim();
 
-        courses = courses.filter(course =>
-            (course.course_name || "")
-                .toLowerCase()
-                .includes(text)
+        courses = courses.filter(c =>
+            (c.course_name || "").toLowerCase().includes(text)
         );
 
         // Sort
-        if (sortSelect.value === "newest") {
-            courses.sort((a, b) =>
-                new Date(b.created_at || 0) -
-                new Date(a.created_at || 0)
-            );
-        } else {
-            courses.sort((a, b) =>
-                (a.course_name || "")
-                    .localeCompare(b.course_name || "")
-            );
+        switch (sortSelect.value) {
+
+            case "paid":
+                courses = courses.filter(c => c.course_paid === true);
+                break;
+
+            case "free":
+                courses = courses.filter(c => c.course_paid === false);
+                break;
+
+            case "newest":
+                courses.sort((a, b) =>
+                    new Date(b.created_at || 0) -
+                    new Date(a.created_at || 0)
+                );
+                break;
+
+            default:
+                break;
         }
 
         renderCourses(courses);
     }
 
-    // ================= RENDER =================
+    // RENDER
     function renderCourses(courses) {
 
         courseGrid.innerHTML = "";
 
-        if (courses.length === 0) {
+        if (!courses.length) {
             courseGrid.innerHTML = "<p>No courses found.</p>";
             return;
         }
@@ -89,24 +89,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const card = document.createElement("div");
             card.className = "card";
-            card.style.cursor = "pointer";
-
-            // Same thumbnail for every course
-            const thumbnail = "image/myyy.png";
 
             card.innerHTML = `
                 <img class="course-thumb"
-                     src="${thumbnail}"
-                     alt="Course Thumbnail">
+                     src="image/myyy.png"
+                     alt="Course">
 
                 <div class="course-body">
                     <h3>${course.course_name}</h3>
-
                     <p>${course.course_details}</p>
 
                     <div class="course-meta">
                         <span>${course.course_language}</span>
-
                         <strong>
                             ${course.course_paid
                                 ? "₹" + course.course_price
@@ -116,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
 
-            // CLICK → COURSE DETAILS
             card.addEventListener("click", () => {
                 localStorage.setItem("selected_course_id", course.id);
                 window.location.href = `course_details.html?id=${course.id}`;
@@ -126,37 +119,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ================= SEARCH =================
-    if (searchInput) {
-        searchInput.addEventListener("input", applyFilters);
-    }
+    // EVENTS
+    searchInput.addEventListener("input", applyFilters);
+    sortSelect.addEventListener("change", applyFilters);
 
-    // ================= SORT =================
-    if (sortSelect) {
-        sortSelect.addEventListener("change", applyFilters);
-    }
+    videoTab.addEventListener("click", () => {
+        currentType = "video";
+        videoTab.classList.add("active");
+        documentTab.classList.remove("active");
+        applyFilters();
+    });
 
-    // ================= VIDEO TAB =================
-    if (videoTab) {
-        videoTab.addEventListener("click", () => {
-            currentType = "video";
-            videoTab.classList.add("active");
-            documentTab?.classList.remove("active");
-            applyFilters();
-        });
-    }
+    documentTab.addEventListener("click", () => {
+        currentType = "document";
+        documentTab.classList.add("active");
+        videoTab.classList.remove("active");
+        applyFilters();
+    });
 
-    // ================= DOCUMENT TAB =================
-    if (documentTab) {
-        documentTab.addEventListener("click", () => {
-            currentType = "document";
-            documentTab.classList.add("active");
-            videoTab?.classList.remove("active");
-            applyFilters();
-        });
-    }
-
-    // ================= INIT =================
     loadCourses();
-
 });
