@@ -55,11 +55,6 @@
 
         <div class="top-bar">
 
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Search courses...">
-            </div>
-
             <div class="top-bar-right">
 
                 <div class="user-profile">
@@ -96,38 +91,66 @@
 
                         <form id="addCourseForm">
 
+                            <!-- Course Name -->
+
                             <div class="form-group">
+
                                 <label>Course Name</label>
+
                                 <input type="text"
                                        id="courseName"
                                        placeholder="Course Name"
                                        required>
+
                             </div>
 
+                            <!-- Course Details -->
+
                             <div class="form-group">
+
                                 <label>Course Details</label>
+
                                 <textarea id="courseDetails"
                                           rows="4"
                                           placeholder="Course Description"
                                           required></textarea>
+
                             </div>
+
+                            <!-- Language / Type / Price -->
 
                             <div class="form-row three-cols">
 
                                 <div class="form-group">
+
                                     <label>Language</label>
+
                                     <select id="language" required>
+
                                         <option value="" selected disabled>
                                             Select
                                         </option>
-                                        <option value="English">English</option>
-                                        <option value="Bengali">Bengali</option>
-                                        <option value="Hindi">Hindi</option>
+
+                                        <option value="English">
+                                            English
+                                        </option>
+
+                                        <option value="Bengali">
+                                            Bengali
+                                        </option>
+
+                                        <option value="Hindi">
+                                            Hindi
+                                        </option>
+
                                     </select>
+
                                 </div>
 
                                 <div class="form-group">
+
                                     <label>Type</label>
+
                                     <select id="courseType"
                                             onchange="togglePriceField(this.value)"
                                             required>
@@ -141,16 +164,46 @@
                                         </option>
 
                                     </select>
+
                                 </div>
 
                                 <div class="form-group">
+
                                     <label>Price</label>
+
                                     <input type="number"
                                            id="price"
                                            placeholder="">
+
                                 </div>
 
                             </div>
+
+                            <!-- Resource Type -->
+
+                            <div class="form-group">
+
+                                <label>Resource Type</label>
+
+                                <select id="resourceType" required>
+
+                                    <option value="" selected disabled>
+                                        Select Resource Type
+                                    </option>
+
+                                    <option value="video">
+                                        Video
+                                    </option>
+
+                                    <option value="document">
+                                        Document
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- Course Thumbnail -->
 
                             <div class="form-group">
 
@@ -175,6 +228,8 @@
 
                             </div>
 
+                            <!-- Course Material -->
+
                             <div class="form-group">
 
                                 <label>Course Material</label>
@@ -198,10 +253,14 @@
 
                             </div>
 
+                            <!-- Submit -->
+
                             <div class="form-actions">
+
                                 <button type="submit" class="btn-submit">
                                     Submit
                                 </button>
+
                             </div>
 
                         </form>
@@ -221,8 +280,11 @@
                 <div class="settings-page">
 
                     <div class="settings-header">
+
                         <h2>Account Settings</h2>
+
                         <p>Your account information</p>
+
                     </div>
 
                     <div class="account-details-card">
