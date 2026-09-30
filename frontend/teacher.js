@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const courseList = document.getElementById("courseList");
 
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+    const menuToggle = document.getElementById("menuToggle");
+
     const templateCard =
         courseList.querySelector("[data-course-card]");
 
@@ -37,6 +41,49 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
+    // ---------------- MOBILE SIDEBAR ----------------
+
+    function openSidebar() {
+
+        sidebar.classList.add("open");
+        sidebarOverlay.classList.add("show");
+        document.body.classList.add("menu-open");
+
+    }
+
+    function closeSidebar() {
+
+        sidebar.classList.remove("open");
+        sidebarOverlay.classList.remove("show");
+        document.body.classList.remove("menu-open");
+
+    }
+
+    menuToggle?.addEventListener("click", () => {
+
+        if (sidebar.classList.contains("open"))
+            closeSidebar();
+        else
+            openSidebar();
+
+    });
+
+    sidebarOverlay?.addEventListener("click", closeSidebar);
+
+    document.addEventListener("keydown", e => {
+
+        if (e.key === "Escape")
+            closeSidebar();
+
+    });
+
+    window.addEventListener("resize", () => {
+
+        if (window.innerWidth > 900)
+            closeSidebar();
+
+    });
+
     // ---------------- NAV ----------------
 
     navItems.forEach(item => {
@@ -44,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
         item.onclick = e => {
 
             e.preventDefault();
+
+            closeSidebar();
 
             const page = item.dataset.page;
 

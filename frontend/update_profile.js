@@ -1,959 +1,383 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+const UP_API_BASE_URL = 'http://127.0.0.1:8000';
+const UP_LOGIN_PAGE = 'index.html'; // change to your login page name
+const UP_DEFAULT_PIC = 'https://i.pravatar.cc/100?img=32';
 
-const token = localStorage.getItem("access_token");
-const userRole = localStorage.getItem("userRole");
+function upPicUrl(path) {
+    if (!path) return UP_DEFAULT_PIC;
+    if (path.startsWith('http')) return path;
+    return UP_API_BASE_URL + '/' + path.replace(/^\/+/, '') + '?t=' + Date.now();
+}
+
+// Filled after the page loads
+let upRole = '';          // 'student' or 'teacher'
+let upProfilePath = '';   // /api/v1/students/me or /api/v1/teachers/me
+let upOriginalEmail = '';
+let upBusy = false;
 
 
-// ========================================
-// ROLE CONFIG
-// ========================================
+// ==========================================
+// HELPERS
+// ==========================================
 
-let profileEndpoint = "";
-let redirectPage = "";
+function upGetToken() {
+    return localStorage.getItem('access_token');
+}
 
-if (userRole === "student") {
+function upAuthHeaders(json) {
+    const headers = { 'Authorization': 'Bearer ' + upGetToken() };
+    if (json) {
+        headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+}
 
-    profileEndpoint = `${API_BASE_URL}/students/me`;
-    redirectPage = "student.html";
+function upShowMessage(text, type) {
+    const el = document.getElementById('up-message');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'up-message' + (type ? ' ' + type : '');
+}
 
-} else if (userRole === "teacher") {
+function upErrorText(result, fallback) {
+    if (result && typeof result.detail === 'string') {
+        return result.detail;
+    }
+    if (result && Array.isArray(result.detail) && result.detail[0] && result.detail[0].msg) {
+        return result.detail[0].msg;
+    }
+    return fallback;
+}
 
-    profileEndpoint = `${API_BASE_URL}/teachers/me`;
-    redirectPage = "teacher.html";
+function upSetBusy(busy) {
+    upBusy = busy;
+    const save = document.getElementById('up-save-btn');
+    const del = document.getElementById('up-delete-btn');
+    if (save) save.disabled = busy;
+    if (del) del.disabled = busy;
+}
 
-} else {
+function upClearSession() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('token_type');
+}
 
-    alert("User role not found. Please login again.");
+function upValue(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+}
 
-    window.location.href = "login.html";
+function upSetValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
 }
 
 
-// ========================================
-// CHECK LOGIN
-// ========================================
+// ==========================================
+// LOAD CURRENT DATA INTO THE FORM
+// ==========================================
 
-if (!token) {
+async function initUpdateProfile() {
 
-    alert("Please login first.");
+    const form = document.getElementById('updateProfileForm');
+    if (!form) return;
 
-    window.location.href = "login.html";
-}
-
-
-// ========================================
-// GET HTML ELEMENTS
-// ========================================
-
-const firstNameInput =
-    document.getElementById("firstName");
-
-const lastNameInput =
-    document.getElementById("lastName");
-
-const emailInput =
-    document.getElementById("email");
-
-const phoneInput =
-    document.getElementById("phone");
-
-const genderInput =
-    document.getElementById("gender");
-
-const dobInput =
-    document.getElementById("dateOfBirth");
-
-const addressInput =
-    document.getElementById("address");
-
-const aboutInput =
-    document.getElementById("about");
-
-const updateProfileForm =
-    document.getElementById("updateProfileForm");
-
-const saveBtn =
-    document.getElementById("saveBtn");
-
-const cancelBtn =
-    document.getElementById("cancelBtn");
-
-
-// ========================================
-// STORE ORIGINAL VALUES
-// ========================================
-
-let originalPhoneNumber = "";
-let originalEmail = "";
-
-
-// ========================================
-// SAFE VALUE
-// ========================================
-
-function getSafeValue(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-        return "";
-    }
-
-    if (typeof value === "string") {
-        return value;
-    }
-
-    if (
-        typeof value === "number" ||
-        typeof value === "boolean"
-    ) {
-        return String(value);
-    }
-
-    if (typeof value === "object") {
-
-        if (typeof value.value === "string") {
-            return value.value;
-        }
-
-        if (typeof value.name === "string") {
-            return value.name;
-        }
-
-        if (typeof value.text === "string") {
-            return value.text;
-        }
-
-        if (typeof value.email_id === "string") {
-            return value.email_id;
-        }
-
-        if (typeof value.email === "string") {
-            return value.email;
-        }
-
-        return "";
-    }
-
-    return "";
-}
-
-
-// ========================================
-// NORMALIZE PHONE
-// ========================================
-
-function normalizePhone(value) {
-
-    return getSafeValue(value)
-        .replace(/\s+/g, "")
-        .trim();
-}
-
-
-// ========================================
-// NORMALIZE EMAIL
-// ========================================
-
-function normalizeEmail(value) {
-
-    return getSafeValue(value)
-        .trim()
-        .toLowerCase();
-}
-
-
-// ========================================
-// NORMALIZE GENDER
-// ========================================
-
-function normalizeGender(value) {
-
-    const gender = getSafeValue(value)
-        .toLowerCase()
-        .trim();
-
-    if (
-        gender === "male" ||
-        gender === "m"
-    ) {
-        return "m";
-    }
-
-    if (
-        gender === "female" ||
-        gender === "f"
-    ) {
-        return "f";
-    }
-
-    if (
-        gender === "other" ||
-        gender === "o"
-    ) {
-        return "o";
-    }
-
-    return gender;
-}
-
-
-// ========================================
-// NORMALIZE DATE
-// ========================================
-
-function normalizeDate(value) {
-
-    let dateValue = getSafeValue(value);
-
-    if (dateValue.includes("T")) {
-
-        dateValue =
-            dateValue.split("T")[0];
-    }
-
-    return dateValue;
-}
-
-
-// ========================================
-// LOAD PROFILE
-// ========================================
-
-async function loadProfile() {
-
-    if (!token) {
+    if (!upGetToken()) {
+        alert('Please login first.');
+        window.location.replace(UP_LOGIN_PAGE);
         return;
     }
 
+    // Load the data only once per form element
+    if (form.dataset.loaded) return;
+    form.dataset.loaded = '1';
+
+    upShowMessage('Loading your details...', '');
+    upSetBusy(true);
+
     try {
 
-        console.log("Loading profile...");
+        // 1) User account: email and role
+        const userResponse = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
+            headers: upAuthHeaders(false)
+        });
 
-        const response = await fetch(
-            profileEndpoint,
-            {
-                method: "GET",
-
-                headers: {
-                    "Authorization":
-                        `Bearer ${token}`,
-
-                    "Accept":
-                        "application/json"
-                }
-            }
-        );
-
-
-        // ========================================
-        // SESSION EXPIRED
-        // ========================================
-
-        if (response.status === 401) {
-
-            alert(
-                "Session expired. Please login again."
-            );
-
-            localStorage.removeItem(
-                "access_token"
-            );
-
-            localStorage.removeItem(
-                "token_type"
-            );
-
-            localStorage.removeItem(
-                "userRole"
-            );
-
-            window.location.href =
-                "login.html";
-
+        if (userResponse.status === 401) {
+            upClearSession();
+            alert('Session expired. Please login again.');
+            window.location.replace(UP_LOGIN_PAGE);
             return;
         }
 
-
-        // ========================================
-        // OTHER ERROR
-        // ========================================
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Profile load failed. Status: ${response.status}`
-            );
+        if (!userResponse.ok) {
+            throw new Error('Could not load account (' + userResponse.status + ')');
         }
 
+        const user = await userResponse.json();
 
-        // ========================================
-        // GET PROFILE DATA
-        // ========================================
+        upRole = String(user.role || '').toLowerCase();
+        upOriginalEmail = user.email_id || '';
+        upSetValue('up-email', upOriginalEmail);
 
-        const data =
-            await response.json();
+        upProfilePath = upRole === 'teacher'
+            ? '/api/v1/teachers/me'
+            : '/api/v1/students/me';
 
-        console.log(
-            "PROFILE DATA:",
-            data
-        );
+        // 2) Profile: name, phone, gender, dob, address, about
+        const profileResponse = await fetch(UP_API_BASE_URL + upProfilePath, {
+            headers: upAuthHeaders(false)
+        });
 
-
-        // ========================================
-        // FIRST NAME
-        // ========================================
-
-        if (firstNameInput) {
-
-            firstNameInput.value =
-                getSafeValue(
-                    data.first_name
-                );
+        if (!profileResponse.ok) {
+            throw new Error('Could not load profile (' + profileResponse.status + ')');
         }
 
+        const profile = await profileResponse.json();
 
-        // ========================================
-        // LAST NAME
-        // ========================================
+        upSetValue('up-first-name', profile.first_name);
+        upSetValue('up-last-name', profile.last_name);
+        upSetValue('up-phone', profile.phone_no);
+        upSetValue('up-gender', profile.gender);
+        upSetValue('up-dob', profile.date_of_birth);
+        upSetValue('up-address', profile.address);
+        upSetValue('up-about', profile.about);
 
-        if (lastNameInput) {
+        const preview = document.getElementById('up-pic-preview');
+        if (preview) preview.src = upPicUrl(profile.profile_pic);
 
-            lastNameInput.value =
-                getSafeValue(
-                    data.last_name
-                );
-        }
-
-
-        // ========================================
-        // EMAIL
-        // ========================================
-
-        if (emailInput) {
-
-            let emailValue = "";
-
-
-            if (
-                data.user &&
-                typeof data.user === "object"
-            ) {
-
-                emailValue =
-                    getSafeValue(
-                        data.user.email_id
-                    );
-            }
-
-
-            if (!emailValue) {
-
-                emailValue =
-                    getSafeValue(
-                        data.email_id
-                    );
-            }
-
-
-            if (!emailValue) {
-
-                emailValue =
-                    getSafeValue(
-                        data.email
-                    );
-            }
-
-
-            emailInput.value =
-                emailValue;
-
-
-            originalEmail =
-                normalizeEmail(
-                    emailValue
-                );
-        }
-
-
-        // ========================================
-        // PHONE
-        // ========================================
-
-        if (phoneInput) {
-
-            const phoneValue =
-                getSafeValue(
-                    data.phone_no
-                );
-
-            phoneInput.value =
-                phoneValue;
-
-
-            // SAVE ORIGINAL PHONE
-            originalPhoneNumber =
-                normalizePhone(
-                    phoneValue
-                );
-        }
-
-
-        // ========================================
-        // GENDER
-        // ========================================
-
-        if (genderInput) {
-
-            genderInput.value =
-                normalizeGender(
-                    data.gender
-                );
-        }
-
-
-        // ========================================
-        // DATE OF BIRTH
-        // ========================================
-
-        if (dobInput) {
-
-            dobInput.value =
-                normalizeDate(
-                    data.date_of_birth
-                );
-        }
-
-
-        // ========================================
-        // ADDRESS
-        // ========================================
-
-        if (addressInput) {
-
-            addressInput.value =
-                getSafeValue(
-                    data.address
-                );
-        }
-
-
-        // ========================================
-        // ABOUT
-        // ========================================
-
-        if (aboutInput) {
-
-            aboutInput.value =
-                getSafeValue(
-                    data.about
-                );
-        }
-
-
-        console.log(
-            "Original Phone:",
-            originalPhoneNumber
-        );
-
-        console.log(
-            "Original Email:",
-            originalEmail
-        );
-
-        console.log(
-            "Profile loaded successfully."
-        );
+        upShowMessage('', '');
 
     } catch (error) {
-
-        console.error(
-            "Load Profile Error:",
-            error
-        );
-
-        alert(
-            error.message ||
-            "Profile load korte problem hoyeche."
-        );
+        console.error('Load error:', error);
+        upShowMessage('Could not load your details. Please refresh the page.', 'error');
+    } finally {
+        upSetBusy(false);
     }
 }
 
 
-// ========================================
-// GET ERROR MESSAGE
-// ========================================
+// ==========================================
+// SAVE CHANGES
+// ==========================================
 
-async function getErrorMessage(response) {
+async function upHandleSave(e) {
+
+    e.preventDefault();
+
+    if (upBusy) return;
+
+    const firstName = upValue('up-first-name');
+    const lastName = upValue('up-last-name');
+    const phone = upValue('up-phone');
+    const gender = document.getElementById('up-gender').value;
+    const dob = document.getElementById('up-dob').value;
+    const email = upValue('up-email');
+    const password = document.getElementById('up-password').value;
+
+    if (!firstName || !lastName || !phone || !gender || !dob || !email) {
+        upShowMessage('Please fill in all required fields.', 'error');
+        return;
+    }
+
+    const emailChanged = email !== upOriginalEmail;
+    const passwordChanged = password.length > 0;
+
+    upSetBusy(true);
+    upShowMessage('Saving...', '');
 
     try {
 
-        const errorData =
-            await response.json();
+        // STEP 1: update profile details
+        const profileBody = {
+            first_name: firstName,
+            last_name: lastName,
+            phone_no: phone,
+            gender: gender,
+            date_of_birth: dob,
+            address: upValue('up-address'),
+            about: upValue('up-about')
+        };
 
+        const profileResponse = await fetch(UP_API_BASE_URL + upProfilePath, {
+            method: 'PATCH',
+            headers: upAuthHeaders(true),
+            body: JSON.stringify(profileBody)
+        });
 
-        if (
-            typeof errorData.detail ===
-            "string"
-        ) {
+        const profileResult = await profileResponse.json().catch(() => ({}));
 
-            return errorData.detail;
+        if (!profileResponse.ok) {
+            console.error('Profile update error:', profileResult);
+            upShowMessage(upErrorText(profileResult, 'Profile update failed.'), 'error');
+            return;
         }
 
+                // STEP 1.5: নতুন ছবি বেছে থাকলে upload
+        const picInput = document.getElementById('up-pic-input');
+        const newPic = picInput && picInput.files[0];
 
-        if (
-            Array.isArray(
-                errorData.detail
-            )
-        ) {
+        if (newPic) {
+            const picPath = upRole === 'teacher'
+                ? '/api/v1/teachers/profile-pic/upload'
+                : '/api/v1/students/profile-pic/upload';
 
-            return errorData.detail
-                .map(error => {
+            const picForm = new FormData();
+            picForm.append('file', newPic);
 
-                    if (
-                        typeof error ===
-                        "string"
-                    ) {
+            const picResponse = await fetch(UP_API_BASE_URL + picPath, {
+                method: 'POST',
+                headers: upAuthHeaders(false),   // JSON header নয়
+                body: picForm
+            });
 
-                        return error;
-                    }
-
-                    return (
-                        error.msg ||
-                        "Invalid data"
-                    );
-
-                })
-                .join(", ");
+            if (!picResponse.ok) {
+                const picResult = await picResponse.json().catch(() => ({}));
+                upShowMessage('Profile saved, but picture upload failed: ' +
+                    upErrorText(picResult, 'unknown error.'), 'error');
+                return;
+            }
         }
 
+        // STEP 2: update email / password only if they changed.
+        // Done last, because changing them may invalidate the current login token.
+        if (emailChanged || passwordChanged) {
 
-        if (errorData.message) {
+            const userBody = { email_id: email };
 
-            return errorData.message;
-        }
+            if (passwordChanged) {
+                userBody.hashed_password = password;
+            }
 
-    } catch (error) {
+            const userResponse = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
+                method: 'PATCH',
+                headers: upAuthHeaders(true),
+                body: JSON.stringify(userBody)
+            });
 
-        console.error(
-            "Error reading API error:",
-            error
-        );
-    }
+            const userResult = await userResponse.json().catch(() => ({}));
 
-
-    return `Profile update failed. Status: ${response.status}`;
-}
-
-
-// ========================================
-// UPDATE PROFILE
-// ========================================
-
-if (updateProfileForm) {
-
-    updateProfileForm.addEventListener(
-        "submit",
-        async function (event) {
-
-            event.preventDefault();
-
-
-            // ========================================
-            // TOKEN CHECK
-            // ========================================
-
-            if (!token) {
-
-                alert(
-                    "Please login first."
+            if (!userResponse.ok) {
+                console.error('User update error:', userResult);
+                upShowMessage(
+                    'Profile saved, but email/password update failed: ' +
+                    upErrorText(userResult, 'unknown error.'),
+                    'error'
                 );
-
-                window.location.href =
-                    "login.html";
-
                 return;
             }
 
-
-            // ========================================
-            // CURRENT VALUES
-            // ========================================
-
-            const newPhoneNumber =
-                phoneInput
-                    ? normalizePhone(
-                        phoneInput.value
-                    )
-                    : "";
-
-
-            const newEmail =
-                emailInput
-                    ? normalizeEmail(
-                        emailInput.value
-                    )
-                    : "";
-
-
-            // ========================================
-            // BUTTON LOADING
-            // ========================================
-
-            if (saveBtn) {
-
-                saveBtn.disabled = true;
-
-                saveBtn.innerHTML =
-                    '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
-            }
-
-
-            try {
-
-                // ========================================
-                // PROFILE DATA
-                // ========================================
-
-                const profileData = {
-
-                    first_name:
-                        firstNameInput
-                            ? firstNameInput.value.trim()
-                            : "",
-
-                    last_name:
-                        lastNameInput
-                            ? lastNameInput.value.trim()
-                            : "",
-
-                    email:
-                        emailInput
-                            ? emailInput.value.trim()
-                            : "",
-
-                    gender:
-                        genderInput
-                            ? genderInput.value
-                            : "",
-
-                    date_of_birth:
-                        dobInput
-                            ? dobInput.value
-                            : "",
-
-                    address:
-                        addressInput
-                            ? addressInput.value.trim()
-                            : "",
-
-                    about:
-                        aboutInput
-                            ? aboutInput.value.trim()
-                            : ""
-                };
-
-
-                // ========================================
-                // IMPORTANT PHONE LOGIC
-                // ========================================
-
-                /*
-                 * Phone number change না করলে
-                 * phone_no PATCH request-এ পাঠানো হবে না।
-                 *
-                 * তাই:
-                 *
-                 * Old: 9876543210
-                 * New: 9876543210
-                 *
-                 * → phone_no যাবে না
-                 *
-                 * কিন্তু:
-                 *
-                 * Old: 9876543210
-                 * New: 9123456789
-                 *
-                 * → phone_no যাবে
-                 */
-
-                if (
-                    newPhoneNumber &&
-                    newPhoneNumber !==
-                    originalPhoneNumber
-                ) {
-
-                    profileData.phone_no =
-                        newPhoneNumber;
-
-                    console.log(
-                        "Phone number changed. Sending new phone."
-                    );
-
-                } else {
-
-                    console.log(
-                        "Phone number unchanged. Phone field skipped."
-                    );
-                }
-
-
-                // ========================================
-                // LOG DATA
-                // ========================================
-
-                console.log(
-                    "Original Phone:",
-                    originalPhoneNumber
-                );
-
-                console.log(
-                    "New Phone:",
-                    newPhoneNumber
-                );
-
-                console.log(
-                    "Sending Profile Data:",
-                    profileData
-                );
-
-
-                // ========================================
-                // UPDATE PROFILE API
-                // ========================================
-
-                const response =
-                    await fetch(
-                        profileEndpoint,
-                        {
-                            method: "PATCH",
-
-                            headers: {
-
-                                "Authorization":
-                                    `Bearer ${token}`,
-
-                                "Content-Type":
-                                    "application/json",
-
-                                "Accept":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    profileData
-                                )
-                        }
-                    );
-
-
-                // ========================================
-                // SESSION EXPIRED
-                // ========================================
-
-                if (
-                    response.status === 401
-                ) {
-
-                    alert(
-                        "Session expired. Please login again."
-                    );
-
-                    localStorage.removeItem(
-                        "access_token"
-                    );
-
-                    localStorage.removeItem(
-                        "token_type"
-                    );
-
-                    localStorage.removeItem(
-                        "userRole"
-                    );
-
-                    window.location.href =
-                        "login.html";
-
-                    return;
-                }
-
-
-                // ========================================
-                // UPDATE ERROR
-                // ========================================
-
-                if (!response.ok) {
-
-                    const message =
-                        await getErrorMessage(
-                            response
-                        );
-
-                    console.error(
-                        "Profile Update Error:",
-                        message
-                    );
-
-
-                    // ========================================
-                    // PHONE DUPLICATE
-                    // ========================================
-
-                    if (
-                        message
-                            .toLowerCase()
-                            .includes("phone") &&
-                        (
-                            message
-                                .toLowerCase()
-                                .includes("exist") ||
-                            message
-                                .toLowerCase()
-                                .includes("already")
-                        )
-                    ) {
-
-                        throw new Error(
-                            "Phone number already exists."
-                        );
-                    }
-
-
-                    // ========================================
-                    // EMAIL DUPLICATE
-                    // ========================================
-
-                    if (
-                        message
-                            .toLowerCase()
-                            .includes("email") &&
-                        (
-                            message
-                                .toLowerCase()
-                                .includes("exist") ||
-                            message
-                                .toLowerCase()
-                                .includes("already")
-                        )
-                    ) {
-
-                        throw new Error(
-                            "Email already exists."
-                        );
-                    }
-
-
-                    throw new Error(
-                        message
-                    );
-                }
-
-
-                // ========================================
-                // UPDATED DATA
-                // ========================================
-
-                let updatedData = null;
-
-                try {
-
-                    updatedData =
-                        await response.json();
-
-                } catch (error) {
-
-                    console.log(
-                        "No JSON response body."
-                    );
-                }
-
-
-                console.log(
-                    "Profile Updated Successfully:",
-                    updatedData
-                );
-
-
-                // ========================================
-                // SUCCESS BUTTON
-                // ========================================
-
-                if (saveBtn) {
-
-                    saveBtn.innerHTML =
-                        '<i class="fa-solid fa-check"></i> Updated!';
-                }
-
-
-                // ========================================
-                // SUCCESS MESSAGE
-                // ========================================
-
-                alert(
-                    "Profile successfully updated!"
-                );
-
-
-                // ========================================
-                // GO BACK TO DASHBOARD
-                // ========================================
-
-                window.location.href =
-                    redirectPage;
-
-            } catch (error) {
-
-                console.error(
-                    "Update Profile Error:",
-                    error
-                );
-
-
-                alert(
-                    error.message ||
-                    "Profile update korte problem hoyeche."
-                );
-
-
-                // ========================================
-                // RESTORE BUTTON
-                // ========================================
-
-                if (saveBtn) {
-
-                    saveBtn.disabled = false;
-
-                    saveBtn.innerHTML =
-                        '<i class="fa-solid fa-check"></i> Update Profile';
-                }
-            }
-
+            // Login again with the new email / password
+            upClearSession();
+            alert('Account updated. Please login again.');
+            window.location.replace(UP_LOGIN_PAGE);
+            return;
         }
-    );
+
+        // Only profile details changed: go back to the dashboard
+        upShowMessage('Profile updated.', 'success');
+        window.dispatchEvent(new CustomEvent('profile-updated'));
+
+        setTimeout(() => {
+            window.location.replace(upRole === 'teacher' ? 'teacher.html' : 'student.html');
+        }, 600);
+
+    } catch (error) {
+        console.error('Save error:', error);
+        upShowMessage('Something went wrong. Please try again.', 'error');
+    } finally {
+        upSetBusy(false);
+    }
 }
 
 
-// ========================================
-// CANCEL BUTTON
-// ========================================
+// ==========================================
+// DELETE ACCOUNT
+// ==========================================
 
-if (cancelBtn) {
+async function upHandleDelete() {
 
-    cancelBtn.addEventListener(
-        "click",
-        function () {
+    if (upBusy) return;
 
-            window.location.href =
-                redirectPage;
-        }
+    const sure = confirm(
+        'Delete your account?\n\nYour profile and login will be permanently removed. This cannot be undone.'
     );
+
+    if (!sure) return;
+
+    upSetBusy(true);
+    upShowMessage('Deleting account...', '');
+
+    try {
+
+        const response = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
+            method: 'DELETE',
+            headers: upAuthHeaders(false)
+        });
+
+        if (response.status !== 204 && !response.ok) {
+            const result = await response.json().catch(() => ({}));
+            console.error('Delete error:', result);
+            upShowMessage(upErrorText(result, 'Account could not be deleted.'), 'error');
+            return;
+        }
+
+        upClearSession();
+        alert('Your account has been deleted.');
+        window.location.replace(UP_LOGIN_PAGE);
+
+    } catch (error) {
+        console.error('Delete error:', error);
+        upShowMessage('Something went wrong. Please try again.', 'error');
+    } finally {
+        upSetBusy(false);
+    }
 }
 
 
-// ========================================
-// LOAD PROFILE
-// ========================================
+// ==========================================
+// AUTO START
+// Works both for a normal page and when the HTML is injected
+// into the dashboard after the page has already loaded.
+// ==========================================
 
-loadProfile();
+// Save and Delete: listen on the document, so the form can be added at any time
+document.addEventListener('submit', function (e) {
+    if (e.target && e.target.id === 'updateProfileForm') {
+        upHandleSave(e);
+    }
+});
+
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.closest && e.target.closest('#up-delete-btn')) {
+        upHandleDelete();
+    }
+});
+
+// Fill the form as soon as it appears on the page
+function upCheckForForm() {
+    const form = document.getElementById('updateProfileForm');
+    if (form && !form.dataset.loaded) {
+        initUpdateProfile();
+    }
+}
+
+new MutationObserver(upCheckForForm).observe(document.documentElement, {
+    childList: true,
+    subtree: true
+});
+
+document.addEventListener('DOMContentLoaded', upCheckForForm);
+
+document.addEventListener('change', function (e) {
+    if (!e.target || e.target.id !== 'up-pic-input') return;
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') || file.size > 2 * 1024 * 1024) {
+        upShowMessage('Please choose an image under 2 MB.', 'error');
+        e.target.value = '';
+        return;
+    }
+
+    document.getElementById('up-pic-preview').src = URL.createObjectURL(file);
+});

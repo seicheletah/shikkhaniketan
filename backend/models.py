@@ -58,8 +58,14 @@ class User(UserBase, table=True):
         ),
     )
     hashed_password: str
-    student: Student = Relationship(back_populates="user")
-    teacher: Teacher = Relationship(back_populates="user")
+    student: Student = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"cascade": "all, delete", "passive_deletes": True},
+    )
+    teacher: Teacher = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"cascade": "all, delete", "passive_deletes": True},
+    )
 
 
 # create user model with pydantic vlidation
@@ -108,7 +114,7 @@ class Enrollment(SQLModel, table=True):
     student_id: str = Field(
         sa_column=Column(
             String,
-            ForeignKey("student.phone_no", ondelete="CASCADE"),
+            ForeignKey("student.phone_no", ondelete="CASCADE", onupdate="CASCADE"),
             primary_key=True,
             nullable=False,
         )
@@ -286,7 +292,7 @@ class Course(CourseBase, table=True):
     teacher_id: str = Field(
         sa_column=Column(
             String,
-            ForeignKey("teacher.phone_no", ondelete="CASCADE"),
+            ForeignKey("teacher.phone_no", ondelete="CASCADE", onupdate="CASCADE"),
             nullable=False,
         )
     )
@@ -438,7 +444,7 @@ class Purchase(PurchaseBase, table=True):
     student_id: str = Field(
         sa_column=Column(
             String,
-            ForeignKey("student.phone_no", ondelete="CASCADE"),
+            ForeignKey("student.phone_no", ondelete="CASCADE", onupdate="CASCADE"),
             nullable=False,
         )
     )
@@ -480,7 +486,7 @@ class Review(ReviewBase, table=True):
     student_id: str = Field(
         sa_column=Column(
             String,
-            ForeignKey("student.phone_no", ondelete="CASCADE"),
+            ForeignKey("student.phone_no", ondelete="CASCADE", onupdate="CASCADE"),
             primary_key=True,
             nullable=False,
         )

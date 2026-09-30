@@ -3,14 +3,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const API = "http://127.0.0.1:8000/api/v1";
     const token = localStorage.getItem("access_token");
 
-    if (!token) {
-        window.location.href = "login.html";
-        return;
-    }
-
     const courseId =
         new URLSearchParams(window.location.search).get("id") ||
         new URLSearchParams(window.location.search).get("course");
+
+    if (!courseId) {
+        alert("Course not found!");
+        return;
+    }
+
+    const contentBody = document.querySelector(".content-body");
+    const topBar = document.querySelector(".top-bar");
 
     // ---------- TAB ----------
     window.switchTab = function (tab) {
@@ -33,6 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---------- STUDENT ----------
     async function loadStudent() {
 
+        if (!token) return;
+
         try {
 
             const res = await fetch(`${API}/students/me`, {
@@ -45,13 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const student = await res.json();
 
-            document.querySelector(".user-name").textContent =
-                `${student.first_name} ${student.last_name}`;
+            const name = document.querySelector(".user-name");
+
+            if (name) {
+                name.textContent =
+                    `${student.first_name} ${student.last_name}`;
+            }
 
         } catch (e) {
             console.log(e);
         }
-
     }
 
     // ---------- COURSE ----------
@@ -59,11 +67,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
+            const headers = { Accept: "application/json" };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
             const res = await fetch(`${API}/courses/${courseId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers
             });
+
+            if (!res.ok) {
+                alert("Course load failed");
+                return;
+            }
 
             const course = await res.json();
 
@@ -78,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const total = price + gst;
 
             const rows = document.querySelectorAll(".price-row strong");
+
             rows[0].textContent = `₹${price}`;
             rows[1].textContent = `₹${gst.toFixed(2)}`;
             rows[2].textContent = `₹${total.toFixed(2)}`;
@@ -86,9 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (e) {
             console.log(e);
-            alert("Course load failed");
         }
-
     }
 
     // ---------- REVIEWS ----------
@@ -96,11 +112,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
+            const headers = { Accept: "application/json" };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
             const res = await fetch(`${API}/courses/${courseId}/review`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers
             });
+
+            if (!res.ok) return;
 
             const reviews = await res.json();
 
@@ -127,28 +149,148 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
             console.log(e);
         }
-
     }
 
     // ---------- PURCHASE ----------
     window.openCourseView = function () {
 
-        window.location.href =
-            `course_view.html?course=${courseId}`;
+        const accessToken = localStorage.getItem("access_token");
+
+        if (accessToken) {
+            window.location.href = `course_view.html?course=${courseId}`;
+        } else {
+            window.location.href = "sign_up.html";
+        }
 
     };
 
-    // ---------- LOGOUT ----------
-    document.querySelector(".logout")?.addEventListener("click", e => {
+    // ---------- SETTINGS ----------
+    async function showSettings() {
 
-        e.preventDefault();
+        if (topBar) topBar.style.display = "none";
 
-        localStorage.clear();
+        if (!token) {
+            contentBody.innerHTML = "<h2>No profile found</h2>";
+            return;
+        }
 
-        window.location.href = "login.html";
+        try {
+
+            const res = await fetch(`${API}/students/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) {
+                contentBody.innerHTML = "<h2>No profile found</h2>";
+                return;
+            }
+
+            const data = await res.json();
+
+            contentBody.innerHTML = `
+                <section class="settings-page">
+
+                    <h2 style="margin-bottom:20px;">Profile Details</h2>
+
+                    <div class="account-card">
+
+                        <div style="display:flex;align-items:center;gap:20px;margin-bottom:25px;">
+
+                            <img src="${data.profile_pic || "https://i.pravatar.cc/150?img=68"}"
+                                 style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+
+                            <div>
+                                <h3>${data.first_name || ""} ${data.last_name || ""}</h3>
+                                <p>${data.user?.email_id || "-"}</p>
+                            </div>
+
+                        </div>
+
+                        <div class="profile-grid">
+
+                            <div class="input-box">
+                                <label>First Name</label>
+                                <p>${data.first_name || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Last Name</label>
+                                <p>${data.last_name || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Email</label>
+                                <p>${data.user?.email_id || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Phone</label>
+                                <p>${data.phone_no || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Gender</label>
+                                <p>${data.gender || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Date of Birth</label>
+                                <p>${data.date_of_birth || "-"}</p>
+                            </div>
+
+                            <div class="input-box full">
+                                <label>Address</label>
+                                <p>${data.address || "-"}</p>
+                            </div>
+
+                            <div class="input-box full">
+                                <label>About</label>
+                                <p>${data.about || "-"}</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+            `;
+
+        } catch (e) {
+            console.log(e);
+            contentBody.innerHTML = "<h2>No profile found</h2>";
+        }
+
+    }
+
+    // ---------- SIDEBAR ----------
+    document.querySelectorAll(".nav-item").forEach(item => {
+
+        item.addEventListener("click", (e) => {
+
+            e.preventDefault();
+
+            const text = item.textContent.trim().toLowerCase();
+
+            if (text === "courses") {
+                location.reload();
+            }
+
+            if (text === "settings") {
+                showSettings();
+            }
+
+            if (text === "logout") {
+                localStorage.clear();
+                window.location.href = "login.html";
+            }
+
+        });
 
     });
 
+    // ---------- INIT ----------
     loadStudent();
     loadCourse();
 

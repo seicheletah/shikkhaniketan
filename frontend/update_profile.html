@@ -1,558 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
+<link rel="stylesheet" href="update_profile.css">
 
-<head>
+<div id="update-wrapper">
+    <div class="up-card">
 
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Update Profile - SkillHub</title>
-
-
-    <!-- Google Font -->
-
-    <link rel="preconnect"
-          href="https://fonts.googleapis.com">
-
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
-
-
-    <!-- Font Awesome -->
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-
-    <!-- CSS -->
-
-    <link rel="stylesheet"
-          href="update_profile.css">
-
-</head>
-
-
-<body>
-
-
-    <div class="update-page">
-
-
-        <!-- ========================================
-             PAGE INTRO
-        ========================================= -->
-
-        <div class="page-intro">
-
-            <div class="intro-icon">
-
-                <i class="fa-solid fa-user-pen"></i>
-
-            </div>
-
-            <div class="intro-text">
-
-                <span class="eyebrow">
-                    ACCOUNT SETTINGS
-                </span>
-
-                <h1>
-                    Update Profile
-                </h1>
-
-                <p>
-                    Manage your personal information and keep your profile up to date.
-                </p>
-
-            </div>
-
+        <div class="up-header">
+            <h2>Update Profile</h2>
+            <p>Change your details and save.</p>
         </div>
 
+        <form id="updateProfileForm" novalidate>
 
+<div class="up-avatar" style="text-align:center; margin-bottom:20px;">
+    <img id="up-pic-preview" src="https://i.pravatar.cc/100?img=32"
+         alt="Profile Picture"
+         style="width:110px; height:110px; border-radius:50%; object-fit:cover;">
+    <div style="margin-top:10px;">
+        <input type="file" id="up-pic-input"
+               accept="image/png, image/jpeg, image/webp">
+    </div>
+</div>
 
-        <!-- ========================================
-             UPDATE PROFILE FORM
-        ========================================= -->
+            <div class="up-grid">
 
-        <form id="updateProfileForm">
-
-
-            <!-- ========================================
-                 PERSONAL INFORMATION
-            ========================================= -->
-
-            <section class="profile-card">
-
-
-                <!-- CARD HEADER -->
-
-                <div class="card-header">
-
-                    <div class="header-icon">
-
-                        <i class="fa-solid fa-user"></i>
-
-                    </div>
-
-                    <div>
-
-                        <h2>
-                            Personal Information
-                        </h2>
-
-                        <p>
-                            Update your basic account information.
-                        </p>
-
-                    </div>
-
+                <div class="up-group">
+                    <label for="up-first-name">First Name</label>
+                    <input type="text" id="up-first-name" name="first_name" required>
                 </div>
 
-
-
-                <!-- FORM GRID -->
-
-                <div class="form-grid">
-
-
-                    <!-- FIRST NAME -->
-
-                    <div class="form-group">
-
-                        <label for="firstName">
-                            First Name
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-regular fa-user"></i>
-
-                            <input
-                                type="text"
-                                id="firstName"
-                                name="first_name"
-                                placeholder="Enter first name"
-                                required>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- LAST NAME -->
-
-                    <div class="form-group">
-
-                        <label for="lastName">
-                            Last Name
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-regular fa-user"></i>
-
-                            <input
-                                type="text"
-                                id="lastName"
-                                name="last_name"
-                                placeholder="Enter last name"
-                                required>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- EMAIL -->
-
-                    <div class="form-group full-width">
-
-                        <label for="email">
-                            Email Address
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-regular fa-envelope"></i>
-
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                placeholder="Enter email address"
-                                required>
-
-                        </div>
-
-                        <div class="field-note">
-
-                            <i class="fa-solid fa-circle-info"></i>
-
-                            You can change your email address.
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- PHONE -->
-
-                    <div class="form-group">
-
-                        <label for="phone">
-                            Phone Number
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-solid fa-phone"></i>
-
-                            <input
-                                type="tel"
-                                id="phone"
-                                name="phone_no"
-                                placeholder="Enter phone number">
-
-                        </div>
-
-                        <div class="field-note">
-
-                            <i class="fa-solid fa-circle-info"></i>
-
-                            Phone number must be unique.
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- GENDER -->
-
-                    <div class="form-group">
-
-                        <label for="gender">
-                            Gender
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-solid fa-venus-mars"></i>
-
-                            <select
-                                id="gender"
-                                name="gender">
-
-                                <option value="">
-                                    Select Gender
-                                </option>
-
-                                <option value="m">
-                                    Male
-                                </option>
-
-                                <option value="f">
-                                    Female
-                                </option>
-
-                                <option value="o">
-                                    Other
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- DATE OF BIRTH -->
-
-                    <div class="form-group">
-
-                        <label for="dateOfBirth">
-                            Date of Birth
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-regular fa-calendar"></i>
-
-                            <input
-                                type="date"
-                                id="dateOfBirth"
-                                name="date_of_birth">
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- ADDRESS -->
-
-                    <div class="form-group full-width">
-
-                        <label for="address">
-                            Address
-                        </label>
-
-                        <div class="field textarea-field">
-
-                            <i class="fa-solid fa-location-dot"></i>
-
-                            <textarea
-                                id="address"
-                                name="address"
-                                placeholder="Enter your address"
-                                rows="3"></textarea>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- ABOUT -->
-
-                    <div class="form-group full-width">
-
-                        <label for="about">
-                            About Me
-                        </label>
-
-                        <div class="field textarea-field">
-
-                            <i class="fa-regular fa-message"></i>
-
-                            <textarea
-                                id="about"
-                                name="about"
-                                placeholder="Write a short description about yourself"
-                                rows="4"></textarea>
-
-                        </div>
-
-                    </div>
-
-
+                <div class="up-group">
+                    <label for="up-last-name">Last Name</label>
+                    <input type="text" id="up-last-name" name="last_name" required>
                 </div>
 
-
-            </section>
-
-
-
-            <!-- ========================================
-                 PASSWORD SECTION
-            ========================================= -->
-
-            <section class="profile-card password-card">
-
-
-                <!-- CARD HEADER -->
-
-                <div class="card-header">
-
-                    <div class="header-icon">
-
-                        <i class="fa-solid fa-lock"></i>
-
-                    </div>
-
-                    <div>
-
-                        <h2>
-                            Change Password
-                        </h2>
-
-                        <p>
-                            Change your account password securely.
-                        </p>
-
-                    </div>
-
+                <div class="up-group">
+                    <label for="up-phone">Phone Number</label>
+                    <input type="tel" id="up-phone" name="phone_no" required>
                 </div>
 
-
-
-                <div class="form-grid">
-
-
-                    <!-- CURRENT PASSWORD -->
-
-                    <div class="form-group full-width">
-
-                        <label for="currentPassword">
-                            Current Password
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-solid fa-lock"></i>
-
-                            <input
-                                type="password"
-                                id="currentPassword"
-                                name="current_password"
-                                placeholder="Enter current password">
-
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                id="toggleCurrentPassword"
-                                aria-label="Show or hide password">
-
-                                <i class="fa-regular fa-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- NEW PASSWORD -->
-
-                    <div class="form-group">
-
-                        <label for="newPassword">
-                            New Password
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-solid fa-key"></i>
-
-                            <input
-                                type="password"
-                                id="newPassword"
-                                name="new_password"
-                                placeholder="Enter new password">
-
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                id="toggleNewPassword"
-                                aria-label="Show or hide password">
-
-                                <i class="fa-regular fa-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- CONFIRM PASSWORD -->
-
-                    <div class="form-group">
-
-                        <label for="confirmPassword">
-                            Confirm New Password
-                        </label>
-
-                        <div class="field">
-
-                            <i class="fa-solid fa-key"></i>
-
-                            <input
-                                type="password"
-                                id="confirmPassword"
-                                name="confirm_password"
-                                placeholder="Confirm new password">
-
-                            <button
-                                type="button"
-                                class="password-toggle"
-                                id="toggleConfirmPassword"
-                                aria-label="Show or hide password">
-
-                                <i class="fa-regular fa-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
+                <div class="up-group">
+                    <label for="up-gender">Gender</label>
+                    <select id="up-gender" name="gender" required>
+                        <option value="" disabled selected hidden>Gender</option>
+                        <option value="m">Male</option>
+                        <option value="f">Female</option>
+                        <option value="o">Other</option>
+                    </select>
                 </div>
 
-
-                <div class="field-note password-note">
-
-                    <i class="fa-solid fa-circle-info"></i>
-
-                    Leave the password fields empty if you do not want to change your password.
-
+                <div class="up-group">
+                    <label for="up-dob">Date of Birth</label>
+                    <input type="date" id="up-dob" name="date_of_birth" required>
                 </div>
 
+                <div class="up-group">
+                    <label for="up-email">Email</label>
+                    <input type="email" id="up-email" name="email" required>
+                </div>
 
-            </section>
+                <div class="up-group up-full">
+                    <label for="up-password">New Password</label>
+                    <input type="password" id="up-password" name="password"
+                           placeholder="Leave empty to keep your current password"
+                           autocomplete="new-password">
+                </div>
 
+                <div class="up-group up-full">
+                    <label for="up-address">Address</label>
+                    <input type="text" id="up-address" name="address">
+                </div>
 
-
-            <!-- ========================================
-                 ACTION AREA
-            ========================================= -->
-
-            <div class="action-area">
-
-
-                <button
-                    type="button"
-                    class="cancel-btn"
-                    id="cancelBtn">
-
-                    Cancel
-
-                </button>
-
-
-
-                <button
-                    type="submit"
-                    class="save-btn"
-                    id="saveBtn">
-
-                    <i class="fa-solid fa-check"></i>
-
-                    Update Profile
-
-                </button>
-
+                <div class="up-group up-full">
+                    <label for="up-about">About</label>
+                    <textarea id="up-about" name="about" rows="3"></textarea>
+                </div>
 
             </div>
 
+            <p id="up-message" class="up-message" role="status" aria-live="polite"></p>
+
+            <div class="up-actions">
+                <button type="submit" id="up-save-btn" class="up-btn up-btn-primary">Save changes</button>
+                <button type="button" id="up-delete-btn" class="up-btn up-btn-danger">Delete account</button>
+            </div>
 
         </form>
-
-
     </div>
+</div>
 
-
-
-    <!-- ========================================
-         JAVASCRIPT
-    ========================================= -->
-
-    <script src="update_profile.js"></script>
-
-
-</body>
-
-</html>
+<!-- No <script> here. Add <script src="update_profile.js"></script> once
+     to student.html and teacher.html. -->

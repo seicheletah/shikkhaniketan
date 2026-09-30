@@ -178,14 +178,14 @@ class CourseSampleData:
 
     request_body_course_thumbnail_upload_male = {
         "category": "thumbnail",
-        "media_type": "image",
+        "media_type": "image/jpeg",
         "file_name": "sampleimage",
         "file_extension": "jpg",
     }
 
     request_body_course_resource_upload_male = {
         "category": "resource",
-        "media_type": "video",
+        "media_type": "video/mp4",
         "file_name": "samplevideo",
         "file_extension": "mp4",
     }

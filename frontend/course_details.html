@@ -1,144 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Detail - SkillHub</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="course_details.css">
 
-    <!-- Font Awesome Icons & Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
 </head>
 
 <body>
 
-    <div class="dashboard-container">
+<div class="dashboard-container">
 
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-logo-box">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
-                <h2 class="brand-name">SkillHub</h2>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo-box">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2 class="brand-name">SkillHub</h2>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="explore.html" class="nav-item active">
+                <span>Courses</span>
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>Settings</span>
+            </a>
+
+            <a href="#" class="nav-item logout">
+                <span>Logout</span>
+            </a>
+        </nav>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOP BAR -->
+        <div class="top-bar">
+
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search courses...">
             </div>
 
-            <nav class="nav-menu">
-                <a href="#" class="nav-item active">
-                    <span>Courses</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <span>Settings</span>
-                </a>
-                <a href="#" class="nav-item logout">
-                    <span>Logout</span>
-                </a>
-            </nav>
-        </aside>
+            <div class="top-bar-right">
 
-        <!-- MAIN CONTENT AREA -->
-        <main class="main-content">
+                <div class="user-profile">
+                    <img id="studentProfileImg"
+                         src="https://i.pravatar.cc/150?img=68"
+                         alt="Student">
 
-            <!-- TOP BAR -->
-            <div class="top-bar">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Search courses...">
-                </div>
-
-                <div class="top-bar-right">
-                    <div class="user-profile">
-                        <img src="https://i.pravatar.cc/150?img=68" alt="User Profile">
-                        <span class="user-name">Alex Smit</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTENT BODY -->
-            <div class="content-body">
-
-                <!-- MAIN GRID: LEFT (MEDIA + OVERVIEW/REVIEWS) | RIGHT (PURCHASE CARD) -->
-                <div class="course-detail-layout">
-
-                    <!-- LEFT COLUMN -->
-                    <div class="left-column">
+                    <span class="user-name"
+                          id="studentUserName">
                         
-                        <!-- MEDIA VIEWER (DISABLED) -->
-                        <div class="media-viewer disabled">
-                            <div class="disabled-overlay">
-                                <i class="fa-solid fa-lock"></i>
-                                <p>Media viewer disabled (Purchase to unlock)</p>
-                            </div>
-                        </div>
+                    </span>
+                </div>
 
-                        <!-- OVERVIEW & REVIEWS SECTION -->
-                        <div class="overview-review-card">
-                            <div class="tabs-header">
-                                <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
-                                <button class="tab-btn" onclick="switchTab('reviews')">Reviews</button>
-                            </div>
+            </div>
 
-                            <div class="tab-content" id="overviewTab">
-                                <h3>Course Overview</h3>
-                                <p>Master full-stack web development with hands-on projects. Learn HTML, CSS, JavaScript, Node.js, and PostgreSQL from scratch.</p>
-                                <ul class="course-highlights">
-                                    <li><i class="fa-solid fa-check"></i> 12 Hours of HD Video Content</li>
-                                    <li><i class="fa-solid fa-check"></i> Full Lifetime Access</li>
-                                    <li><i class="fa-solid fa-check"></i> Certificate of Completion</li>
-                                </ul>
-                            </div>
+        </div>
 
-                            <div class="tab-content hidden" id="reviewsTab">
-                                <h3>Student Reviews</h3>
-                                <div class="review-item">
-                                    <strong>Rahul Das</strong>
-                                    <span class="rating">★★★★★</span>
-                                    <p>Excellent course! Very clear explanation and structured code examples.</p>
-                                </div>
-                            </div>
+        <!-- CONTENT -->
+        <div class="content-body">
+
+            <div class="course-detail-layout">
+
+                <!-- LEFT -->
+                <div class="left-column">
+
+                    <!-- Media -->
+                    <div class="media-viewer disabled">
+
+                        <div class="disabled-overlay">
+                            <i class="fa-solid fa-lock"></i>
+                            <p>Purchase this course to unlock videos & documents</p>
                         </div>
 
                     </div>
 
-                    <!-- RIGHT COLUMN: COURSE PRICE & PURCHASE CARD -->
-                    <div class="right-column">
-                        <div class="purchase-card">
-                            <h3 class="course-title">Full-Stack Web Development</h3>
-                            
-                            <div class="price-breakdown">
-                                <div class="price-row">
-                                    <span>Course Price:</span>
-                                    <strong>₹2,999</strong>
-                                </div>
-                                <div class="price-row">
-                                    <span>Tax (18% GST):</span>
-                                    <strong>₹540</strong>
-                                </div>
-                                <hr class="divider">
-                                <div class="price-row total">
-                                    <span>Total Price:</span>
-                                    <strong>₹3,539</strong>
-                                </div>
+                    <!-- Overview / Reviews -->
+                    <div class="overview-review-card">
+
+                        <div class="tabs-header">
+                            <button class="tab-btn active"
+                                    onclick="switchTab('overview')">
+                                Overview
+                            </button>
+
+                            <button class="tab-btn"
+                                    onclick="switchTab('reviews')">
+                                Reviews
+                            </button>
+                        </div>
+
+                        <!-- Overview -->
+                        <div class="tab-content"
+                             id="overviewTab">
+
+                            <h3>Course Overview</h3>
+
+                            <p>
+                                Course description will load here...
+                            </p>
+
+                            <ul class="course-highlights">
+                                <li><i class="fa-solid fa-check"></i> HD Learning Content</li>
+                                <li><i class="fa-solid fa-check"></i> Lifetime Access</li>
+                                <li><i class="fa-solid fa-check"></i> Certificate Included</li>
+                            </ul>
+
+                        </div>
+
+                        <!-- Reviews -->
+                        <div class="tab-content hidden"
+                             id="reviewsTab">
+
+                            <h3>Student Reviews</h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- RIGHT -->
+                <div class="right-column">
+
+                    <div class="purchase-card">
+
+                        <h3 class="course-title">
+                            Loading Course...
+                        </h3>
+
+                        <div class="price-breakdown">
+
+                            <div class="price-row">
+                                <span>Course Price</span>
+                                <strong>₹0</strong>
                             </div>
 
-                            <button class="btn-purchase" onclick="openCourseView()">Purchase</button>
+                            <div class="price-row">
+                                <span>GST (18%)</span>
+                                <strong>₹0</strong>
+                            </div>
+
+                            <hr class="divider">
+
+                            <div class="price-row total">
+                                <span>Total</span>
+                                <strong>₹0</strong>
+                            </div>
+
                         </div>
+
+                        <button class="btn-purchase"
+                                onclick="openCourseView()">
+                            Purchase
+                        </button>
+
                     </div>
 
                 </div>
 
             </div>
 
-        </main>
+        </div>
 
-    </div>
-    <script src="course_details.js"></script>
+    </main>
 
-    
+</div>
+
+<script src="course_details.js"></script>
+
 </body>
-
 </html>

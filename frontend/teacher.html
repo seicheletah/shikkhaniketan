@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,9 +20,14 @@
 
     <div class="dashboard-container">
 
+        <!-- ================= MOBILE OVERLAY ================= -->
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
         <!-- ================= SIDEBAR ================= -->
 
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
 
             <div class="brand">
 
@@ -39,33 +43,28 @@
 
             <nav class="nav-menu">
 
-                <a href="add_course.html"
-                   class="nav-item active"
-                   data-page="courses">
+            <a href="add_course.html"
+               class="nav-item active"
+               data-page="courses">
+                <span>Courses</span>
+            </a>
 
-                    <span>Courses</span>
+            <a href="#"
+               class="nav-item"
+               data-page="settings">
+                <span>Settings</span>
+            </a>
 
-                </a>
+            <a href="#"
+               class="nav-item logout"
+               data-page="logout">
+                <span>Logout</span>
+            </a>
 
-                <a href="#"
-                   class="nav-item"
-                   data-page="settings">
+        </nav>
 
-                    <span>Settings</span>
+    </aside>
 
-                </a>
-
-                <a href="#"
-                   class="nav-item logout"
-                   data-page="logout">
-
-                    <span>Logout</span>
-
-                </a>
-
-            </nav>
-
-        </aside>
 
 
         <!-- ================= MAIN CONTENT ================= -->
@@ -76,14 +75,28 @@
 
             <div class="top-bar">
 
-                <div class="search-box">
+                <div class="top-bar-left">
 
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <button
+                        type="button"
+                        class="menu-toggle"
+                        id="menuToggle"
+                        aria-label="Open menu">
 
-                    <input
-                        type="text"
-                        id="courseSearch"
-                        placeholder="Search your courses...">
+                        <i class="fa-solid fa-bars"></i>
+
+                    </button>
+
+                    <div class="search-box">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input
+                            type="text"
+                            id="courseSearch"
+                            placeholder="Search your courses...">
+
+                    </div>
 
                 </div>
 

@@ -1,180 +1,264 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
     const API = "http://127.0.0.1:8000/api/v1";
-    const token = localStorage.getItem("access_token");
 
-    if (!token) {
-        window.location.href = "login.html";
+    const token = localStorage.getItem("access_token");
+    const role = localStorage.getItem("userRole");
+
+    // Account না থাকলে Course View খুলবে না
+    if (!token || role !== "student") {
+        window.location.href = "sign_up.html";
         return;
     }
 
     const courseId = new URLSearchParams(window.location.search).get("course");
 
-    const video = document.querySelector("#videoPlayerBox video");
-    const pdf = document.querySelector("#pdfReaderBox iframe");
-    const overview = document.querySelector("#overviewTab p");
-    const title = document.querySelector("#overviewTab h3");
-    const reviewBox = document.getElementById("reviewsTab");
-    const userName = document.querySelector(".user-name");
+    const topBar = document.querySelector(".top-bar");
     const contentBody = document.querySelector(".content-body");
 
-    // ========= STUDENT PROFILE =========
-    const meRes = await fetch(`${API}/students/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const video = document.querySelector("#videoPlayerBox video");
+    const pdf = document.querySelector("#pdfReaderBox iframe");
 
-    const me = await meRes.json();
-    userName.textContent = `${me.first_name} ${me.last_name}`;
+    const title = document.querySelector("#overviewTab h3");
+    const overview = document.querySelector("#overviewTab p");
+    const reviewBox = document.getElementById("reviewsTab");
 
-    // ========= LOAD COURSE =========
+    const userName = document.querySelector(".user-name");
+    const userImg = document.querySelector(".user-profile img");
+
+    // ================= STUDENT PROFILE =================
+    async function loadStudent() {
+        try {
+            const res = await fetch(`${API}/students/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json"
+                }
+            });
+
+            if (!res.ok) return;
+
+            const student = await res.json();
+
+            userName.textContent =
+                `${student.first_name || ""} ${student.last_name || ""}`.trim();
+
+            if (student.profile_pic) {
+                userImg.src = student.profile_pic;
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    // ================= LOAD COURSE =================
     async function loadCourse() {
 
-        const res = await fetch(`${API}/courses/${courseId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        try {
 
-        const course = await res.json();
+            const res = await fetch(`${API}/courses/${courseId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json"
+                }
+            });
 
-        title.textContent = course.course_name;
-        overview.textContent = course.course_details;
+            if (!res.ok) return;
 
-        loadMedia();
-        loadReviews();
+            const course = await res.json();
+
+            title.textContent = course.course_name;
+            overview.textContent = course.course_details;
+
+            loadMedia();
+            loadReviews();
+
+        } catch (err) {
+            console.log(err);
+        }
     }
 
-    // ========= VIDEO & PDF =========
+    // ================= VIDEO / PDF =================
     async function loadMedia() {
 
-        const res = await fetch(`${API}/courses/${courseId}/media/resource/access`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        try {
 
-        const media = await res.json();
+            const res = await fetch(
+                `${API}/courses/${courseId}/media/resource/access`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        Accept: "application/json"
+                    }
+                }
+            );
 
-        media.forEach(item => {
+            if (!res.ok) return;
 
-            if (item.media_type === "video") {
-                video.src = item.access_url;
-            }
+            const media = await res.json();
 
-            if (item.media_type === "document") {
-                pdf.src = item.access_url;
-            }
+            if (!Array.isArray(media)) return;
 
-        });
+            media.forEach(item => {
 
+                if (item.media_type === "video") {
+                    video.src = item.access_url;
+                    video.load();
+                }
+
+                if (item.media_type === "document") {
+                    pdf.src = item.access_url;
+                }
+
+            });
+
+        } catch (err) {
+            console.log(err);
+        }
     }
 
-    // ========= REVIEWS =========
+    // ================= REVIEWS =================
     async function loadReviews() {
 
-        const res = await fetch(`${API}/courses/${courseId}/review`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        try {
 
-        const reviews = await res.json();
+            const res = await fetch(`${API}/courses/${courseId}/review`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json"
+                }
+            });
 
-        reviewBox.innerHTML = `<h3>Student Feedback</h3>`;
+            if (!res.ok) return;
 
-        if (reviews.length === 0) {
-            reviewBox.innerHTML += `<p>No reviews yet.</p>`;
-        }
+            const reviews = await res.json();
 
-        reviews.forEach(r => {
+            reviewBox.innerHTML = "<h3>Student Feedback</h3>";
 
-            reviewBox.innerHTML += `
-                <div class="review-item">
-                    <div class="reviewer-header">
-                        <strong>${r.student_name || "Student"}</strong>
-                        <span class="rating">⭐ ${r.rating}/5</span>
+            if (!reviews.length) {
+                reviewBox.innerHTML += "<p>No reviews yet.</p>";
+                return;
+            }
+
+            reviews.forEach(r => {
+
+                reviewBox.innerHTML += `
+                    <div class="review-item">
+                        <div class="reviewer-header">
+                            <strong>${r.student_name || "Student"}</strong>
+                            <span class="rating">⭐ ${r.rating}/5</span>
+                        </div>
+                        <p>${r.review || ""}</p>
                     </div>
-                    <p>${r.review}</p>
-                </div>
-            `;
+                `;
 
-        });
+            });
 
-        reviewBox.innerHTML += `
-            <div style="margin-top:20px">
-                <textarea id="reviewText"
-                    placeholder="Write your review"
-                    style="width:100%;height:90px;padding:10px"></textarea>
-
-                <input id="rating"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value="5"
-                    style="width:80px;margin-top:10px">
-
-                <button id="submitReviewBtn"
-                    style="padding:10px 20px;margin-left:10px;background:#0f766e;color:#fff;border:none;border-radius:8px">
-                    Submit
-                </button>
-            </div>
-        `;
-
-        document
-            .getElementById("submitReviewBtn")
-            .addEventListener("click", submitReview);
-
+        } catch (err) {
+            console.log(err);
+        }
     }
 
-    // ========= SUBMIT REVIEW =========
-    async function submitReview() {
-
-        const review = document.getElementById("reviewText").value;
-        const rating = Number(document.getElementById("rating").value);
-
-        await fetch(`${API}/courses/${courseId}/review`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                review,
-                rating
-            })
-        });
-
-        alert("Review submitted");
-        loadReviews();
-
-    }
-
-    // ========= SETTINGS =========
+    // ================= SETTINGS =================
     async function showSettings() {
 
-        const res = await fetch(`${API}/students/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        topBar.style.display = "none";
 
-        const data = await res.json();
+        try {
 
-        contentBody.innerHTML = `
-            <div class="settings-page">
-                <h2>My Profile</h2>
+            const res = await fetch(`${API}/students/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json"
+                }
+            });
 
-                <div class="account-card">
-                    <p><b>First Name :</b> ${data.first_name}</p>
-                    <p><b>Last Name :</b> ${data.last_name}</p>
-                    <p><b>Email :</b> ${data.user.email_id}</p>
-                    <p><b>Phone :</b> ${data.phone_no}</p>
-                    <p><b>Gender :</b> ${data.gender}</p>
-                    <p><b>DOB :</b> ${data.date_of_birth}</p>
-                    <p><b>Address :</b> ${data.address}</p>
-                    <p><b>About :</b> ${data.about}</p>
-                </div>
-            </div>
-        `;
+            if (!res.ok) {
+                contentBody.innerHTML = "<h2>No Profile Found</h2>";
+                return;
+            }
 
+            const data = await res.json();
+
+            contentBody.innerHTML = `
+                <section class="settings-page">
+
+                    <h2 style="margin-bottom:25px;">My Profile</h2>
+
+                    <div class="account-card">
+
+                        <div style="display:flex;align-items:center;gap:20px;margin-bottom:30px;">
+
+                            <img src="${data.profile_pic || "https://i.pravatar.cc/150?img=68"}"
+                                 style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+
+                            <div>
+                                <h3>${data.first_name || ""} ${data.last_name || ""}</h3>
+                                <p>${data.user?.email_id || "-"}</p>
+                            </div>
+
+                        </div>
+
+                        <div class="profile-grid">
+
+                            <div class="input-box">
+                                <label>First Name</label>
+                                <p>${data.first_name || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Last Name</label>
+                                <p>${data.last_name || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Email</label>
+                                <p>${data.user?.email_id || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Phone</label>
+                                <p>${data.phone_no || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Gender</label>
+                                <p>${data.gender || "-"}</p>
+                            </div>
+
+                            <div class="input-box">
+                                <label>Date of Birth</label>
+                                <p>${data.date_of_birth || "-"}</p>
+                            </div>
+
+                            <div class="input-box full">
+                                <label>Address</label>
+                                <p>${data.address || "-"}</p>
+                            </div>
+
+                            <div class="input-box full">
+                                <label>About</label>
+                                <p>${data.about || "-"}</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+            `;
+
+        } catch (err) {
+            console.log(err);
+            contentBody.innerHTML = "<h2>No Profile Found</h2>";
+        }
     }
 
-    // ========= SIDEBAR =========
+    // ================= SIDEBAR =================
     document.querySelectorAll(".nav-item").forEach(item => {
 
-        item.addEventListener("click", e => {
+        item.addEventListener("click", (e) => {
 
             e.preventDefault();
 
@@ -197,11 +281,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     });
 
+    loadStudent();
     loadCourse();
 
 });
 
-// ========= VIDEO / PDF TAB =========
+// ================= VIDEO / PDF TAB =================
 function switchMedia(type) {
 
     document
@@ -219,10 +304,9 @@ function switchMedia(type) {
     document
         .querySelectorAll(".toggle-btn")[type === "video" ? 0 : 1]
         .classList.add("active");
-
 }
 
-// ========= OVERVIEW / REVIEW TAB =========
+// ================= OVERVIEW / REVIEW TAB =================
 function switchTab(tab) {
 
     document
@@ -240,5 +324,4 @@ function switchTab(tab) {
     document
         .querySelectorAll(".tab-btn")[tab === "overview" ? 0 : 1]
         .classList.add("active");
-
 }

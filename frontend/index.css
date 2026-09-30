@@ -329,7 +329,7 @@ body {
 
     width: 100%;
 
-    background: #082c49;
+    background: #0d416b;
 
     color: #ffffff;
 
@@ -843,3 +843,125 @@ body {
     text-decoration: none;
 }
 
+
+
+/* ================= POPULAR COURSES ================= */
+
+.popular-courses{
+    padding:60px 40px;
+    background:#f8fbff;
+}
+
+.section-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+}
+
+.section-header h2{
+    font-size:32px;
+    color:#0f172a;
+    font-weight:700;
+}
+
+.section-header a{
+    color:#0f766e;
+    text-decoration:none;
+    font-weight:600;
+}
+
+/* Grid */
+
+.course-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:24px;
+}
+
+/* Card */
+
+.course-card{
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    border:1px solid #e5e7eb;
+    box-shadow:0 8px 24px rgba(15,118,110,.08);
+    transition:.25s;
+    cursor:pointer;
+}
+
+.course-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 16px 35px rgba(15,118,110,.18);
+}
+
+.course-thumb{
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    display:block;
+}
+
+.course-body{
+    padding:18px;
+}
+
+.course-body h3{
+    font-size:18px;
+    color:#111827;
+    margin-bottom:8px;
+    font-weight:700;
+}
+
+.course-body p{
+    font-size:13px;
+    color:#64748b;
+    line-height:1.5;
+    height:40px;
+    overflow:hidden;
+}
+
+.course-meta{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:16px;
+    font-size:13px;
+}
+
+.course-meta span{
+    color:#0f766e;
+    font-weight:600;
+}
+
+.course-meta strong{
+    color:#111827;
+    font-size:15px;
+}
+
+
+
+/* Search করা course highlight */
+.search-highlight{
+    border:2px solid #0f766e;
+    box-shadow:0 0 20px rgba(15,118,110,.35);
+    transform:translateY(-6px) scale(1.03);
+    transition:.3s;
+}
+
+
+.search-highlight{
+    border:2px solid #0f766e;
+    transform:translateY(-6px) scale(1.03);
+    box-shadow:0 16px 32px rgba(15,118,110,.22);
+    background:#ffffff;
+}
+
+.search-highlight .course-thumb{
+    filter:brightness(1.08);
+}
+
+.search-highlight:hover{
+    transform:translateY(-8px) scale(1.04);
+}

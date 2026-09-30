@@ -14,9 +14,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const dobInput = document.getElementById('dob');
     const addressInput = document.getElementById('address');
     const aboutInput = document.getElementById('about');
+    const picInput = document.getElementById('profile-pic');
+    const picPreview = document.getElementById('pic-preview');
 
     let isSubmitting = false;
 
+    picInput.addEventListener('change', () => {
+    const file = picInput.files[0];
+    if (!file) {
+        picPreview.style.display = 'none';
+        return;
+    }
+    if (!file.type.startsWith('image/')) {
+        alert('Please choose an image file.');
+        picInput.value = '';
+        picPreview.style.display = 'none';
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Image must be smaller than 2 MB.');
+        picInput.value = '';
+        picPreview.style.display = 'none';
+        return;
+    }
+    picPreview.src = URL.createObjectURL(file);
+    picPreview.style.display = 'block';
+});
 
     // ==========================================
     // FORM SUBMIT
@@ -245,21 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let profileUrl;
             let redirectPage;
-
+            let picUploadUrl;
 
             if (normalizedRole === 'student') {
-
-                profileUrl =
-                    'http://127.0.0.1:8000/api/v1/students/';
-
+                profileUrl = 'http://127.0.0.1:8000/api/v1/students/';
+                picUploadUrl = 'http://127.0.0.1:8000/api/v1/students/profile-pic/upload';
                 redirectPage = 'student.html';
-
-
             } else if (normalizedRole === 'teacher') {
-
-                profileUrl =
-                    'http://127.0.0.1:8000/api/v1/teachers/';
-
+                profileUrl = 'http://127.0.0.1:8000/api/v1/teachers/';
+                picUploadUrl = 'http://127.0.0.1:8000/api/v1/teachers/profile-pic/upload';
                 redirectPage = 'teacher.html';
 
 
@@ -363,6 +380,30 @@ document.addEventListener('DOMContentLoaded', () => {
             // ==========================================
 
             console.log('Profile created successfully.');
+
+            // STEP 5.5: প্রোফাইল ছবি upload (ঐচ্ছিক)
+            const pictureFile = picInput.files[0];
+
+            if (pictureFile) {
+                try {
+                    const picForm = new FormData();
+                    picForm.append('file', pictureFile);   // field-এর নাম "file" (Swagger অনুযায়ী)
+
+                    const picResponse = await fetch(picUploadUrl, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + accessToken },
+                        // Content-Type দিও না, browser নিজেই boundary সহ দেবে
+                        body: picForm
+                    });
+
+                    if (!picResponse.ok) {
+                        console.error('Picture upload failed:', await picResponse.text());
+                        alert('Profile created, but picture upload failed. You can upload it later from Update Profile.');
+                    }
+                } catch (err) {
+                    console.error('Picture upload error:', err);
+                }
+            }
 
 
             // ==========================================
