@@ -24,7 +24,7 @@ api_router = APIRouter(prefix="/courses", tags=["Purchase"])
 @api_router.post(
     "/{id}/purchase",
     status_code=status.HTTP_200_OK,
-    response_model=PurchaseOrderResponse,
+    response_model=PurchaseOrderResponse | GenericMessage,
 )
 def purchase_course(
     id: uuid.UUID,
@@ -56,6 +56,19 @@ def purchase_course(
             status_code=status.HTTP_409_CONFLICT,
             detail="course already purchased",
         )
+    if not course.course_paid:
+        enrollment = Enrollment(student_id=student.phone_no, course_id=id)
+        try:
+            db_session.add(enrollment)
+            db_session.commit()
+        except SQLAlchemyError:
+            db_session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error has occurred",
+            )
+        return {"detail": "success"}
+
     order_data = {"amount": int(course.course_price * 100), "currency": "INR"}
     try:
         razorpay_order = razorpay_client.order.create(data=order_data)  # type: ignore

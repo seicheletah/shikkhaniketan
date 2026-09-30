@@ -32,6 +32,13 @@ def create_review(
     """
     Create a review on speciic course by ID.
     """
+    student = db_session.exec(
+        select(Student).where(Student.user_id == current_user.id)
+    ).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
+        )
     course = db_session.get(Course, id)
     if not course:
         raise HTTPException(

@@ -75,7 +75,9 @@ def upload_course_media_thumbnail(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
-    media_thumbnail_presigned = generate_upload_presigned_url(s3_thumbnail_key)
+    media_thumbnail_presigned = generate_upload_presigned_url(
+        s3_thumbnail_key, mediadata.media_type.value
+    )
     return {
         "media_id": media_thumbnail_id,
         "upload_url": media_thumbnail_presigned,
@@ -137,7 +139,9 @@ def upload_course_media_resource(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
-    media_resource_presigned = generate_upload_presigned_url(s3_resource_key)
+    media_resource_presigned = generate_upload_presigned_url(
+        s3_resource_key, mediadata.media_type.value
+    )
     return {"media_id": media_resource_id, "upload_url": media_resource_presigned}
 
 

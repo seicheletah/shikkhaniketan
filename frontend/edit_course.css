@@ -1,0 +1,262 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #effcfb;
+    color: #010407;
+}
+
+.page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 28px 4%;
+}
+
+h1 {
+    font-size: 42px;
+    color: #075b65;
+    margin-bottom: 42px;
+    font-weight: 700;
+}
+
+.account-card {
+    background: #ffffff;
+    border: 1px solid #d4e9e7;
+    border-radius: 30px;
+    padding: 42px;
+    box-shadow: 0 10px 35px rgba(0, 80, 80, 0.08);
+}
+
+.account-card h2 {
+    font-size: 30px;
+    margin-bottom: 0;
+    color: #102a43;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 27px;
+}
+
+.detail-box {
+    min-height: 118px;
+    padding: 26px 24px;
+    border: 1px solid #d1e7e6;
+    border-radius: 22px;
+    background: #fbffff;
+}
+
+.detail-box span {
+    display: block;
+    font-size: 18px;
+    color: #52749b;
+    margin-bottom: 14px;
+}
+
+.detail-box p {
+    font-size: 24px;
+    font-weight: 500;
+    color: #071f3d;
+    word-break: break-word;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+
+    .page {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 32px;
+        margin-bottom: 25px;
+    }
+
+    .account-card {
+        padding: 25px;
+        border-radius: 22px;
+    }
+
+    .account-card h2 {
+        font-size: 25px;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    .detail-box {
+        padding: 20px;
+    }
+
+    .detail-box p {
+        font-size: 20px;
+    }
+}
+
+.detail-box label {
+    display: block;
+    font-size: 18px;
+    color: #52749b;
+    margin-bottom: 15px;
+}
+
+.detail-box input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+
+    font-size: 25px;
+    color: #071f3d;
+    font-family: Arial, sans-serif;
+}
+
+.detail-box input:focus {
+    border: none;
+    outline: none;
+}
+
+
+/* Container box matching your image style */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  font-family: inherit;
+}
+
+/* Remove default disclosure triangle on WebKit/Firefox */
+.custom-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Main Box (Header) */
+.dropdown-header {
+  padding: 16px 20px;
+  font-size: 16px;
+  color: #3b628c;
+  background-color: #ffffff;
+  border: 1.5px solid #d0e7f0;
+  border-radius: 16px;
+  cursor: pointer;
+  list-style: none; /* Hides default triangle in standard browsers */
+  position: relative;
+  user-select: none;
+  transition: border-color 0.2s ease, border-radius 0.2s ease;
+}
+
+/* Custom Arrow Icon inside the box */
+.dropdown-header::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #3b628c;
+  transition: transform 0.2s ease;
+}
+
+/* Rotate arrow when opened */
+.custom-dropdown[open] .dropdown-header::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Flatten bottom corners of header when dropdown is open */
+.custom-dropdown[open] .dropdown-header {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+/* Dropdown Menu Box inside/underneath */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+  background-color: #ffffff;
+  border: 1.5px solid #d0e7f0;
+  border-top: none;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+/* Menu items */
+.dropdown-menu li a {
+  display: block;
+  padding: 12px 20px;
+  color: #3b628c;
+  text-decoration: none;
+  font-size: 15px;
+  transition: background-color 0.15s ease;
+}
+
+/* Hover effect on options inside */
+.dropdown-menu li a:hover {
+  background-color: #f0f7fa;
+}
+
+/* Container pushing buttons to bottom-right corner */
+.btn-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Base button styling */
+.btn {
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+/* Red Delete Button */
+.btn-delete {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.btn-delete:hover {
+  background-color: #fca5a5;
+  color: #991b1b;
+}
+
+/* Teal Submit Button matching header */
+.btn-submit {
+  background-color: #124e5d;
+  color: #ffffff;
+}
+
+.btn-submit:hover {
+  background-color: #0e3d49;
+}
