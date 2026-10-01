@@ -1,218 +1,183 @@
+const API_BASE_URL = 'http://127.0.0.1:8000';
+const DEFAULT_PIC = 'https://i.pravatar.cc/100?img=32';
 
-document.addEventListener("DOMContentLoaded", () => {
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value || '-';
+}
 
-    const API_BASE = "http://127.0.0.1:8000/api/v1";
-    const token = localStorage.getItem("access_token");
+function formatGender(g) {
+    const map = { m: 'Male', f: 'Female', o: 'Other' };
+    return map[g] || g || '-';
+}
+
+function buildPicUrl(path) {
+    if (!path) return DEFAULT_PIC;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE_URL}/${path.replace(/^\/+/, '')}?t=${Date.now()}`;
+}
+
+async function loadStudentProfile() {
+    const token = localStorage.getItem('access_token');
 
     if (!token) {
-        location.href = "login.html";
+        alert('Please login first.');
         return;
     }
 
-    const topBar = document.querySelector(".top-bar");
-    const courseGrid = document.getElementById("courseGrid");
-    const searchInput = document.querySelector(".search-box input");
-
-    let allCourses = [];
-
-    // ================= PROFILE =================
-
-    async function loadStudentProfile() {
-
-        const res = await fetch(`${API_BASE}/students/me`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json"
-            }
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/students/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const data = await res.json();
-
-        const fullName =
-            `${data.first_name || ""} ${data.last_name || ""}`.trim();
-
-        // Top bar
-        document.getElementById("studentUserName").textContent = fullName || "Student";
-
-        if (data.profile_pic) {
-            document.getElementById("studentProfileImg").src = data.profile_pic;
-            document.getElementById("profilePhoto").src = data.profile_pic;
+        if (!response.ok) {
+            throw new Error('Failed to load profile (' + response.status + ')');
         }
 
-        // Settings profile
-        document.getElementById("profileName").textContent = fullName;
-        document.getElementById("profileFirstName").textContent = data.first_name || "-";
-        document.getElementById("profileLastName").textContent = data.last_name || "-";
-        document.getElementById("profileEmail").textContent = data.user?.email_id || "-";
-        document.getElementById("profilePhone").textContent = data.phone_no || "-";
-        document.getElementById("profileGender").textContent = data.gender || "-";
-        document.getElementById("profileDob").textContent = data.date_of_birth || "-";
-        document.getElementById("profileAddress").textContent = data.address || "-";
-        document.getElementById("profileAbout").textContent = data.about || "-";
+        const data = await response.json();
+
+        setText('disp-id', data.user ? data.user.id : '');
+        setText('disp-first-name', data.first_name);
+        setText('disp-last-name', data.last_name);
+        setText('disp-email', data.user ? data.user.email_id : '');
+        setText('disp-phone', data.phone_no);
+        setText('disp-gender', formatGender(data.gender));
+        setText('disp-dob', data.date_of_birth);
+        setText('disp-address', data.address);
+        setText('disp-about', data.about);
+
+        const pic = document.getElementById('disp-profile-pic');
+        if (pic) pic.src = buildPicUrl(data.profile_pic);
+
+        const topPic = document.querySelector('.topbar .profile-img');
+        if (topPic) topPic.src = buildPicUrl(data.profile_pic);
+
+        const nameEl = document.getElementById('studentUserName');
+        if (nameEl && data.first_name) nameEl.innerText = data.first_name;
+    } catch (error) {
+        console.error('Error fetching profile:', error);
     }
+}
 
-    // ================= ENROLLED COURSES =================
 
-    async function loadCourses() {
+document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = document.querySelectorAll('.nav-link[data-page]');
+    const mainContent = document.getElementById('main-content');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-        const res = await fetch(`${API_BASE}/students/me/enrolled-courses`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json"
+    // innerHTML দিয়ে বসানো <script> ব্রাউজার নিজে রান করে না,
+    // তাই নতুন করে বানিয়ে বসাচ্ছি যাতে রান হয়
+    function runScripts(container) {
+        container.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.getAttribute('src')) {
+                newScript.src = oldScript.getAttribute('src');
+            } else {
+                newScript.textContent = oldScript.textContent;
             }
-        });
-
-        if (!res.ok) {
-            courseGrid.innerHTML = "<p>No enrolled courses.</p>";
-            return;
-        }
-
-        const data = await res.json();
-
-        allCourses = Array.isArray(data)
-            ? data
-            : (data.courses || []);
-
-        renderCourses(allCourses);
-    }
-
-    // ================= RENDER COURSES =================
-
-    function renderCourses(courses) {
-
-        courseGrid.innerHTML = "";
-
-        if (courses.length === 0) {
-            courseGrid.innerHTML = "<p>No enrolled courses.</p>";
-            return;
-        }
-
-        courses.forEach(course => {
-
-            const progress = course.progress || 0;
-            const thumbnail =
-                course.thumbnail_url || "images/test_thumbnail.jpg";
-
-            const card = document.createElement("div");
-            card.className = "course-card";
-
-            card.innerHTML = `
-                <div class="course-image">
-                    <img src="${thumbnail}" alt="Course">
-                </div>
-
-                <div class="card-body">
-                    <h4>${course.course_name}</h4>
-
-                    <div class="progress-info">
-                        <span>Progress</span>
-                        <span>${progress}%</span>
-                    </div>
-
-                    <div class="progress-bar">
-                        <div class="progress" style="width:${progress}%"></div>
-                    </div>
-                </div>
-
-                <button class="btn-continue">
-                    Continue Learning
-                </button>
-            `;
-
-            card.querySelector(".btn-continue").onclick = () => {
-                location.href = `course_view.html?course=${course.id}`;
-            };
-
-            courseGrid.appendChild(card);
+            oldScript.replaceWith(newScript);
         });
     }
 
-    // ================= SEARCH =================
+    async function fetchAndRenderPage(pageUrl) {
+        try {
+            mainContent.innerHTML = '<p style="color: #096858;">Loading page...</p>';
 
-    searchInput.addEventListener("input", () => {
-
-        const value = searchInput.value.toLowerCase();
-
-        const filtered = allCourses.filter(course =>
-            (course.course_name || "")
-                .toLowerCase()
-                .includes(value)
-        );
-
-        renderCourses(filtered);
-    });
-
-    // ================= SIDEBAR =================
-
-    document.querySelectorAll(".nav-item").forEach(item => {
-
-        item.addEventListener("click", e => {
-
-            e.preventDefault();
-
-            const page = item.dataset.page;
-
-            document.querySelectorAll(".nav-item")
-                .forEach(nav => nav.classList.remove("active"));
-
-            item.classList.add("active");
-
-            document.querySelectorAll(".page-section")
-                .forEach(sec => sec.classList.remove("active"));
-
-            if (page === "courses") {
-
-                topBar.classList.remove("hide-search");
-
-                document
-                    .getElementById("courses")
-                    .classList.add("active");
-
-                loadCourses();
+            const response = await fetch(pageUrl);
+            if (!response.ok) {
+                throw new Error(`Page not found (${response.status})`);
             }
 
-            if (page === "quiz") {
+            const htmlData = await response.text();
+            mainContent.innerHTML = htmlData;
 
-                topBar.classList.remove("hide-search");
+            runScripts(mainContent);
 
-                document
-                    .getElementById("quiz")
-                    .classList.add("active");
-            }
-
-            if (page === "settings") {
-
-                topBar.classList.add("hide-search");
-
-                document
-                    .getElementById("settings")
-                    .classList.add("active");
-
+            if (pageUrl.includes('settings')) {
                 loadStudentProfile();
             }
 
-            if (page === "logout") {
+            mainContent.scrollTop = 0;
+        } catch (error) {
+            mainContent.innerHTML = `
+                <div style="color: #d9534f;">
+                    <h2>ERROR!</h2>
+                    <p>Page missing or local file issue. Please serve using Live Server.</p>
+                </div>
+            `;
+            console.error('Fetch Error:', error);
+        }
+    }
 
-                localStorage.clear();
-                location.href = "login.html";
+    // অন্য পেজ (যেমন courses.js) থেকে ড্যাশবোর্ডের ভেতরে পেজ খোলার জন্য
+    window.loadDashboardPage = function (pageUrl) {
+        const matchingNav = document.querySelector(`.nav-link[data-page="${pageUrl}"]`);
+        updateActiveButton(matchingNav);
+        fetchAndRenderPage(pageUrl);
+    };
+
+    function updateActiveButton(targetLink) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        if (targetLink) {
+            targetLink.classList.add('active');
+        }
+    }
+
+    // Update Profile সেভের পর Settings পেজে ফেরার জন্য
+    window.goToSettings = function () {
+        const settingsLink = document.querySelector('.nav-link[data-page="settings.html"]');
+        updateActiveButton(settingsLink);
+        fetchAndRenderPage('settings.html');
+        loadStudentProfile();
+    };
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const pageToLoad = link.getAttribute('data-page');
+
+            updateActiveButton(link);
+            fetchAndRenderPage(pageToLoad);
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
             }
+        });
+    });
 
+    mainContent.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.getAttribute('href') && !link.getAttribute('href').startsWith('#')) {
+            e.preventDefault();
+            const pageToLoad = link.getAttribute('href');
+
+            const matchingNav = document.querySelector(`.nav-link[data-page="${pageToLoad}"]`);
+            updateActiveButton(matchingNav);
+
+            fetchAndRenderPage(pageToLoad);
+        }
+    });
+
+    if (window.location.hash === '#settings') {
+        window.goToSettings();
+    } else {
+        fetchAndRenderPage('courses.html');
+    }
+
+    loadStudentProfile();
+
+    if (menuToggle && sidebarOverlay) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
         });
 
-    });
-
-    // Initial Load
-    loadStudentProfile();
-    loadCourses();
-
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
 });
-
-// ================= UPDATE PROFILE =================
-
-const updateBtn = document.getElementById("updateProfileBtn");
-
-if (updateBtn) {
-    updateBtn.addEventListener("click", () => {
-        window.location.href = "update_profile.html";
-    });
-}

@@ -1,297 +1,319 @@
-document.addEventListener("DOMContentLoaded", () => {
+(() => {
 
     const API = "http://127.0.0.1:8000/api/v1";
     const token = localStorage.getItem("access_token");
 
+    // ড্যাশবোর্ডের ভেতরে খুললে URL-এ id থাকে না, তাই localStorage থেকে নিচ্ছি
+    const params = new URLSearchParams(window.location.search);
     const courseId =
-        new URLSearchParams(window.location.search).get("id") ||
-        new URLSearchParams(window.location.search).get("course");
+        localStorage.getItem("selected_course_id") ||
+        params.get("id") ||
+        params.get("course");
+
+    const titleEl = document.getElementById("cdTitle");
+    const detailsEl = document.getElementById("cdDetails");
+    const priceEl = document.getElementById("cdPrice");
+    const gstEl = document.getElementById("cdGst");
+    const totalEl = document.getElementById("cdTotal");
+    const reviewsBox = document.getElementById("reviewsTab");
+    const overviewBox = document.getElementById("overviewTab");
+    const purchaseBtn = document.getElementById("cdPurchaseBtn");
+
+    let courseName = "";
+    let coursePaid = true;
 
     if (!courseId) {
-        alert("Course not found!");
+        titleEl.textContent = "Course not found!";
         return;
     }
 
-    const contentBody = document.querySelector(".content-body");
-    const topBar = document.querySelector(".top-bar");
-
-    // ---------- TAB ----------
-    window.switchTab = function (tab) {
-
-        document.getElementById("overviewTab").classList.add("hidden");
-        document.getElementById("reviewsTab").classList.add("hidden");
-
-        document.querySelectorAll(".tab-btn")
-            .forEach(btn => btn.classList.remove("active"));
-
-        if (tab === "overview") {
-            document.getElementById("overviewTab").classList.remove("hidden");
-            document.querySelectorAll(".tab-btn")[0].classList.add("active");
+    // ---------- BACK ----------
+    document.getElementById("cdBackBtn").addEventListener("click", () => {
+        if (typeof window.loadDashboardPage === "function") {
+            window.loadDashboardPage("courses.html");
         } else {
-            document.getElementById("reviewsTab").classList.remove("hidden");
-            document.querySelectorAll(".tab-btn")[1].classList.add("active");
+            window.location.href = "student.html";
         }
-    };
+    });
 
-    // ---------- STUDENT ----------
-    async function loadStudent() {
+    // ---------- TABS ----------
+    const tabButtons = document.querySelectorAll(".cd-tab-btn");
 
-        if (!token) return;
+    tabButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const tab = btn.getAttribute("data-tab");
 
-        try {
+            tabButtons.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
 
-            const res = await fetch(`${API}/students/me`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            overviewBox.classList.toggle("hidden", tab !== "overview");
+            reviewsBox.classList.toggle("hidden", tab !== "reviews");
+        });
+    });
 
-            if (!res.ok) return;
-
-            const student = await res.json();
-
-            const name = document.querySelector(".user-name");
-
-            if (name) {
-                name.textContent =
-                    `${student.first_name} ${student.last_name}`;
-            }
-
-        } catch (e) {
-            console.log(e);
-        }
+    // ---------- PAID CHECK ----------
+    function isPaid(course) {
+        return (
+            course.course_paid === true ||
+            course.course_paid === 1 ||
+            course.course_paid === "1" ||
+            course.course_paid === "true"
+        );
     }
 
     // ---------- COURSE ----------
     async function loadCourse() {
-
         try {
-
             const headers = { Accept: "application/json" };
+            if (token) headers.Authorization = `Bearer ${token}`;
 
-            if (token) {
-                headers.Authorization = `Bearer ${token}`;
-            }
-
-            const res = await fetch(`${API}/courses/${courseId}`, {
-                headers
-            });
+            const res = await fetch(`${API}/courses/${courseId}`, { headers });
 
             if (!res.ok) {
-                alert("Course load failed");
+                titleEl.textContent = "Course load failed";
                 return;
             }
 
             const course = await res.json();
 
-            document.querySelector(".course-title").textContent =
-                course.course_name;
+            courseName = course.course_name || "";
+            coursePaid = isPaid(course);
 
-            document.querySelector("#overviewTab p").textContent =
-                course.course_details;
+            titleEl.textContent = courseName;
+            detailsEl.textContent = course.course_details || "";
 
-            const price = Number(course.course_price || 0);
+            const price = coursePaid ? Number(course.course_price || 0) : 0;
             const gst = price * 0.18;
             const total = price + gst;
 
-            const rows = document.querySelectorAll(".price-row strong");
+            priceEl.textContent = `₹${price}`;
+            gstEl.textContent = `₹${gst.toFixed(2)}`;
+            totalEl.textContent = `₹${total.toFixed(2)}`;
 
-            rows[0].textContent = `₹${price}`;
-            rows[1].textContent = `₹${gst.toFixed(2)}`;
-            rows[2].textContent = `₹${total.toFixed(2)}`;
+            purchaseBtn.textContent = coursePaid ? "Purchase" : "Start Learning";
 
             loadReviews();
 
         } catch (e) {
             console.log(e);
+            titleEl.textContent = "Course load failed";
         }
     }
 
     // ---------- REVIEWS ----------
     async function loadReviews() {
-
         try {
-
             const headers = { Accept: "application/json" };
+            if (token) headers.Authorization = `Bearer ${token}`;
 
-            if (token) {
-                headers.Authorization = `Bearer ${token}`;
-            }
-
-            const res = await fetch(`${API}/courses/${courseId}/review`, {
-                headers
-            });
+            const res = await fetch(`${API}/courses/${courseId}/review`, { headers });
 
             if (!res.ok) return;
 
             const reviews = await res.json();
 
-            const box = document.getElementById("reviewsTab");
-            box.innerHTML = "<h3>Student Reviews</h3>";
+            reviewsBox.innerHTML = "<h3>Student Reviews</h3>";
 
             if (!reviews.length) {
-                box.innerHTML += "<p>No reviews yet.</p>";
+                const p = document.createElement("p");
+                p.textContent = "No reviews yet.";
+                reviewsBox.appendChild(p);
                 return;
             }
 
             reviews.forEach(r => {
+                const item = document.createElement("div");
+                item.className = "review-item";
 
-                box.innerHTML += `
-                    <div class="review-item">
-                        <strong>${r.student_name || "Student"}</strong>
-                        <span class="rating">⭐ ${r.rating}/5</span>
-                        <p>${r.review || ""}</p>
-                    </div>
-                `;
+                const name = document.createElement("strong");
+                name.textContent = r.student_name || "Student";
 
+                const rating = document.createElement("span");
+                rating.className = "rating";
+                rating.textContent = `⭐ ${r.rating}/5`;
+
+                const text = document.createElement("p");
+                text.textContent = r.review || "";
+
+                item.append(name, rating, text);
+                reviewsBox.appendChild(item);
             });
 
         } catch (e) {
             console.log(e);
+        }
+    }
+
+    // ---------- GO TO COURSE VIEW ----------
+    function goToCourseView() {
+        localStorage.setItem("selected_course_id", courseId);
+
+        if (typeof window.loadDashboardPage === "function") {
+            window.loadDashboardPage("course_view.html");
+        } else {
+            window.location.href = `course_view.html?course=${courseId}`;
+        }
+    }
+
+    // ---------- BUTTON STATE ----------
+    function setBusy(busy, text) {
+        purchaseBtn.disabled = busy;
+        purchaseBtn.style.opacity = busy ? "0.7" : "1";
+        purchaseBtn.style.cursor = busy ? "not-allowed" : "pointer";
+        purchaseBtn.textContent = text || (coursePaid ? "Purchase" : "Start Learning");
+    }
+
+    // ---------- LOAD RAZORPAY SCRIPT ----------
+    function loadRazorpayScript() {
+        return new Promise((resolve, reject) => {
+            if (window.Razorpay) {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Razorpay script load failed"));
+            document.body.appendChild(script);
+        });
+    }
+
+    // ---------- VERIFY PAYMENT ----------
+    async function verifyPayment(response) {
+        setBusy(true, "Verifying payment...");
+
+        try {
+            const res = await fetch(`${API}/courses/verify-payment`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    course_id: courseId
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                console.log("Verify error:", data);
+                alert("Payment verification failed. If money was deducted, please contact support.");
+                setBusy(false);
+                return;
+            }
+
+            // পেমেন্ট ভেরিফাই হয়েছে, এবার কোর্স ভিউ পেজে যাবে
+            goToCourseView();
+
+        } catch (err) {
+            console.log(err);
+            alert("Could not verify payment. Please check your connection.");
+            setBusy(false);
         }
     }
 
     // ---------- PURCHASE ----------
-    window.openCourseView = function () {
+    purchaseBtn.addEventListener("click", async () => {
 
-        const accessToken = localStorage.getItem("access_token");
-
-        if (accessToken) {
-            window.location.href = `course_view.html?course=${courseId}`;
-        } else {
-            window.location.href = "sign_up.html";
-        }
-
-    };
-
-    // ---------- SETTINGS ----------
-    async function showSettings() {
-
-        if (topBar) topBar.style.display = "none";
-
+        // লগইন না থাকলে সাইন আপ পেজে
         if (!token) {
-            contentBody.innerHTML = "<h2>No profile found</h2>";
+            window.location.href = "sign_up.html";
             return;
         }
 
-        try {
+        // ফ্রি কোর্সে পেমেন্ট ছাড়াই কোর্স ভিউ
+        if (!coursePaid) {
+            goToCourseView();
+            return;
+        }
 
-            const res = await fetch(`${API}/students/me`, {
+        setBusy(true, "Please wait...");
+
+        try {
+            // 1) ব্যাকএন্ডে অর্ডার তৈরি
+            const res = await fetch(`${API}/courses/${courseId}/purchase`, {
+                method: "POST",
                 headers: {
+                    Accept: "application/json",
                     Authorization: `Bearer ${token}`
                 }
             });
 
-            if (!res.ok) {
-                contentBody.innerHTML = "<h2>No profile found</h2>";
+            const order = await res.json().catch(() => ({}));
+
+            if (res.status === 401) {
+                window.location.href = "login.html";
                 return;
             }
 
-            const data = await res.json();
+            if (!res.ok) {
+                console.log("Purchase error:", order);
 
-            contentBody.innerHTML = `
-                <section class="settings-page">
+                const msg = typeof order.detail === "string"
+                    ? order.detail
+                    : "Could not start payment.";
 
-                    <h2 style="margin-bottom:20px;">Profile Details</h2>
+                // আগেই কেনা থাকলে সরাসরি কোর্স ভিউতে নিয়ে যাবে
+                if (/already|purchased|enrolled/i.test(msg)) {
+                    goToCourseView();
+                    return;
+                }
 
-                    <div class="account-card">
+                alert(msg);
+                setBusy(false);
+                return;
+            }
 
-                        <div style="display:flex;align-items:center;gap:20px;margin-bottom:25px;">
+            // 2) Razorpay স্ক্রিপ্ট লোড
+            await loadRazorpayScript();
 
-                            <img src="${data.profile_pic || "https://i.pravatar.cc/150?img=68"}"
-                                 style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+            // 3) Razorpay পেমেন্ট পপআপ
+            const options = {
+                key: order.key_id,
+                amount: order.amount,
+                currency: order.currency || "INR",
+                order_id: order.id,
+                name: "SkillHub",
+                description: courseName || "Course Purchase",
+                theme: { color: "#127c71" },
 
-                            <div>
-                                <h3>${data.first_name || ""} ${data.last_name || ""}</h3>
-                                <p>${data.user?.email_id || "-"}</p>
-                            </div>
+                handler: function (response) {
+                    verifyPayment(response);
+                },
 
-                        </div>
+                modal: {
+                    ondismiss: function () {
+                        setBusy(false);
+                    }
+                }
+            };
 
-                        <div class="profile-grid">
+            const rzp = new window.Razorpay(options);
 
-                            <div class="input-box">
-                                <label>First Name</label>
-                                <p>${data.first_name || "-"}</p>
-                            </div>
+            rzp.on("payment.failed", function (resp) {
+                console.log("Payment failed:", resp.error);
+                alert("Payment failed: " + (resp.error && resp.error.description
+                    ? resp.error.description
+                    : "Please try again."));
+                setBusy(false);
+            });
 
-                            <div class="input-box">
-                                <label>Last Name</label>
-                                <p>${data.last_name || "-"}</p>
-                            </div>
+            rzp.open();
 
-                            <div class="input-box">
-                                <label>Email</label>
-                                <p>${data.user?.email_id || "-"}</p>
-                            </div>
-
-                            <div class="input-box">
-                                <label>Phone</label>
-                                <p>${data.phone_no || "-"}</p>
-                            </div>
-
-                            <div class="input-box">
-                                <label>Gender</label>
-                                <p>${data.gender || "-"}</p>
-                            </div>
-
-                            <div class="input-box">
-                                <label>Date of Birth</label>
-                                <p>${data.date_of_birth || "-"}</p>
-                            </div>
-
-                            <div class="input-box full">
-                                <label>Address</label>
-                                <p>${data.address || "-"}</p>
-                            </div>
-
-                            <div class="input-box full">
-                                <label>About</label>
-                                <p>${data.about || "-"}</p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </section>
-            `;
-
-        } catch (e) {
-            console.log(e);
-            contentBody.innerHTML = "<h2>No profile found</h2>";
+        } catch (err) {
+            console.log(err);
+            alert("Something went wrong. Please try again.");
+            setBusy(false);
         }
-
-    }
-
-    // ---------- SIDEBAR ----------
-    document.querySelectorAll(".nav-item").forEach(item => {
-
-        item.addEventListener("click", (e) => {
-
-            e.preventDefault();
-
-            const text = item.textContent.trim().toLowerCase();
-
-            if (text === "courses") {
-                location.reload();
-            }
-
-            if (text === "settings") {
-                showSettings();
-            }
-
-            if (text === "logout") {
-                localStorage.clear();
-                window.location.href = "login.html";
-            }
-
-        });
-
     });
 
     // ---------- INIT ----------
-    loadStudent();
     loadCourse();
 
-});
+})();

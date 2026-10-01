@@ -1,922 +1,177 @@
-/* =========================================
-   ROOT VARIABLES
-========================================= */
+/* All rules are scoped to #update-wrapper so they don't affect the dashboard */
 
-:root {
-    --teal-primary: #0f766e;
-    --teal-dark: #0b5f59;
-    --teal-light: #e6f4f2;
-
-    --page-bg: #edf7f5;
-
-    --white: #ffffff;
-
-    --text-dark: #173b37;
-    --text-muted: #64748b;
-
-    --border: #d4e8e5;
-    --border-light: #e2efed;
-
-    --input-bg: #fbfefd;
-
-    --danger: #dc2626;
-
-    --shadow:
-        0 6px 22px rgba(15, 118, 110, 0.06);
-
-    --transition:
-        all 0.25s ease;
-}
-
-
-/* =========================================
-   RESET
-========================================= */
-
-* {
+#update-wrapper {
+    font-family: 'Poppins', sans-serif;
+    padding: 24px;
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-
-    font-family:
-        'Plus Jakarta Sans',
-        sans-serif;
 }
 
-
-/* =========================================
-   BODY
-========================================= */
-
-body {
-    min-height: 100vh;
-
-    background:
-        linear-gradient(
-            135deg,
-            #edf7f5 0%,
-            #f7fcfb 50%,
-            #edf7f5 100%
-        );
-
-    color: var(--text-dark);
+#update-wrapper *,
+#update-wrapper *::before,
+#update-wrapper *::after {
+    box-sizing: border-box;
 }
 
-
-/* =========================================
-   UPDATE PAGE
-========================================= */
-
-.update-page {
-    width: 100%;
-    max-width: 1100px;
-
+#update-wrapper .up-card {
+    max-width: 820px;
     margin: 0 auto;
-
-    padding:
-        45px 35px 60px;
-}
-
-
-/* =========================================
-   PAGE INTRO
-========================================= */
-
-.page-intro {
-    display: flex;
-    align-items: center;
-
-    gap: 18px;
-
-    margin-bottom: 32px;
-}
-
-
-/* =========================================
-   INTRO ICON
-========================================= */
-
-.intro-icon {
-    width: 58px;
-    height: 58px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    background:
-        linear-gradient(
-            135deg,
-            #0f766e,
-            #159b91
-        );
-
-    color: #ffffff;
-
+    background: #ffffff;
+    border: 1px solid #e3e6ee;
     border-radius: 14px;
-
-    box-shadow:
-        0 6px 15px rgba(
-            15,
-            118,
-            110,
-            0.18
-        );
+    padding: 28px;
 }
 
-.intro-icon i {
-    font-size: 23px;
+#update-wrapper .up-header {
+    margin-bottom: 22px;
 }
 
+#update-wrapper .up-header h2 {
+    margin: 0 0 4px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1d2433;
+}
 
-/* =========================================
-   INTRO TEXT
-========================================= */
+#update-wrapper .up-header p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6b7385;
+}
 
-.intro-text {
+#update-wrapper .up-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+}
+
+#update-wrapper .up-group {
     display: flex;
     flex-direction: column;
+    gap: 6px;
 }
 
-.eyebrow {
-    display: block;
-
-    margin-bottom: 5px;
-
-    font-size: 11px;
-    font-weight: 700;
-
-    letter-spacing: 1.2px;
-
-    color: var(--teal-primary);
-}
-
-.intro-text h1 {
-    margin-bottom: 6px;
-
-    font-size: 30px;
-    line-height: 1.2;
-
-    font-weight: 800;
-
-    color: #145a57;
-}
-
-.intro-text p {
-    font-size: 14px;
-    line-height: 1.6;
-
-    color: var(--text-muted);
-}
-
-
-/* =========================================
-   PROFILE CARD
-========================================= */
-
-.profile-card {
-    width: 100%;
-
-    background: var(--white);
-
-    border:
-        1px solid var(--border);
-
-    border-radius: 16px;
-
-    padding: 30px;
-
-    margin-bottom: 24px;
-
-    box-shadow: var(--shadow);
-}
-
-
-/* =========================================
-   CARD HEADER
-========================================= */
-
-.card-header {
-    display: flex;
-    align-items: center;
-
-    gap: 14px;
-
-    margin-bottom: 28px;
-
-    padding-bottom: 20px;
-
-    border-bottom:
-        1px solid var(--border-light);
-}
-
-
-/* =========================================
-   HEADER ICON
-========================================= */
-
-.header-icon {
-    width: 44px;
-    height: 44px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    background: var(--teal-light);
-
-    color: var(--teal-primary);
-
-    border-radius: 10px;
-}
-
-.header-icon i {
-    font-size: 17px;
-}
-
-
-/* =========================================
-   CARD HEADER TEXT
-========================================= */
-
-.card-header h2 {
-    margin-bottom: 4px;
-
-    font-size: 19px;
-
-    font-weight: 700;
-
-    color: #145a57;
-}
-
-.card-header p {
-    font-size: 13px;
-
-    line-height: 1.5;
-
-    color: var(--text-muted);
-}
-
-
-/* =========================================
-   FORM GRID
-========================================= */
-
-.form-grid {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 22px 20px;
-}
-
-
-/* =========================================
-   FORM GROUP
-========================================= */
-
-.form-group {
-    width: 100%;
-}
-
-.form-group.full-width {
+#update-wrapper .up-full {
     grid-column: 1 / -1;
 }
 
-
-/* =========================================
-   LABEL
-========================================= */
-
-.form-group label {
-    display: block;
-
-    margin-bottom: 8px;
-
-    font-size: 13px;
-
-    font-weight: 600;
-
-    color: #345b57;
+#update-wrapper label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #3a4257;
 }
 
-
-/* =========================================
-   FIELD
-========================================= */
-
-.field {
-    position: relative;
-
+#update-wrapper input,
+#update-wrapper select,
+#update-wrapper textarea {
     width: 100%;
-
-    display: flex;
-    align-items: center;
-}
-
-
-/* =========================================
-   FIELD ICON
-========================================= */
-
-.field > i {
-    position: absolute;
-
-    left: 15px;
-
-    color: #6b8d88;
-
-    font-size: 14px;
-
-    pointer-events: none;
-
-    z-index: 2;
-}
-
-
-/* =========================================
-   INPUT
-========================================= */
-
-.field input,
-.field select,
-.field textarea {
-    width: 100%;
-
-    border:
-        1px solid var(--border);
-
-    border-radius: 9px;
-
-    background: var(--input-bg);
-
-    color: #173b37;
-
+    padding: 11px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #1d2433;
+    background: #f8f9fc;
+    border: 1px solid #d5d9e4;
+    border-radius: 8px;
     outline: none;
-
-    transition: var(--transition);
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-
-/* =========================================
-   INPUT / SELECT
-========================================= */
-
-.field input,
-.field select {
-    height: 46px;
-
-    padding:
-        0 15px 0 43px;
-
-    font-size: 13px;
-}
-
-
-/* =========================================
-   TEXTAREA
-========================================= */
-
-.field textarea {
-    min-height: 105px;
-
-    padding:
-        13px 15px 13px 43px;
-
-    font-size: 13px;
-
-    line-height: 1.6;
-
+#update-wrapper textarea {
     resize: vertical;
+    min-height: 84px;
 }
 
-
-/* =========================================
-   TEXTAREA ICON
-========================================= */
-
-.textarea-field {
-    align-items: flex-start;
-}
-
-.textarea-field > i {
-    top: 16px;
-}
-
-
-/* =========================================
-   INPUT PLACEHOLDER
-========================================= */
-
-.field input::placeholder,
-.field textarea::placeholder {
-    color: #9aafac;
-}
-
-
-/* =========================================
-   FOCUS
-========================================= */
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-    border-color:
-        var(--teal-primary);
-
+#update-wrapper input:focus,
+#update-wrapper select:focus,
+#update-wrapper textarea:focus {
+    border-color: #3563e9;
+    box-shadow: 0 0 0 3px rgba(53, 99, 233, 0.18);
     background: #ffffff;
-
-    box-shadow:
-        0 0 0 3px
-        rgba(
-            15,
-            118,
-            110,
-            0.08
-        );
 }
 
-
-/* =========================================
-   SELECT
-========================================= */
-
-.field select {
-    cursor: pointer;
-
-    appearance: auto;
+#update-wrapper .up-message {
+    min-height: 1.3em;
+    margin: 16px 0 0;
+    font-size: 0.9rem;
 }
 
-
-/* =========================================
-   EMAIL / NORMAL EDITABLE FIELD
-========================================= */
-
-#email {
-    padding-right: 15px;
+#update-wrapper .up-message.error {
+    color: #c62828;
 }
 
+#update-wrapper .up-message.success {
+    color: #2e7d32;
+}
 
-/* =========================================
-   FIELD NOTE
-========================================= */
-
-.field-note {
+#update-wrapper .up-actions {
     display: flex;
-    align-items: center;
-
-    gap: 6px;
-
-    margin-top: 7px;
-
-    font-size: 11px;
-
-    line-height: 1.5;
-
-    color: #708b87;
-}
-
-.field-note i {
-    font-size: 11px;
-
-    color: var(--teal-primary);
-}
-
-
-/* =========================================
-   PASSWORD CARD
-========================================= */
-
-.password-card {
-    margin-top: 0;
-}
-
-
-/* =========================================
-   PASSWORD INPUT
-========================================= */
-
-#currentPassword,
-#newPassword,
-#confirmPassword {
-    padding-right: 48px;
-}
-
-
-/* =========================================
-   PASSWORD TOGGLE
-========================================= */
-
-.password-toggle {
-    position: absolute;
-
-    right: 8px;
-
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    width: 34px;
-    height: 34px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: none;
-
-    background: transparent;
-
-    color: #718b87;
-
-    border-radius: 7px;
-
-    cursor: pointer;
-
-    transition: var(--transition);
-
-    z-index: 3;
-}
-
-.password-toggle:hover {
-    background: var(--teal-light);
-
-    color: var(--teal-primary);
-}
-
-.password-toggle i {
-    font-size: 14px;
-}
-
-
-/* =========================================
-   PASSWORD NOTE
-========================================= */
-
-.password-note {
-    margin-top: 20px;
-
-    padding:
-        11px 13px;
-
-    background: #f4faf9;
-
-    border:
-        1px solid #dceeea;
-
-    border-radius: 8px;
-}
-
-
-/* =========================================
-   ACTION AREA
-========================================= */
-
-.action-area {
-    width: 100%;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-end;
-
+    flex-wrap: wrap;
     gap: 12px;
-
-    margin-top: 8px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e3e6ee;
 }
 
-
-/* =========================================
-   CANCEL BUTTON
-========================================= */
-
-.cancel-btn {
-    min-width: 105px;
-
-    height: 44px;
-
-    padding:
-        0 20px;
-
-    background: #ffffff;
-
-    color: #526b67;
-
-    border:
-        1px solid #cddfdd;
-
-    border-radius: 8px;
-
-    font-size: 13px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition: var(--transition);
-}
-
-.cancel-btn:hover {
-    background: #f3f8f7;
-
-    border-color:
-        #b9d3cf;
-
-    color: #294d48;
-}
-
-
-/* =========================================
-   SAVE / UPDATE BUTTON
-========================================= */
-
-.save-btn {
-    min-width: 160px;
-
-    height: 44px;
-
-    padding:
-        0 22px;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 8px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #0f766e,
-            #159b91
-        );
-
-    color: #ffffff;
-
+#update-wrapper .up-btn {
+    width: auto;
+    padding: 11px 22px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
     border: none;
-
     border-radius: 8px;
-
-    font-size: 13px;
-
-    font-weight: 700;
-
     cursor: pointer;
-
-    box-shadow:
-        0 5px 12px
-        rgba(
-            15,
-            118,
-            110,
-            0.16
-        );
-
-    transition:
-        background 0.25s ease,
-        transform 0.2s ease,
-        box-shadow 0.25s ease;
+    transition: background 0.15s, opacity 0.15s;
 }
 
-
-/* =========================================
-   UPDATE BUTTON HOVER
-========================================= */
-
-.save-btn:hover {
-    background:
-        linear-gradient(
-            135deg,
-            #0b5f59,
-            #0f766e
-        );
-
-    transform:
-        translateY(-1px);
-
-    box-shadow:
-        0 7px 16px
-        rgba(
-            15,
-            118,
-            110,
-            0.22
-        );
-}
-
-
-/* =========================================
-   DISABLED BUTTON
-========================================= */
-
-.save-btn:disabled {
-    opacity: 0.65;
-
+#update-wrapper .up-btn:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
-
-    transform: none;
-
-    box-shadow: none;
 }
 
-
-/* =========================================
-   RESPONSIVE - 900px
-========================================= */
-
-@media (max-width: 900px) {
-
-    .update-page {
-        max-width: 850px;
-
-        padding:
-            35px 25px 50px;
-    }
-
-    .profile-card {
-        padding: 26px;
-    }
-
+#update-wrapper .up-btn-primary {
+    background: #3563e9;
+    color: #ffffff;
 }
 
+#update-wrapper .up-btn-primary:hover:not(:disabled) {
+    background: #2a52c7;
+}
 
-/* =========================================
-   RESPONSIVE - 768px
-========================================= */
+#update-wrapper .up-btn-danger {
+    margin-left: auto;
+    background: #ffffff;
+    color: #c62828;
+    border: 1px solid #e2a3a3;
+}
 
-@media (max-width: 768px) {
+#update-wrapper .up-btn-danger:hover:not(:disabled) {
+    background: #fdecec;
+}
 
-    .update-page {
-        padding:
-            30px 20px 45px;
+#update-wrapper .up-btn:focus-visible {
+    outline: 3px solid rgba(53, 99, 233, 0.4);
+    outline-offset: 2px;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    #update-wrapper {
+        padding: 12px;
     }
 
-
-    .page-intro {
-        margin-bottom: 26px;
+    #update-wrapper .up-card {
+        padding: 18px;
     }
 
-
-    .intro-text h1 {
-        font-size: 27px;
-    }
-
-
-    .form-grid {
+    #update-wrapper .up-grid {
         grid-template-columns: 1fr;
-
-        gap: 19px;
     }
 
-
-    .form-group.full-width {
-        grid-column: auto;
-    }
-
-
-    .profile-card {
-        padding: 23px;
-
-        border-radius: 14px;
-    }
-
-
-    .card-header {
-        margin-bottom: 23px;
-    }
-
-
-    .action-area {
-        margin-top: 5px;
-    }
-
-}
-
-
-/* =========================================
-   RESPONSIVE - 500px
-========================================= */
-
-@media (max-width: 500px) {
-
-    .update-page {
-        padding:
-            25px 15px 40px;
-    }
-
-
-    .page-intro {
-        align-items: flex-start;
-
-        gap: 13px;
-    }
-
-
-    .intro-icon {
-        width: 48px;
-        height: 48px;
-
-        border-radius: 11px;
-    }
-
-
-    .intro-icon i {
-        font-size: 19px;
-    }
-
-
-    .eyebrow {
-        font-size: 10px;
-    }
-
-
-    .intro-text h1 {
-        font-size: 23px;
-    }
-
-
-    .intro-text p {
-        font-size: 12px;
-    }
-
-
-    .profile-card {
-        padding: 19px;
-
-        border-radius: 12px;
-    }
-
-
-    .card-header {
-        gap: 11px;
-
-        padding-bottom: 17px;
-    }
-
-
-    .header-icon {
-        width: 39px;
-        height: 39px;
-    }
-
-
-    .header-icon i {
-        font-size: 15px;
-    }
-
-
-    .card-header h2 {
-        font-size: 17px;
-    }
-
-
-    .card-header p {
-        font-size: 11px;
-    }
-
-
-    .form-grid {
-        gap: 17px;
-    }
-
-
-    .form-group label {
-        font-size: 12px;
-    }
-
-
-    .field input,
-    .field select {
-        height: 44px;
-
-        font-size: 12px;
-    }
-
-
-    .field textarea {
-        font-size: 12px;
-    }
-
-
-    .action-area {
-        flex-direction: column-reverse;
-
+    #update-wrapper .up-btn {
         width: 100%;
     }
 
-
-    .cancel-btn,
-    .save-btn {
-        width: 100%;
+    #update-wrapper .up-btn-danger {
+        margin-left: 0;
     }
-
 }

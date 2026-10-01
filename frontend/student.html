@@ -1,198 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - SkillHub</title>
-
+    <title>SkillHub - Dashboard</title>
     <link rel="stylesheet" href="student.css">
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
-
-<div class="dashboard-container">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-
-        <div class="brand">
-            <div class="brand-logo-box">
-                <i class="fa-solid fa-graduation-cap"></i>
-            </div>
-            <h2 class="brand-name">SkillHub</h2>
-        </div>
-
-        <nav class="nav-menu">
-
-            <a href="#"
-               class="nav-item active"
-               data-page="courses">
-                <span>Courses</span>
-            </a>
-
-            <a href="#"
-               class="nav-item"
-               data-page="quiz">
-                <span>Quiz</span>
-            </a>
-
-            <a href="#"
-               class="nav-item"
-               data-page="settings">
-                <span>Settings</span>
-            </a>
-
-            <a href="#"
-               class="nav-item logout"
-               data-page="logout">
-                <span>Logout</span>
-            </a>
-
-        </nav>
-
-    </aside>
-
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-
-        <!-- TOP BAR -->
-        <div class="top-bar">
-
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Search your courses...">
-            </div>
-
-            <div class="top-bar-right">
-
-                <div class="user-profile">
-                    <img id="studentProfileImg"
-                         src="https://i.pravatar.cc/150?img=32"
-                         alt="Student">
-
-                    <span class="user-name"
-                          id="studentUserName">
-                        Student
-                    </span>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- CONTENT -->
-        <div class="content-body">
-
-            <!-- ENROLLED COURSES -->
-            <section class="page-section active"
-                     id="courses">
-
-                <div class="section-title-wrapper">
-                    <h2>Enrolled Courses</h2>
-                </div>
-
-                <!-- Backend থেকে Purchased Course এখানে আসবে -->
-                <div class="course-grid"
-                     id="courseGrid">
-                </div>
-
-            </section>
-
-
-            <!-- QUIZ -->
-            <section class="page-section"
-                     id="quiz">
-
-                <div class="section-title-wrapper">
-                    <h2>Pending Quiz</h2>
-                </div>
-
-            </section>
-
-
-            <!-- SETTINGS -->
-            <!-- SETTINGS -->
-<section class="page-section" id="settings">
-
-    <div class="section-title-wrapper">
-        <h2>Account Details</h2>
-    </div>
-
-    <div class="account-card">
-
-        <!-- Profile Header -->
-        <div class="profile-header">
-          <div>
-                <h3 id="profileName">Student</h3>
-                
-            </div>  
-        </div>
-
-        <!-- Profile Information -->
-        <div class="profile-grid">
-
-            <div class="input-box">
-                <label>First Name</label>
-                <p id="profileFirstName">-</p>
-            </div>
-
-            <div class="input-box">
-                <label>Last Name</label>
-                <p id="profileLastName">-</p>
-            </div>
-
-            <div class="input-box">
-                <label>Email</label>
-                <p id="profileEmail">-</p>
-            </div>
-
-            <div class="input-box">
-                <label>Phone</label>
-                <p id="profilePhone">-</p>
-            </div>
-
-            <div class="input-box">
-                <label>Gender</label>
-                <p id="profileGender">-</p>
-            </div>
-
-            <div class="input-box">
-                <label>Date of Birth</label>
-                <p id="profileDob">-</p>
-            </div>
-
-            <div class="input-box full">
-                <label>Address</label>
-                <p id="profileAddress">-</p>
-            </div>
-
-            <div class="input-box full">
-                <label>About Me</label>
-                <p id="profileAbout">-</p>
-            </div>
-
-        </div>
-
-        <!-- Update Button -->
-        <button id="updateProfileBtn" class="update-profile-option">
-            Update Profile
-            <i class="fa-solid fa-arrow-right"></i>
+    <div class="app-container">
+        <!-- মোবাইলের জন্য মেনু বাটন -->
+        <button class="mobile-toggle" id="menuToggle">
+            <i class="fa-solid fa-bars"></i>
         </button>
 
-    </div>
+        <!-- ফিক্সড সবুজ সাইডবার -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-graduation-cap brand-icon"></i>
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <h2>SkillHub</h2>
+                </a>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="courses.html" class="nav-link active" data-page="courses.html">
+                    <span>Courses</span>
+                </a>
+                <a href="quiz.html" class="nav-link" data-page="quiz.html">
+                    <span>Quiz</span>
+                </a>
+                <a href="settings.html" class="nav-link" data-page="settings.html">
+                    <span>Settings</span>
+                </a>
+                <a href="#logout" class="nav-link" data-page="logout">
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
 
-</section>
+        <!-- মোবাইলের জন্য ব্যাকড্রপ ব্যাকগ্রাউন্ড -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- প্রধান কন্টেন্ট ও টপবার র‍্যাপার -->
+        <div class="main-wrapper">
+            <!-- ফিক্সড টপবার -->
+            <header class="topbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" placeholder="Search your courses...">
+                </div>
+                <marquee> Welcome, to your dashboard, <span class="user-name" id="studentUserName">Student</span>
+                          
+                </marquee>
+                <div class="user-profile">
+                    <img src="https://i.pravatar.cc/100?img=32" alt="User Profile" class="profile-img">
+                    
+                </div>
+            </header>
+
+            <!-- স্ক্রোলযোগ্য মেইন কন্টেন্ট এরিয়া (লাল বর্ডারযুক্ত অংশ) -->
+            <main class="content-area" id="main-content">
+                <!-- Fetch API-এর মাধ্যমে এখানে আলাদা আলাদা পেজ লোড হবে -->
+            </main>
         </div>
-
-    </main>
-
-</div>
-
-<script src="student.js"></script>
-
+    </div>
+   
+    <script src="student.js"></script>
+    <script src="update_profile.js"></script>
 </body>
 </html>
