@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---------------- ELEMENTS ----------------
 
+    const topBar = document.querySelector(".top-bar");
     const navItems = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".page-section");
 
@@ -21,13 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("courseSearch");
 
     const courseList = document.getElementById("courseList");
-
-    const sidebar = document.getElementById("sidebar");
-    const sidebarOverlay = document.getElementById("sidebarOverlay");
-    const menuToggle = document.getElementById("menuToggle");
-
-    const templateCard =
-        courseList.querySelector("[data-course-card]");
+    const templateCard = courseList?.querySelector("[data-course-card]");
 
     let teacher = {};
     let allCourses = [];
@@ -41,67 +36,20 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    // ---------------- MOBILE SIDEBAR ----------------
-
-    function openSidebar() {
-
-        sidebar.classList.add("open");
-        sidebarOverlay.classList.add("show");
-        document.body.classList.add("menu-open");
-
-    }
-
-    function closeSidebar() {
-
-        sidebar.classList.remove("open");
-        sidebarOverlay.classList.remove("show");
-        document.body.classList.remove("menu-open");
-
-    }
-
-    menuToggle?.addEventListener("click", () => {
-
-        if (sidebar.classList.contains("open"))
-            closeSidebar();
-        else
-            openSidebar();
-
-    });
-
-    sidebarOverlay?.addEventListener("click", closeSidebar);
-
-    document.addEventListener("keydown", e => {
-
-        if (e.key === "Escape")
-            closeSidebar();
-
-    });
-
-    window.addEventListener("resize", () => {
-
-        if (window.innerWidth > 900)
-            closeSidebar();
-
-    });
-
-    // ---------------- NAV ----------------
+    // ---------------- NAVIGATION ----------------
 
     navItems.forEach(item => {
 
-        item.onclick = e => {
+        item.addEventListener("click", e => {
 
             e.preventDefault();
-
-            closeSidebar();
 
             const page = item.dataset.page;
 
             if (page === "logout") {
-
                 localStorage.clear();
                 location.href = "login.html";
                 return;
-
             }
 
             navItems.forEach(n => n.classList.remove("active"));
@@ -111,10 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const section = document.getElementById(page);
 
-            if (section)
+            if (section) {
                 section.classList.add("active");
+            }
 
-        };
+            // Hide Search Bar in Settings
+            if (page === "settings") {
+                topBar?.classList.add("hide-search");
+            } else {
+                topBar?.classList.remove("hide-search");
+            }
+
+        });
 
     });
 
@@ -122,71 +78,331 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadProfile() {
 
-        const res = await fetch(API + "/teachers/me", {
-            headers: headers()
-        });
+        try {
 
-        if (res.status === 401) {
-            localStorage.clear();
-            location.href = "login.html";
-            return;
+            const res = await fetch(`${API}/teachers/me`, {
+                headers: headers()
+            });
+
+            if (res.status === 401) {
+                localStorage.clear();
+                location.href = "login.html";
+                return;
+            }
+
+            if (!res.ok) {
+                console.error("Profile loading failed");
+                return;
+            }
+
+            teacher = await res.json();
+
+            const fullName =
+                `${teacher.first_name || ""} ${teacher.last_name || ""}`.trim();
+
+            if (teacherName) {
+                teacherName.textContent = fullName || "Teacher";
+            }
+
+            if (teacherImg && teacher.profile_pic) {
+                teacherImg.src = teacher.profile_pic;
+            }
+
+            setValue("teacherFirstName", teacher.first_name);
+            setValue("teacherLastName", teacher.last_name);
+            setValue("teacherEmail", teacher.user?.email_id);
+            setValue("teacherPhone", teacher.phone_no);
+            setValue("teacherGender", teacher.gender);
+            setValue("teacherDob", teacher.date_of_birth);
+            setValue("teacherAddress", teacher.address);
+            setValue("teacherAbout", teacher.about);
+
+        } catch (error) {
+
+            console.error("Profile Error:", error);
+
         }
-
-        teacher = await res.json();
-
-        const fullName =
-            `${teacher.first_name || ""} ${teacher.last_name || ""}`.trim();
-
-        teacherName.textContent = fullName || "Teacher";
-
-        if (teacher.profile_pic)
-            teacherImg.src = teacher.profile_pic;
-
-        set("teacherFirstName", teacher.first_name);
-        set("teacherLastName", teacher.last_name);
-        set("teacherEmail", teacher.user?.email_id);
-        set("teacherPhone", teacher.phone_no);
-        set("teacherGender", teacher.gender);
-        set("teacherDob", teacher.date_of_birth);
-        set("teacherAddress", teacher.address);
-        set("teacherAbout", teacher.about);
 
     }
 
-    function set(id, value) {
+    function setValue(id, value) {
 
         const el = document.getElementById(id);
 
-        if (el)
+        if (el) {
             el.textContent = value || "-";
+        }
 
     }
 
-    // ---------------- COURSES ----------------
+    // ---------------- LOAD COURSES ----------------
 
     async function loadCourses() {
 
-        const res = await fetch(API + "/teachers/me/courses", {
-            headers: headers()
-        });
+        try {
 
-        if (!res.ok) return;
+            const res = await fetch(`${API}/teachers/me/courses`, {
+                headers: headers()
+            });
 
-        const data = await res.json();
+            if (res.status === 401) {
+                localStorage.clear();
+                location.href = "login.html";
+                return;
+            }
 
-        allCourses = Array.isArray(data)
-            ? data
-            : (data.courses || []);
+            if (!res.ok) {
+                courseList.innerHTML = "<p>No courses found.</p>";
+                return;
+            }
 
-        renderCourses(allCourses);
+            const data = await res.json();
+
+            allCourses = Array.isArray(data)
+                ? data
+                : (data.courses || []);
+
+            // Load rating separately for every course
+            await loadRatingsForCourses();
+
+            renderCourses(allCourses);
+
+        } catch (error) {
+
+            console.error("Course Loading Error:", error);
+
+            if (courseList) {
+                courseList.innerHTML = "<p>Failed to load courses.</p>";
+            }
+
+        }
 
     }
 
+    // ---------------- LOAD RATINGS FOR EACH COURSE ----------------
+
+    async function loadRatingsForCourses() {
+
+        await Promise.all(
+
+            allCourses.map(async course => {
+
+                try {
+
+                    const res = await fetch(
+                        `${API}/courses/${course.id}/review`,
+                        {
+                            headers: headers()
+                        }
+                    );
+
+                    if (!res.ok) {
+
+                        course.average_rating = 0;
+                        course.total_reviews = 0;
+
+                        return;
+                    }
+
+                    const data = await res.json();
+
+                    let reviews = [];
+
+                    if (Array.isArray(data)) {
+                        reviews = data;
+                    } else if (Array.isArray(data.reviews)) {
+                        reviews = data.reviews;
+                    }
+
+                    // If backend directly sends average rating
+                    if (
+                        data &&
+                        !Array.isArray(data) &&
+                        data.average_rating !== undefined
+                    ) {
+
+                        course.average_rating =
+                            Number(data.average_rating) || 0;
+
+                        course.total_reviews =
+                            Number(
+                                data.total_reviews ??
+                                data.review_count ??
+                                reviews.length
+                            ) || 0;
+
+                        return;
+                    }
+
+                    // Calculate average rating from reviews
+                    if (reviews.length > 0) {
+
+                        const ratings = reviews
+                            .map(review => Number(review.rating))
+                            .filter(rating => !isNaN(rating));
+
+                        if (ratings.length > 0) {
+
+                            const total = ratings.reduce(
+                                (sum, rating) => sum + rating,
+                                0
+                            );
+
+                            course.average_rating =
+                                total / ratings.length;
+
+                            course.total_reviews =
+                                ratings.length;
+
+                        } else {
+
+                            course.average_rating = 0;
+                            course.total_reviews = 0;
+
+                        }
+
+                    } else {
+
+                        course.average_rating = 0;
+                        course.total_reviews = 0;
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        `Rating loading failed for course ${course.id}:`,
+                        error
+                    );
+
+                    course.average_rating = 0;
+                    course.total_reviews = 0;
+
+                }
+
+            })
+
+        );
+
+    }
+
+    // ---------------- RESOURCE TYPE ----------------
+
+    function getResourceType(course) {
+
+        const type =
+            course.course_resource_type ||
+            course.resource_type ||
+            course.course_type ||
+            course.type ||
+            "video";
+
+        const value = String(type).toLowerCase();
+
+        if (
+            value.includes("document") ||
+            value.includes("pdf") ||
+            value.includes("doc")
+        ) {
+            return "Document";
+        }
+
+        return "Video";
+    }
+
+    // ---------------- RATING DISPLAY ----------------
+
+    function getRating(course) {
+
+        const rating = Number(
+            course.average_rating ??
+            course.rating ??
+            course.course_rating ??
+            0
+        );
+
+        return isNaN(rating) ? 0 : rating;
+
+    }
+
+    // ---------------- ADD COURSE EXTRA INFO ----------------
+
+    function addCourseExtraInfo(card, course) {
+
+        const metrics = card.querySelector(".course-metrics");
+
+        if (!metrics) return;
+
+        // Remove previously added information
+        metrics
+            .querySelectorAll(".dynamic-course-info")
+            .forEach(el => el.remove());
+
+        // ---------------- RATING ----------------
+
+        const rating = getRating(course);
+
+        const totalReviews =
+            Number(course.total_reviews ?? course.review_count ?? 0) || 0;
+
+        const ratingMetric = document.createElement("div");
+
+        ratingMetric.className =
+            "metric dynamic-course-info course-rating";
+
+        ratingMetric.innerHTML = `
+            <span>Rating</span>
+            <strong>
+                ⭐ ${rating > 0 ? rating.toFixed(1) : "No rating"}
+            </strong>
+            <small>
+                ${totalReviews} ${totalReviews === 1 ? "Review" : "Reviews"}
+            </small>
+        `;
+
+        metrics.appendChild(ratingMetric);
+
+        // ---------------- RESOURCE TYPE ----------------
+
+        const resourceType = getResourceType(course);
+
+        const typeMetric = document.createElement("div");
+
+        typeMetric.className =
+            "metric dynamic-course-info course-resource-type";
+
+        const icon =
+            resourceType === "Document"
+                ? "fa-file-lines"
+                : "fa-video";
+
+        typeMetric.innerHTML = `
+            <span>Type</span>
+            <strong>
+                <i class="fa-solid ${icon}"></i>
+                ${resourceType}
+            </strong>
+        `;
+
+        metrics.appendChild(typeMetric);
+
+    }
+
+    // ---------------- RENDER COURSES ----------------
+
     function renderCourses(courses) {
+
+        if (!courseList || !templateCard) return;
 
         courseList.innerHTML = "";
 
-        if (!courses.length) return;
+        if (courses.length === 0) {
+
+            courseList.innerHTML =
+                "<p>No courses found.</p>";
+
+            return;
+        }
 
         courses.forEach(course => {
 
@@ -194,34 +410,98 @@ document.addEventListener("DOMContentLoaded", () => {
 
             card.style.display = "";
 
-            card.querySelector("[data-course-name]").textContent =
-                course.course_name;
+            // ---------------- COURSE NAME ----------------
 
-            card.querySelector("[data-course-details]").textContent =
-                course.course_details;
+            const courseName =
+                card.querySelector("[data-course-name]");
 
-            card.querySelector("[data-course-language]").textContent =
-                course.course_language;
+            if (courseName) {
+                courseName.textContent =
+                    course.course_name || "Course Name";
+            }
 
-            card.querySelector("[data-course-price]").textContent =
-                course.course_paid
-                    ? `${course.course_price_currency} ${course.course_price}`
-                    : "Free";
+            // ---------------- COURSE DETAILS ----------------
 
-            // Edit Button
+            const courseDetails =
+                card.querySelector("[data-course-details]");
+
+            if (courseDetails) {
+                courseDetails.textContent =
+                    course.course_details || "Course details";
+            }
+
+            // ---------------- LANGUAGE ----------------
+
+            const courseLanguage =
+                card.querySelector("[data-course-language]");
+
+            if (courseLanguage) {
+                courseLanguage.textContent =
+                    course.course_language || "-";
+            }
+
+            // ---------------- PRICE ----------------
+
+            const coursePrice =
+                card.querySelector("[data-course-price]");
+
+            if (coursePrice) {
+
+                const isPaid =
+                    course.course_paid === true ||
+                    course.course_paid === 1 ||
+                    course.course_paid === "true" ||
+                    course.course_paid === "1";
+
+                if (isPaid) {
+
+                    const currency =
+                        course.course_price_currency || "₹";
+
+                    coursePrice.textContent =
+                        `${currency} ${course.course_price ?? 0}`;
+
+                } else {
+
+                    coursePrice.textContent = "Free";
+
+                }
+
+            }
+
+            // ---------------- RATING + TYPE ----------------
+
+            addCourseExtraInfo(card, course);
+
+            // ---------------- EDIT BUTTON ----------------
+
             const editBtn =
                 card.querySelector("[data-edit-course]");
 
-            editBtn.onclick = e => {
+            if (editBtn) {
 
-                e.stopPropagation();
+                editBtn.textContent = "Edit Course";
 
-                alert("Edit Course ID : " + course.id);
+                editBtn.onclick = e => {
+
+                    e.stopPropagation();
+
+                    alert(
+                        "Edit Course ID : " +
+                        course.id
+                    );
+
+                };
+
+            }
+
+            // ---------------- COURSE CLICK ----------------
+
+            card.onclick = () => {
+
+                showCourse(course);
 
             };
-
-            // Whole Card Click
-            card.onclick = () => showCourse(course);
 
             courseList.appendChild(card);
 
@@ -229,44 +509,104 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    // ---------------- SAME PAGE DETAILS ----------------
+    // ---------------- COURSE DETAILS ----------------
 
     function showCourse(course) {
 
-        const cards =
-            courseList.querySelectorAll("[data-course-card]");
+        if (!courseList || !templateCard) return;
 
-        cards.forEach(c => c.style.display = "none");
+        courseList.innerHTML = "";
 
-        const detailCard = templateCard.cloneNode(true);
+        const detailCard =
+            templateCard.cloneNode(true);
 
         detailCard.style.display = "";
 
-        detailCard.querySelector("[data-course-name]").textContent =
-            course.course_name;
+        // ---------------- NAME ----------------
 
-        detailCard.querySelector("[data-course-details]").textContent =
-            course.course_details;
+        const courseName =
+            detailCard.querySelector("[data-course-name]");
 
-        detailCard.querySelector("[data-course-language]").textContent =
-            course.course_language;
+        if (courseName) {
+            courseName.textContent =
+                course.course_name || "Course Name";
+        }
 
-        detailCard.querySelector("[data-course-price]").textContent =
-            course.course_paid
-                ? `${course.course_price_currency} ${course.course_price}`
-                : "Free";
+        // ---------------- DETAILS ----------------
 
-        const editBtn =
+        const courseDetails =
+            detailCard.querySelector("[data-course-details]");
+
+        if (courseDetails) {
+            courseDetails.textContent =
+                course.course_details || "Course details";
+        }
+
+        // ---------------- LANGUAGE ----------------
+
+        const courseLanguage =
+            detailCard.querySelector("[data-course-language]");
+
+        if (courseLanguage) {
+            courseLanguage.textContent =
+                course.course_language || "-";
+        }
+
+        // ---------------- PRICE ----------------
+
+        const coursePrice =
+            detailCard.querySelector("[data-course-price]");
+
+        if (coursePrice) {
+
+            const isPaid =
+                course.course_paid === true ||
+                course.course_paid === 1 ||
+                course.course_paid === "true" ||
+                course.course_paid === "1";
+
+            if (isPaid) {
+
+                const currency =
+                    course.course_price_currency || "₹";
+
+                coursePrice.textContent =
+                    `${currency} ${course.course_price ?? 0}`;
+
+            } else {
+
+                coursePrice.textContent = "Free";
+
+            }
+
+        }
+
+        // ---------------- RATING + TYPE ----------------
+
+        addCourseExtraInfo(detailCard, course);
+
+        // ---------------- BACK BUTTON ----------------
+
+        const backBtn =
             detailCard.querySelector("[data-edit-course]");
 
-        editBtn.textContent = "Back";
+        if (backBtn) {
 
-        editBtn.onclick = e => {
+            backBtn.textContent = "Back";
 
+            backBtn.onclick = e => {
+
+                e.stopPropagation();
+
+                renderCourses(allCourses);
+
+            };
+
+        }
+
+        // Prevent detail card click
+        detailCard.onclick = e => {
             e.stopPropagation();
-
-            renderCourses(allCourses);
-
         };
 
         courseList.appendChild(detailCard);
@@ -278,26 +618,30 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput?.addEventListener("input", () => {
 
         const text =
-            searchInput.value.toLowerCase();
+            searchInput.value.trim().toLowerCase();
 
         const filtered =
-            allCourses.filter(c =>
-                (c.course_name || "")
+            allCourses.filter(course =>
+
+                (course.course_name || "")
                     .toLowerCase()
                     .includes(text)
+
             );
 
         renderCourses(filtered);
 
     });
 
-    // ---------------- BUTTONS ----------------
+    // ---------------- PUBLISH BUTTON ----------------
 
     publishBtn?.addEventListener("click", () => {
 
         location.href = "add_course.html";
 
     });
+
+    // ---------------- UPDATE PROFILE ----------------
 
     updateBtn?.addEventListener("click", () => {
 

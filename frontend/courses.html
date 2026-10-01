@@ -1,1 +1,52 @@
-<h2>jdfjdfdsfjsdn</h2>
+<link rel="stylesheet" href="courses.css">
+
+<div class="courses-page">
+
+  <!-- Search -->
+  <section class="course-search-section">
+    <div class="course-search-box">
+      <svg class="course-search-icon" xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+
+      <input type="text" id="courseSearch" placeholder="Search courses...">
+    </div>
+  </section>
+
+  <!-- Content -->
+  <div class="courses-content">
+
+    <div class="controls-bar">
+
+      <!-- Video / Document Tabs -->
+      <div class="tabs">
+        <button id="videoTab" class="tab-btn active">Videos</button>
+        <span class="divider">|</span>
+        <button id="documentTab" class="tab-btn">Documents</button>
+      </div>
+
+      <!-- Sort -->
+      <div class="sort-box">
+        <label for="sort">Sort</label>
+
+        <select id="sort">
+          <option value="all">All</option>
+          <option value="paid">Paid</option>
+          <option value="free">Free</option>
+          <option value="newest">Newest</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Backend Courses -->
+    <div class="cards-grid" id="courseGrid"></div>
+
+  </div>
+
+</div>
+
+<script src="courses.js"></script>

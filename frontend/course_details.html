@@ -1,188 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Detail - SkillHub</title>
+<link rel="stylesheet" href="course_details.css">
 
-    <link rel="stylesheet" href="course_details.css">
+<div class="course-details-page">
 
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <button class="cd-back-btn" id="cdBackBtn">
+        <i class="fa-solid fa-arrow-left"></i> Back to Courses
+    </button>
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
-</head>
+    <div class="course-detail-layout">
 
-<body>
+        <!-- LEFT -->
+        <div class="left-column">
 
-<div class="dashboard-container">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-
-        <div class="brand">
-            <div class="brand-logo-box">
-                <i class="fa-solid fa-graduation-cap"></i>
-            </div>
-            <h2 class="brand-name">SkillHub</h2>
-        </div>
-
-        <nav class="nav-menu">
-            <a href="explore.html" class="nav-item active">
-                <span>Courses</span>
-            </a>
-
-            <a href="#" class="nav-item">
-                <span>Settings</span>
-            </a>
-
-            <a href="#" class="nav-item logout">
-                <span>Logout</span>
-            </a>
-        </nav>
-
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-
-        <!-- TOP BAR -->
-        <div class="top-bar">
-
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Search courses...">
+            <!-- Media -->
+            <div class="media-viewer disabled">
+                <div class="disabled-overlay">
+                    <i class="fa-solid fa-lock"></i>
+                    <p>Purchase this course to unlock videos &amp; documents</p>
+                </div>
             </div>
 
-            <div class="top-bar-right">
+            <!-- Overview / Reviews -->
+            <div class="overview-review-card">
 
-                <div class="user-profile">
-                    <img id="studentProfileImg"
-                         src="https://i.pravatar.cc/150?img=68"
-                         alt="Student">
+                <div class="tabs-header">
+                    <button class="cd-tab-btn active" data-tab="overview">Overview</button>
+                    <button class="cd-tab-btn" data-tab="reviews">Reviews</button>
+                </div>
 
-                    <span class="user-name"
-                          id="studentUserName">
-                        
-                    </span>
+                <!-- Overview -->
+                <div class="cd-tab-content" id="overviewTab">
+                    <h3>Course Overview</h3>
+                    <p id="cdDetails">Course description will load here...</p>
+
+                    <ul class="course-highlights">
+                        <li><i class="fa-solid fa-check"></i> HD Learning Content</li>
+                        <li><i class="fa-solid fa-check"></i> Lifetime Access</li>
+                        <li><i class="fa-solid fa-check"></i> Certificate Included</li>
+                    </ul>
+                </div>
+
+                <!-- Reviews -->
+                <div class="cd-tab-content hidden" id="reviewsTab">
+                    <h3>Student Reviews</h3>
                 </div>
 
             </div>
 
         </div>
 
-        <!-- CONTENT -->
-        <div class="content-body">
+        <!-- RIGHT -->
+        <div class="right-column">
 
-            <div class="course-detail-layout">
+            <div class="purchase-card">
 
-                <!-- LEFT -->
-                <div class="left-column">
+                <h3 class="course-title" id="cdTitle">Loading Course...</h3>
 
-                    <!-- Media -->
-                    <div class="media-viewer disabled">
+                <div class="price-breakdown">
 
-                        <div class="disabled-overlay">
-                            <i class="fa-solid fa-lock"></i>
-                            <p>Purchase this course to unlock videos & documents</p>
-                        </div>
-
+                    <div class="price-row">
+                        <span>Course Price</span>
+                        <strong id="cdPrice">₹0</strong>
                     </div>
 
-                    <!-- Overview / Reviews -->
-                    <div class="overview-review-card">
+                    <div class="price-row">
+                        <span>GST (18%)</span>
+                        <strong id="cdGst">₹0</strong>
+                    </div>
 
-                        <div class="tabs-header">
-                            <button class="tab-btn active"
-                                    onclick="switchTab('overview')">
-                                Overview
-                            </button>
+                    <hr class="cd-divider">
 
-                            <button class="tab-btn"
-                                    onclick="switchTab('reviews')">
-                                Reviews
-                            </button>
-                        </div>
-
-                        <!-- Overview -->
-                        <div class="tab-content"
-                             id="overviewTab">
-
-                            <h3>Course Overview</h3>
-
-                            <p>
-                                Course description will load here...
-                            </p>
-
-                            <ul class="course-highlights">
-                                <li><i class="fa-solid fa-check"></i> HD Learning Content</li>
-                                <li><i class="fa-solid fa-check"></i> Lifetime Access</li>
-                                <li><i class="fa-solid fa-check"></i> Certificate Included</li>
-                            </ul>
-
-                        </div>
-
-                        <!-- Reviews -->
-                        <div class="tab-content hidden"
-                             id="reviewsTab">
-
-                            <h3>Student Reviews</h3>
-
-                        </div>
-
+                    <div class="price-row total">
+                        <span>Total</span>
+                        <strong id="cdTotal">₹0</strong>
                     </div>
 
                 </div>
 
-                <!-- RIGHT -->
-                <div class="right-column">
-
-                    <div class="purchase-card">
-
-                        <h3 class="course-title">
-                            Loading Course...
-                        </h3>
-
-                        <div class="price-breakdown">
-
-                            <div class="price-row">
-                                <span>Course Price</span>
-                                <strong>₹0</strong>
-                            </div>
-
-                            <div class="price-row">
-                                <span>GST (18%)</span>
-                                <strong>₹0</strong>
-                            </div>
-
-                            <hr class="divider">
-
-                            <div class="price-row total">
-                                <span>Total</span>
-                                <strong>₹0</strong>
-                            </div>
-
-                        </div>
-
-                        <button class="btn-purchase"
-                                onclick="openCourseView()">
-                            Purchase
-                        </button>
-
-                    </div>
-
-                </div>
+                <button class="btn-purchase" id="cdPurchaseBtn">Purchase</button>
 
             </div>
 
         </div>
 
-    </main>
+    </div>
 
 </div>
 
 <script src="course_details.js"></script>
-
-</body>
-</html>

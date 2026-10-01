@@ -1,5 +1,5 @@
 const UP_API_BASE_URL = 'http://127.0.0.1:8000';
-const UP_LOGIN_PAGE = 'index.html'; // change to your login page name
+const UP_LOGIN_PAGE = 'index.html';
 const UP_DEFAULT_PIC = 'https://i.pravatar.cc/100?img=32';
 
 function upPicUrl(path) {
@@ -8,10 +8,11 @@ function upPicUrl(path) {
     return UP_API_BASE_URL + '/' + path.replace(/^\/+/, '') + '?t=' + Date.now();
 }
 
-// Filled after the page loads
-let upRole = '';          // 'student' or 'teacher'
-let upProfilePath = '';   // /api/v1/students/me or /api/v1/teachers/me
+let upRole = '';
+let upProfilePath = '';
 let upOriginalEmail = '';
+let upOriginalProfile = {};
+let upUserId = '';
 let upBusy = false;
 
 
@@ -71,6 +72,74 @@ function upSetValue(id, value) {
     if (el) el.value = value || '';
 }
 
+// Settings পেজে নিয়ে যাওয়া
+function upGoToSettings() {
+    if (typeof window.goToSettings === 'function') {
+        window.goToSettings();
+    } else {
+        const page = upRole === 'teacher' ? 'teacher.html' : 'student.html';
+        window.location.replace(page + '#settings');
+    }
+}
+
+// ID দিয়ে email/password update (403 বা 404 হলে /me তে fallback)
+async function upUpdateUserById(body) {
+    if (upUserId) {
+        const res = await fetch(UP_API_BASE_URL + '/api/v1/users/' + upUserId, {
+            method: 'PATCH',
+            headers: upAuthHeaders(true),
+            body: JSON.stringify(body)
+        });
+        if (res.status !== 403 && res.status !== 404) return res;
+    }
+    return fetch(UP_API_BASE_URL + '/api/v1/users/me', {
+        method: 'PATCH',
+        headers: upAuthHeaders(true),
+        body: JSON.stringify(body)
+    });
+}
+
+// ID দিয়ে delete (403 বা 404 হলে /me তে fallback)
+async function upDeleteUserById() {
+    if (upUserId) {
+        const res = await fetch(UP_API_BASE_URL + '/api/v1/users/' + upUserId, {
+            method: 'DELETE',
+            headers: upAuthHeaders(false)
+        });
+        if (res.status !== 403 && res.status !== 404) return res;
+    }
+    return fetch(UP_API_BASE_URL + '/api/v1/users/me', {
+        method: 'DELETE',
+        headers: upAuthHeaders(false)
+    });
+}
+
+// নতুন ইমেইল/পাসওয়ার্ড দিয়ে আবার login করে নতুন token নেওয়া
+async function upRelogin(email, password) {
+    const body = new URLSearchParams();
+    body.append('grant_type', 'password');
+    body.append('username', email);
+    body.append('password', password);
+    body.append('scope', '');
+    body.append('client_id', 'string');
+    body.append('client_secret', 'string');
+
+    const response = await fetch(UP_API_BASE_URL + '/api/v1/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+    });
+
+    if (!response.ok) return false;
+
+    const result = await response.json();
+    if (!result.access_token) return false;
+
+    localStorage.setItem('access_token', result.access_token);
+    localStorage.setItem('token_type', result.token_type || 'bearer');
+    return true;
+}
+
 
 // ==========================================
 // LOAD CURRENT DATA INTO THE FORM
@@ -87,7 +156,6 @@ async function initUpdateProfile() {
         return;
     }
 
-    // Load the data only once per form element
     if (form.dataset.loaded) return;
     form.dataset.loaded = '1';
 
@@ -96,7 +164,6 @@ async function initUpdateProfile() {
 
     try {
 
-        // 1) User account: email and role
         const userResponse = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
             headers: upAuthHeaders(false)
         });
@@ -116,13 +183,13 @@ async function initUpdateProfile() {
 
         upRole = String(user.role || '').toLowerCase();
         upOriginalEmail = user.email_id || '';
+        upUserId = user.id || '';
         upSetValue('up-email', upOriginalEmail);
 
         upProfilePath = upRole === 'teacher'
             ? '/api/v1/teachers/me'
             : '/api/v1/students/me';
 
-        // 2) Profile: name, phone, gender, dob, address, about
         const profileResponse = await fetch(UP_API_BASE_URL + upProfilePath, {
             headers: upAuthHeaders(false)
         });
@@ -132,6 +199,7 @@ async function initUpdateProfile() {
         }
 
         const profile = await profileResponse.json();
+        upOriginalProfile = profile;
 
         upSetValue('up-first-name', profile.first_name);
         upSetValue('up-last-name', profile.last_name);
@@ -172,6 +240,7 @@ async function upHandleSave(e) {
     const dob = document.getElementById('up-dob').value;
     const email = upValue('up-email');
     const password = document.getElementById('up-password').value;
+    const confirmPassword = document.getElementById('up-confirm-password').value;
 
     if (!firstName || !lastName || !phone || !gender || !dob || !email) {
         upShowMessage('Please fill in all required fields.', 'error');
@@ -181,13 +250,18 @@ async function upHandleSave(e) {
     const emailChanged = email !== upOriginalEmail;
     const passwordChanged = password.length > 0;
 
+    if (passwordChanged && password !== confirmPassword) {
+        upShowMessage('Passwords do not match.', 'error');
+        return;
+    }
+
     upSetBusy(true);
     upShowMessage('Saving...', '');
 
     try {
 
-        // STEP 1: update profile details
-        const profileBody = {
+        // STEP 1: শুধু যেগুলো বদলেছে সেগুলো পাঠানো
+        const allFields = {
             first_name: firstName,
             last_name: lastName,
             phone_no: phone,
@@ -197,21 +271,30 @@ async function upHandleSave(e) {
             about: upValue('up-about')
         };
 
-        const profileResponse = await fetch(UP_API_BASE_URL + upProfilePath, {
-            method: 'PATCH',
-            headers: upAuthHeaders(true),
-            body: JSON.stringify(profileBody)
-        });
-
-        const profileResult = await profileResponse.json().catch(() => ({}));
-
-        if (!profileResponse.ok) {
-            console.error('Profile update error:', profileResult);
-            upShowMessage(upErrorText(profileResult, 'Profile update failed.'), 'error');
-            return;
+        const profileBody = {};
+        for (const key in allFields) {
+            if (allFields[key] !== String(upOriginalProfile[key] || '')) {
+                profileBody[key] = allFields[key];
+            }
         }
 
-                // STEP 1.5: নতুন ছবি বেছে থাকলে upload
+        if (Object.keys(profileBody).length > 0) {
+            const profileResponse = await fetch(UP_API_BASE_URL + upProfilePath, {
+                method: 'PATCH',
+                headers: upAuthHeaders(true),
+                body: JSON.stringify(profileBody)
+            });
+
+            const profileResult = await profileResponse.json().catch(() => ({}));
+
+            if (!profileResponse.ok) {
+                console.error('Profile update error:', profileResult);
+                upShowMessage(upErrorText(profileResult, 'Profile update failed.'), 'error');
+                return;
+            }
+        }
+
+        // STEP 2: নতুন ছবি থাকলে upload
         const picInput = document.getElementById('up-pic-input');
         const newPic = picInput && picInput.files[0];
 
@@ -225,7 +308,7 @@ async function upHandleSave(e) {
 
             const picResponse = await fetch(UP_API_BASE_URL + picPath, {
                 method: 'POST',
-                headers: upAuthHeaders(false),   // JSON header নয়
+                headers: upAuthHeaders(false),
                 body: picForm
             });
 
@@ -237,8 +320,7 @@ async function upHandleSave(e) {
             }
         }
 
-        // STEP 2: update email / password only if they changed.
-        // Done last, because changing them may invalidate the current login token.
+        // STEP 3: ইমেইল / পাসওয়ার্ড (সবার শেষে), ID দিয়ে
         if (emailChanged || passwordChanged) {
 
             const userBody = { email_id: email };
@@ -247,11 +329,7 @@ async function upHandleSave(e) {
                 userBody.hashed_password = password;
             }
 
-            const userResponse = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
-                method: 'PATCH',
-                headers: upAuthHeaders(true),
-                body: JSON.stringify(userBody)
-            });
+            const userResponse = await upUpdateUserById(userBody);
 
             const userResult = await userResponse.json().catch(() => ({}));
 
@@ -265,20 +343,30 @@ async function upHandleSave(e) {
                 return;
             }
 
-            // Login again with the new email / password
-            upClearSession();
-            alert('Account updated. Please login again.');
-            window.location.replace(UP_LOGIN_PAGE);
-            return;
+            if (passwordChanged) {
+                const ok = await upRelogin(email, password);
+                if (!ok) {
+                    upClearSession();
+                    alert('Account updated. Please login again.');
+                    window.location.replace(UP_LOGIN_PAGE);
+                    return;
+                }
+            } else {
+                const check = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
+                    headers: upAuthHeaders(false)
+                });
+                if (!check.ok) {
+                    upClearSession();
+                    alert('Email updated. Please login again with your new email.');
+                    window.location.replace(UP_LOGIN_PAGE);
+                    return;
+                }
+            }
         }
 
-        // Only profile details changed: go back to the dashboard
         upShowMessage('Profile updated.', 'success');
-        window.dispatchEvent(new CustomEvent('profile-updated'));
 
-        setTimeout(() => {
-            window.location.replace(upRole === 'teacher' ? 'teacher.html' : 'student.html');
-        }, 600);
+        setTimeout(upGoToSettings, 500);
 
     } catch (error) {
         console.error('Save error:', error);
@@ -290,7 +378,7 @@ async function upHandleSave(e) {
 
 
 // ==========================================
-// DELETE ACCOUNT
+// DELETE ACCOUNT (ID দিয়ে)
 // ==========================================
 
 async function upHandleDelete() {
@@ -308,10 +396,7 @@ async function upHandleDelete() {
 
     try {
 
-        const response = await fetch(UP_API_BASE_URL + '/api/v1/users/me', {
-            method: 'DELETE',
-            headers: upAuthHeaders(false)
-        });
+        const response = await upDeleteUserById();
 
         if (response.status !== 204 && !response.ok) {
             const result = await response.json().catch(() => ({}));
@@ -335,11 +420,8 @@ async function upHandleDelete() {
 
 // ==========================================
 // AUTO START
-// Works both for a normal page and when the HTML is injected
-// into the dashboard after the page has already loaded.
 // ==========================================
 
-// Save and Delete: listen on the document, so the form can be added at any time
 document.addEventListener('submit', function (e) {
     if (e.target && e.target.id === 'updateProfileForm') {
         upHandleSave(e);
@@ -352,7 +434,6 @@ document.addEventListener('click', function (e) {
     }
 });
 
-// Fill the form as soon as it appears on the page
 function upCheckForForm() {
     const form = document.getElementById('updateProfileForm');
     if (form && !form.dataset.loaded) {

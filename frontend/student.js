@@ -18,7 +18,6 @@ function buildPicUrl(path) {
 }
 
 async function loadStudentProfile() {
-    console.log('loadStudentProfile started');
     const token = localStorage.getItem('access_token');
 
     if (!token) {
@@ -36,8 +35,8 @@ async function loadStudentProfile() {
         }
 
         const data = await response.json();
-        console.log('Student profile:', data);
 
+        setText('disp-id', data.user ? data.user.id : '');
         setText('disp-first-name', data.first_name);
         setText('disp-last-name', data.last_name);
         setText('disp-email', data.user ? data.user.email_id : '');
@@ -47,15 +46,12 @@ async function loadStudentProfile() {
         setText('disp-address', data.address);
         setText('disp-about', data.about);
 
-        // Settings পেজের ছবি
         const pic = document.getElementById('disp-profile-pic');
         if (pic) pic.src = buildPicUrl(data.profile_pic);
 
-        // টপবারের ছবি
         const topPic = document.querySelector('.topbar .profile-img');
         if (topPic) topPic.src = buildPicUrl(data.profile_pic);
 
-        // টপবারে নাম
         const nameEl = document.getElementById('studentUserName');
         if (nameEl && data.first_name) nameEl.innerText = data.first_name;
     } catch (error) {
@@ -71,7 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-    // Fetch API দিয়ে ডাইনামিকালি পেজ লোড করার ফাংশন
+    // innerHTML দিয়ে বসানো <script> ব্রাউজার নিজে রান করে না,
+    // তাই নতুন করে বানিয়ে বসাচ্ছি যাতে রান হয়
+    function runScripts(container) {
+        container.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.getAttribute('src')) {
+                newScript.src = oldScript.getAttribute('src');
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            oldScript.replaceWith(newScript);
+        });
+    }
+
     async function fetchAndRenderPage(pageUrl) {
         try {
             mainContent.innerHTML = '<p style="color: #096858;">Loading page...</p>';
@@ -82,16 +91,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const htmlData = await response.text();
-
-            // নির্দিষ্ট কন্টেন্ট বক্সে HTML ডাটা ঢুকানো
             mainContent.innerHTML = htmlData;
 
-            // settings পেজ লোড হলে প্রোফাইল ডেটা আনো
+            runScripts(mainContent);
+
             if (pageUrl.includes('settings')) {
                 loadStudentProfile();
             }
 
-            // পেজের স্ক্রোল একদম ওপরে নিয়ে যাওয়া
             mainContent.scrollTop = 0;
         } catch (error) {
             mainContent.innerHTML = `
@@ -104,7 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // সাইডবারের অ্যাক্টিভ বাটন আপডেট করার ফাংশন
+    // অন্য পেজ (যেমন courses.js) থেকে ড্যাশবোর্ডের ভেতরে পেজ খোলার জন্য
+    window.loadDashboardPage = function (pageUrl) {
+        const matchingNav = document.querySelector(`.nav-link[data-page="${pageUrl}"]`);
+        updateActiveButton(matchingNav);
+        fetchAndRenderPage(pageUrl);
+    };
+
     function updateActiveButton(targetLink) {
         navLinks.forEach(link => link.classList.remove('active'));
         if (targetLink) {
@@ -112,7 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ১. সাইডবার লিংক ক্লিক হ্যান্ডলার
+    // Update Profile সেভের পর Settings পেজে ফেরার জন্য
+    window.goToSettings = function () {
+        const settingsLink = document.querySelector('.nav-link[data-page="settings.html"]');
+        updateActiveButton(settingsLink);
+        fetchAndRenderPage('settings.html');
+        loadStudentProfile();
+    };
+
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -128,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ২. মেইন কন্টেন্টের ভেতরের লিংকগুলোতে (যেমন: update_profile.html) ক্লিক হ্যান্ডেল করা
     mainContent.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (link && link.getAttribute('href') && !link.getAttribute('href').startsWith('#')) {
@@ -142,13 +161,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // প্রথমবার সাইট ওপেন করলে ডিফল্টভাবে courses.html লোড হবে
-    fetchAndRenderPage('courses.html');
+    if (window.location.hash === '#settings') {
+        window.goToSettings();
+    } else {
+        fetchAndRenderPage('courses.html');
+    }
 
-    // টপবারের ছবি ও নাম প্রথম থেকেই দেখানোর জন্য
     loadStudentProfile();
 
-    // মোবাইল মেনু টগল লজিক
     if (menuToggle && sidebarOverlay) {
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');

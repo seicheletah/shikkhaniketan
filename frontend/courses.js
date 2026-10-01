@@ -1,8 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
+(() => {
 
     const API_BASE = "http://127.0.0.1:8000/api/v1";
 
-    const searchInput = document.querySelector(".search-box input");
+    const searchInput = document.getElementById("courseSearch");
     const sortSelect = document.getElementById("sort");
     const courseGrid = document.getElementById("courseGrid");
 
@@ -11,6 +11,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let allCourses = [];
     let currentType = "video";
+
+
+    // ==========================================
+    // SHOW LOADING SPINNER
+    // ==========================================
+    function showLoader() {
+        courseGrid.innerHTML = `
+            <div class="loader-wrap">
+                <div class="spinner"></div>
+                <p>Loading courses...</p>
+            </div>
+        `;
+    }
 
 
     // ==========================================
@@ -30,32 +43,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // GET COURSE THUMBNAIL
     // ==========================================
     async function getThumbnailUrl(courseId) {
-
         try {
-
             const token = localStorage.getItem("access_token");
 
-            const headers = {
-                Accept: "application/json"
-            };
-
+            const headers = { Accept: "application/json" };
             if (token) {
                 headers.Authorization = `Bearer ${token}`;
             }
 
             const res = await fetch(
                 `${API_BASE}/courses/${courseId}/media/thumbnail/access`,
-                {
-                    method: "GET",
-                    headers
-                }
+                { method: "GET", headers }
             );
 
             if (!res.ok) {
-                console.log(
-                    `Thumbnail not available for course: ${courseId}`
-                );
-
                 return "image/myyy.png";
             }
 
@@ -68,12 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return "image/myyy.png";
 
         } catch (error) {
-
-            console.log(
-                `Thumbnail loading error for course ${courseId}:`,
-                error
-            );
-
+            console.log(`Thumbnail loading error for course ${courseId}:`, error);
             return "image/myyy.png";
         }
     }
@@ -84,14 +80,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
     async function loadCourses() {
 
-        try {
+        // ফেচ শুরুর আগেই স্পিনার দেখাও
+        showLoader();
 
+        try {
             const token = localStorage.getItem("access_token");
 
-            const headers = {
-                Accept: "application/json"
-            };
-
+            const headers = { Accept: "application/json" };
             if (token) {
                 headers.Authorization = `Bearer ${token}`;
             }
@@ -102,25 +97,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!res.ok) {
-                throw new Error(
-                    `Failed to load courses: ${res.status}`
-                );
+                throw new Error(`Failed to load courses: ${res.status}`);
             }
 
             const data = await res.json();
 
-            allCourses = Array.isArray(data)
-                ? data
-                : (data.courses || []);
+            allCourses = Array.isArray(data) ? data : (data.courses || []);
 
+            // applyFilters -> renderCourses স্পিনার মুছে কোর্স বসাবে
             applyFilters();
 
         } catch (error) {
-
             console.log("Course loading error:", error);
-
-            courseGrid.innerHTML =
-                "<p>Failed to load courses.</p>";
+            courseGrid.innerHTML = "<p class='grid-message'>Failed to load courses.</p>";
         }
     }
 
@@ -132,74 +121,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let courses = [...allCourses];
 
-
-        // --------------------------------------
         // VIDEO / DOCUMENT
-        // --------------------------------------
         courses = courses.filter(course =>
-            (course.course_resource_type || "video")
-                .toLowerCase() === currentType
+            (course.course_resource_type || "video").toLowerCase() === currentType
         );
 
-
-        // --------------------------------------
         // SEARCH
-        // --------------------------------------
-        const text =
-            searchInput.value.toLowerCase().trim();
+        const text = searchInput.value.toLowerCase().trim();
 
         courses = courses.filter(course =>
-            (course.course_name || "")
-                .toLowerCase()
-                .includes(text)
+            (course.course_name || "").toLowerCase().includes(text)
         );
 
-
-        // --------------------------------------
         // SORT / PAID / FREE
-        // --------------------------------------
         switch (sortSelect.value) {
 
             case "paid":
-
-                courses = courses.filter(course =>
-                    isPaid(course)
-                );
-
+                courses = courses.filter(course => isPaid(course));
                 break;
-
 
             case "free":
-
-                courses = courses.filter(course =>
-                    !isPaid(course)
-                );
-
+                courses = courses.filter(course => !isPaid(course));
                 break;
-
 
             case "newest":
-
                 courses.sort((a, b) => {
-
-                    const dateA =
-                        new Date(a.created_at || 0);
-
-                    const dateB =
-                        new Date(b.created_at || 0);
-
+                    const dateA = new Date(a.created_at || 0);
+                    const dateB = new Date(b.created_at || 0);
                     return dateB - dateA;
                 });
-
                 break;
-
 
             default:
                 break;
         }
 
-
         renderCourses(courses);
+    }
+
+
+    // ==========================================
+    // OPEN COURSE DETAILS
+    // ==========================================
+    function openCourse(course) {
+        localStorage.setItem("selected_course_id", course.id);
+
+        // ড্যাশবোর্ডের ভেতরে খুলবে (সাইডবার আর টপবার থাকবে)
+        if (typeof window.loadDashboardPage === "function") {
+            window.loadDashboardPage("course_details.html");
+        } else {
+            window.location.href = `course_details.html?id=${course.id}`;
+        }
     }
 
 
@@ -208,23 +180,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
     async function renderCourses(courses) {
 
+        // এখানে innerHTML খালি করায় স্পিনার সরে যায়
         courseGrid.innerHTML = "";
 
-
         if (!courses.length) {
-
-            courseGrid.innerHTML =
-                "<p>No courses found.</p>";
-
+            courseGrid.innerHTML = "<p class='grid-message'>No courses found.</p>";
             return;
         }
 
-
         const cards = courses.map(course => {
 
-            const card =
-                document.createElement("div");
-
+            const card = document.createElement("div");
             card.className = "card";
 
             card.innerHTML = `
@@ -242,16 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     <div class="course-meta">
 
-                        <span>
-                            ${course.course_language || ""}
-                        </span>
+                        <span>${course.course_language || ""}</span>
 
                         <strong>
-                            ${
-                                isPaid(course)
-                                    ? "₹" + (course.course_price || 0)
-                                    : "Free"
-                            }
+                            ${isPaid(course) ? "₹" + (course.course_price || 0) : "Free"}
                         </strong>
 
                     </div>
@@ -259,50 +219,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
 
-
-            // ----------------------------------
-            // COURSE CLICK
-            // ----------------------------------
-            card.addEventListener("click", () => {
-
-                localStorage.setItem(
-                    "selected_course_id",
-                    course.id
-                );
-
-                window.location.href =
-                    `course_details.html?id=${course.id}`;
-            });
-
+            card.addEventListener("click", () => openCourse(course));
 
             courseGrid.appendChild(card);
 
-            return {
-                course,
-                card
-            };
+            return { course, card };
         });
 
-
-        // --------------------------------------
         // LOAD THUMBNAILS
-        // --------------------------------------
         await Promise.all(
-
             cards.map(async ({ course, card }) => {
 
-                const thumbnail =
-                    card.querySelector(".course-thumb");
+                const thumbnail = card.querySelector(".course-thumb");
 
-                const thumbnailUrl =
-                    await getThumbnailUrl(course.id);
+                const thumbnailUrl = await getThumbnailUrl(course.id);
 
                 thumbnail.src = thumbnailUrl;
 
                 thumbnail.onerror = () => {
-
                     thumbnail.onerror = null;
-
                     thumbnail.src = "image/myyy.png";
                 };
             })
@@ -311,49 +246,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ==========================================
-    // SEARCH
+    // EVENTS
     // ==========================================
-    searchInput.addEventListener(
-        "input",
-        applyFilters
-    );
+    searchInput.addEventListener("input", applyFilters);
 
+    sortSelect.addEventListener("change", applyFilters);
 
-    // ==========================================
-    // SORT
-    // ==========================================
-    sortSelect.addEventListener(
-        "change",
-        applyFilters
-    );
-
-
-    // ==========================================
-    // VIDEO TAB
-    // ==========================================
     videoTab.addEventListener("click", () => {
-
         currentType = "video";
-
         videoTab.classList.add("active");
-
         documentTab.classList.remove("active");
-
         applyFilters();
     });
 
-
-    // ==========================================
-    // DOCUMENT TAB
-    // ==========================================
     documentTab.addEventListener("click", () => {
-
         currentType = "document";
-
         documentTab.classList.add("active");
-
         videoTab.classList.remove("active");
-
         applyFilters();
     });
 
@@ -363,4 +272,4 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
     loadCourses();
 
-});
+})();
