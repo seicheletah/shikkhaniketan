@@ -10,6 +10,10 @@
   box-sizing: border-box;
 }
 
+.courses-page .hidden {
+  display: none !important;
+}
+
 /* Search Bar Section */
 .courses-page .course-search-section {
   display: flex;
@@ -116,6 +120,20 @@
   background-color: #ffffff;
   outline: none;
   color: #334155;
+}
+
+/* Section Headings (Recommended for You / Enrolled Courses) */
+.courses-page .section-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0a3d37;
+  margin: 0 0 16px;
+}
+
+.courses-page .enrolled-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
 }
 
 /* Course Grid */
@@ -233,6 +251,16 @@
   font-size: 16px;
   font-weight: 700;
   color: #127c71;
+}
+
+/* Enrolled badge */
+.courses-page .enrolled-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #127c71;
+  background: #e6f4f2;
+  padding: 4px 10px;
+  border-radius: 20px;
 }
 
 @media (max-width: 768px) {
