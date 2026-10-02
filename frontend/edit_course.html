@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Course Form</title>
+  <link rel="stylesheet" href="edit_course.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  
+</head>
+<body>
+
+  <div class="page-wrapper">
+    <h1 class="page-title">Edit Course</h1>
+
+    <div class="main-card">
+      <form id="courseForm" onsubmit="handleSubmit(event)">
+        
+        <div class="form-grid">
+          
+          <!-- Field 1: Course Name -->
+          <div class="field-box">
+            <label class="field-label" for="courseName">Course Name</label>
+            <input type="text" id="courseName" class="field-input" placeholder="Enter Course Name" required>
+          </div>
+
+          <!-- Field 2: Course Details -->
+          <div class="field-box">
+            <label class="field-label" for="courseDetails">Course detailsa</label>
+            <input type="text" id="courseDetails" class="field-input" placeholder="Enter Course details">
+          </div>
+
+          <!-- Field 3: Course Language Custom Dropdown -->
+          <div class="field-box custom-dropdown-container" id="langDropdownContainer">
+            <label class="field-label">Course Language</label>
+            <button type="button" class="select-btn" id="langBtn" onclick="toggleDropdown('langDropdownContainer')">
+              <span id="langText">Course Language</span>
+              <svg class="arrow-icon" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+              </svg>
+            </button>
+            <ul class="dropdown-menu">
+              <li class="dropdown-option" onclick="selectOption('langDropdownContainer', 'langText', 'English')">English</li>
+              <li class="dropdown-option" onclick="selectOption('langDropdownContainer', 'langText', 'Hindi (हिंदी)')">Hindi (हिंदी)</li>
+              <li class="dropdown-option" onclick="selectOption('langDropdownContainer', 'langText', 'Bengali (বাংলা)')">Bengali (বাংলা)</li>
+            </ul>
+          </div>
+
+          <!-- Field 4: Course Type Custom Dropdown -->
+          <div class="field-box custom-dropdown-container" id="typeDropdownContainer">
+            <label class="field-label">Course paid</label>
+            <button type="button" class="select-btn" id="typeBtn" onclick="toggleDropdown('typeDropdownContainer')">
+              <span id="typeText">Course Type</span>
+              <svg class="arrow-icon" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+              </svg>
+            </button>
+            <ul class="dropdown-menu">
+              <li class="dropdown-option" onclick="selectOption('typeDropdownContainer', 'typeText', 'Yes')">Yes</li>
+              <li class="dropdown-option" onclick="selectOption('typeDropdownContainer', 'typeText', 'No')">No</li>
+            </ul>
+          </div>
+
+          <!-- Field 5: Course Price -->
+          <div class="field-box full-width">
+            <label class="field-label" for="coursePrice">Course price</label>
+            <input type="text" id="coursePrice" class="field-input" placeholder="Enter Course Price">
+          </div>
+
+        </div>
+
+        <div class="action-bar">
+          <button type="button" class="btn btn-delete" onclick="handleCancel()">Cancel</button>
+          <button type="submit" class="btn btn-submit">Submit</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast">Action performed successfully!</div>
+
+  
+<script src="edit_course.js"></script>
+
+</body>
+</html>

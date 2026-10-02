@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let teacher = {};
     let allCourses = [];
 
+
     // ---------------- HEADERS ----------------
 
     function headers() {
@@ -35,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
             Accept: "application/json"
         };
     }
+
 
     // ---------------- NAVIGATION ----------------
 
@@ -73,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     });
+
 
     // ---------------- PROFILE ----------------
 
@@ -125,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+
     function setValue(id, value) {
 
         const el = document.getElementById(id);
@@ -134,6 +138,102 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
     }
+
+
+    // ========================================================
+    // COURSE SORTING
+    // ========================================================
+
+    function getCourseCreatedTime(course) {
+
+        /*
+         * Backend যদি creation date পাঠায়,
+         * তাহলে সেটাই সবচেয়ে আগে ব্যবহার হবে।
+         */
+
+        const dateValue =
+            course.created_at ||
+            course.createdAt ||
+            course.created ||
+            course.creation_date ||
+            course.created_date ||
+            course.uploaded_at ||
+            course.uploadedAt;
+
+        if (dateValue) {
+
+            const time = new Date(dateValue).getTime();
+
+            if (!isNaN(time)) {
+                return time;
+            }
+
+        }
+
+
+        /*
+         * যদি backend creation date না পাঠায়,
+         * তাহলে UUID v7 ID থেকে timestamp বের করার চেষ্টা করা হবে।
+         *
+         * UUID v7-এর প্রথম 48 bit-এ creation timestamp থাকে।
+         */
+
+        const id = String(course.id || "");
+
+        const uuidV7Match =
+            id.match(
+                /^([0-9a-f]{8})-([0-9a-f]{4})-/i
+            );
+
+        if (uuidV7Match) {
+
+            try {
+
+                const firstPart =
+                    uuidV7Match[1] +
+                    uuidV7Match[2];
+
+                const timestamp =
+                    parseInt(firstPart, 16);
+
+                if (!isNaN(timestamp) && timestamp > 0) {
+                    return timestamp;
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "Could not read course creation time from ID:",
+                    id
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Creation date এবং UUID timestamp দুটোই না থাকলে
+         * course-কে নিচে রাখার জন্য 0 return করা হবে।
+         */
+
+        return 0;
+    }
+
+
+    function sortNewestFirst(courses) {
+
+        return [...courses].sort((a, b) => {
+
+            const timeA = getCourseCreatedTime(a);
+            const timeB = getCourseCreatedTime(b);
+
+            return timeB - timeA;
+
+        });
+
+    }
+
 
     // ---------------- LOAD COURSES ----------------
 
@@ -146,13 +246,20 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (res.status === 401) {
+
                 localStorage.clear();
                 location.href = "login.html";
                 return;
+
             }
 
             if (!res.ok) {
-                courseList.innerHTML = "<p>No courses found.</p>";
+
+                if (courseList) {
+                    courseList.innerHTML =
+                        "<p>No courses found.</p>";
+                }
+
                 return;
             }
 
@@ -162,9 +269,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? data
                 : (data.courses || []);
 
+
+            // ====================================================
+            // NEWEST COURSE FIRST
+            // ====================================================
+
+            allCourses = sortNewestFirst(allCourses);
+
+
             // Load rating separately for every course
             await loadRatingsForCourses();
 
+
+            // Render newest course first
             renderCourses(allCourses);
 
         } catch (error) {
@@ -172,12 +289,14 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Course Loading Error:", error);
 
             if (courseList) {
-                courseList.innerHTML = "<p>Failed to load courses.</p>";
+                courseList.innerHTML =
+                    "<p>Failed to load courses.</p>";
             }
 
         }
 
     }
+
 
     // ---------------- LOAD RATINGS FOR EACH COURSE ----------------
 
@@ -209,10 +328,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     let reviews = [];
 
                     if (Array.isArray(data)) {
+
                         reviews = data;
+
                     } else if (Array.isArray(data.reviews)) {
+
                         reviews = data.reviews;
+
                     }
+
 
                     // If backend directly sends average rating
                     if (
@@ -234,12 +358,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
 
+
                     // Calculate average rating from reviews
                     if (reviews.length > 0) {
 
                         const ratings = reviews
                             .map(review => Number(review.rating))
                             .filter(rating => !isNaN(rating));
+
 
                         if (ratings.length > 0) {
 
@@ -286,6 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+
     // ---------------- RESOURCE TYPE ----------------
 
     function getResourceType(course) {
@@ -304,11 +431,14 @@ document.addEventListener("DOMContentLoaded", () => {
             value.includes("pdf") ||
             value.includes("doc")
         ) {
+
             return "Document";
+
         }
 
         return "Video";
     }
+
 
     // ---------------- RATING DISPLAY ----------------
 
@@ -325,6 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+
     // ---------------- ADD COURSE EXTRA INFO ----------------
 
     function addCourseExtraInfo(card, course) {
@@ -333,51 +464,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!metrics) return;
 
+
         // Remove previously added information
+
         metrics
             .querySelectorAll(".dynamic-course-info")
             .forEach(el => el.remove());
+
 
         // ---------------- RATING ----------------
 
         const rating = getRating(course);
 
         const totalReviews =
-            Number(course.total_reviews ?? course.review_count ?? 0) || 0;
+            Number(
+                course.total_reviews ??
+                course.review_count ??
+                0
+            ) || 0;
 
-        const ratingMetric = document.createElement("div");
+
+        const ratingMetric =
+            document.createElement("div");
 
         ratingMetric.className =
             "metric dynamic-course-info course-rating";
 
         ratingMetric.innerHTML = `
             <span>Rating</span>
+
             <strong>
                 ⭐ ${rating > 0 ? rating.toFixed(1) : "No rating"}
             </strong>
+
             <small>
-                ${totalReviews} ${totalReviews === 1 ? "Review" : "Reviews"}
+                ${totalReviews}
+                ${totalReviews === 1 ? "Review" : "Reviews"}
             </small>
         `;
 
         metrics.appendChild(ratingMetric);
 
+
         // ---------------- RESOURCE TYPE ----------------
 
-        const resourceType = getResourceType(course);
+        const resourceType =
+            getResourceType(course);
 
-        const typeMetric = document.createElement("div");
+        const typeMetric =
+            document.createElement("div");
 
         typeMetric.className =
             "metric dynamic-course-info course-resource-type";
+
 
         const icon =
             resourceType === "Document"
                 ? "fa-file-lines"
                 : "fa-video";
 
+
         typeMetric.innerHTML = `
             <span>Type</span>
+
             <strong>
                 <i class="fa-solid ${icon}"></i>
                 ${resourceType}
@@ -388,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+
     // ---------------- RENDER COURSES ----------------
 
     function renderCourses(courses) {
@@ -395,6 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!courseList || !templateCard) return;
 
         courseList.innerHTML = "";
+
 
         if (courses.length === 0) {
 
@@ -404,11 +555,23 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        courses.forEach(course => {
 
-            const card = templateCard.cloneNode(true);
+        /*
+         * Render করার আগেও newest-first sorting করা হচ্ছে।
+         * এতে Search/Back থেকেও order ঠিক থাকবে।
+         */
+
+        const sortedCourses =
+            sortNewestFirst(courses);
+
+
+        sortedCourses.forEach(course => {
+
+            const card =
+                templateCard.cloneNode(true);
 
             card.style.display = "";
+
 
             // ---------------- COURSE NAME ----------------
 
@@ -416,9 +579,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.querySelector("[data-course-name]");
 
             if (courseName) {
+
                 courseName.textContent =
                     course.course_name || "Course Name";
+
             }
+
 
             // ---------------- COURSE DETAILS ----------------
 
@@ -426,9 +592,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.querySelector("[data-course-details]");
 
             if (courseDetails) {
+
                 courseDetails.textContent =
                     course.course_details || "Course details";
+
             }
+
 
             // ---------------- LANGUAGE ----------------
 
@@ -436,9 +605,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.querySelector("[data-course-language]");
 
             if (courseLanguage) {
+
                 courseLanguage.textContent =
                     course.course_language || "-";
+
             }
+
 
             // ---------------- PRICE ----------------
 
@@ -453,6 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     course.course_paid === "true" ||
                     course.course_paid === "1";
 
+
                 if (isPaid) {
 
                     const currency =
@@ -463,15 +636,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 } else {
 
-                    coursePrice.textContent = "Free";
+                    coursePrice.textContent =
+                        "Free";
 
                 }
 
             }
 
+
             // ---------------- RATING + TYPE ----------------
 
             addCourseExtraInfo(card, course);
+
 
             // ---------------- EDIT BUTTON ----------------
 
@@ -480,20 +656,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (editBtn) {
 
-                editBtn.textContent = "Edit Course";
+                editBtn.textContent =
+                    "Edit Course";
 
                 editBtn.onclick = e => {
 
                     e.stopPropagation();
 
-                    alert(
-                        "Edit Course ID : " +
-                        course.id
-                    );
+                    // Open Edit Course page with course ID
+                    location.href =
+                        `edit_course.html?id=${encodeURIComponent(course.id)}`;
 
                 };
 
             }
+
 
             // ---------------- COURSE CLICK ----------------
 
@@ -503,11 +680,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             };
 
+
             courseList.appendChild(card);
 
         });
 
     }
+
 
     // ---------------- COURSE DETAILS ----------------
 
@@ -517,10 +696,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         courseList.innerHTML = "";
 
+
         const detailCard =
             templateCard.cloneNode(true);
 
         detailCard.style.display = "";
+
 
         // ---------------- NAME ----------------
 
@@ -528,9 +709,12 @@ document.addEventListener("DOMContentLoaded", () => {
             detailCard.querySelector("[data-course-name]");
 
         if (courseName) {
+
             courseName.textContent =
                 course.course_name || "Course Name";
+
         }
+
 
         // ---------------- DETAILS ----------------
 
@@ -538,9 +722,12 @@ document.addEventListener("DOMContentLoaded", () => {
             detailCard.querySelector("[data-course-details]");
 
         if (courseDetails) {
+
             courseDetails.textContent =
                 course.course_details || "Course details";
+
         }
+
 
         // ---------------- LANGUAGE ----------------
 
@@ -548,9 +735,12 @@ document.addEventListener("DOMContentLoaded", () => {
             detailCard.querySelector("[data-course-language]");
 
         if (courseLanguage) {
+
             courseLanguage.textContent =
                 course.course_language || "-";
+
         }
+
 
         // ---------------- PRICE ----------------
 
@@ -565,6 +755,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 course.course_paid === "true" ||
                 course.course_paid === "1";
 
+
             if (isPaid) {
 
                 const currency =
@@ -575,15 +766,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } else {
 
-                coursePrice.textContent = "Free";
+                coursePrice.textContent =
+                    "Free";
 
             }
 
         }
 
+
         // ---------------- RATING + TYPE ----------------
 
         addCourseExtraInfo(detailCard, course);
+
 
         // ---------------- BACK BUTTON ----------------
 
@@ -604,14 +798,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
 
+
         // Prevent detail card click
+
         detailCard.onclick = e => {
+
             e.stopPropagation();
+
         };
+
 
         courseList.appendChild(detailCard);
 
     }
+
 
     // ---------------- SEARCH ----------------
 
@@ -619,6 +819,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const text =
             searchInput.value.trim().toLowerCase();
+
 
         const filtered =
             allCourses.filter(course =>
@@ -629,9 +830,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             );
 
-        renderCourses(filtered);
+
+        /*
+         * Search result-ও newest course আগে দেখাবে।
+         */
+
+        renderCourses(
+            sortNewestFirst(filtered)
+        );
 
     });
+
 
     // ---------------- PUBLISH BUTTON ----------------
 
@@ -641,6 +850,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
+
     // ---------------- UPDATE PROFILE ----------------
 
     updateBtn?.addEventListener("click", () => {
@@ -648,6 +858,7 @@ document.addEventListener("DOMContentLoaded", () => {
         location.href = "update_profile.html";
 
     });
+
 
     // ---------------- INIT ----------------
 
