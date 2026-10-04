@@ -135,7 +135,7 @@ body.menu-open {
 
 .main-content {
     margin-left: var(--sidebar-width);
-    padding-top: var(--topbar-height);
+    /*padding-top: var(--topbar-height);*/
     flex: 1;
     min-width: 0;
     display: flex;
@@ -147,7 +147,7 @@ body.menu-open {
    TOP BAR (ALWAYS FIXED)
 ======================================== */
 
-.top-bar {
+/*.top-bar {
     position: fixed;
     top: 0;
     left: var(--sidebar-width);
@@ -162,7 +162,7 @@ body.menu-open {
     background: ;
     border-bottom: px solid #d7eee9;
 }
-
+*/
 .top-bar-left {
     display: flex;
     align-items: center;
@@ -787,3 +787,22 @@ body.menu-open {
     flex-shrink: 0;
     order: 2;
 }
+
+
+
+.top-bar {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    z-index: 1;
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 35px;
+    background:;
+    border-bottom: px solid #d7eee9;
+}
+

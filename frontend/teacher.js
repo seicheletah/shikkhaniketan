@@ -675,10 +675,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // ---------------- COURSE CLICK ----------------
 
             card.onclick = () => {
-
-                showCourse(course);
-
-            };
+    location.href = `course_details.html?id=${encodeURIComponent(course.id)}`;
+};
 
 
             courseList.appendChild(card);
