@@ -1,20 +1,49 @@
-/* সব স্টাইল .course-details-page এর ভেতরে সীমাবদ্ধ,
-   তাই ড্যাশবোর্ডের সাইডবার/টপবার নষ্ট হবে না */
+/* ==========================================================
+   course_details.css  -  Udemy-style course details page
+   ==========================================================
 
+   Every rule is scoped under .course-details-page so the
+   dashboard sidebar / top bar are never affected.
+
+   ORGANISATION
+     1. Tokens + base
+     2. Back button
+     3. Main grid (desktop vs phone)
+     4. Head: title, description, rating line
+     5. Stars
+     6. Purchase card (thumbnail, price, button, includes)
+     7. Body sections: rating box with bars
+     8. Reviews
+     9. Responsive rules
+    10. Reduced motion
+   ========================================================== */
+
+
+/* 1. TOKENS + BASE ------------------------------------------------------ */
 .course-details-page {
+    --cd-green-700: #0d6860;   /* hover                          */
+    --cd-green-600: #127c71;   /* main course-page green         */
+    --cd-green-100: #e6f4f2;   /* soft tint                      */
+    --cd-green-50:  #f3faf8;   /* very light tint                */
+    --cd-ink:       #0a3d37;   /* dark text                      */
+    --cd-muted:     #5e7e7a;   /* muted text                     */
+    --cd-line:      #e1f0ed;   /* thin borders                   */
+    --cd-gold:      #f5a623;   /* filled star                    */
+
     width: 100%;
-    color: #0a3d37;
+    color: var(--cd-ink);
 }
 
 .course-details-page * {
     box-sizing: border-box;
 }
 
-/* Back button */
+
+/* 2. BACK BUTTON -------------------------------------------------------- */
 .course-details-page .cd-back-btn {
     background: none;
     border: none;
-    color: #127c71;
+    color: var(--cd-green-600);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -30,92 +59,210 @@
     text-decoration: underline;
 }
 
-/* Layout */
-.course-details-page .course-detail-layout {
+
+/* 3. MAIN GRID -----------------------------------------------------------
+   Desktop: left column (head + body) and a right column (card).
+   The card spans both rows so it can stay visible (sticky) while
+   the left side scrolls.
+   Phone: single column: head, then card, then body.                       */
+.course-details-page .cd-layout {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-areas:
+        "head card"
+        "body card";
+    grid-template-rows: auto 1fr;   /* body takes the leftover height */
+    column-gap: 32px;
+    row-gap: 24px;
+    align-items: start;
 }
 
-/* Media viewer */
-.course-details-page .media-viewer.disabled {
-    background-color: #1a2a28;
-    border-radius: 16px;
-    height: 320px;
+.course-details-page .cd-head { grid-area: head; }
+.course-details-page .cd-body { grid-area: body; }
+.course-details-page .cd-card { grid-area: card; }
+
+
+/* 4. HEAD: TITLE, DESCRIPTION, RATING LINE ------------------------------ */
+.course-details-page .cd-title {
+    margin: 0 0 12px;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+.course-details-page .cd-description {
+    margin: 0 0 16px;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #334155;
+    white-space: pre-line;          /* keeps line breaks typed in the description */
+    overflow-wrap: anywhere;
+}
+
+.course-details-page .cd-rating-line {
     display: flex;
     align-items: center;
-    justify-content: center;
-    position: relative;
-    border: 1px solid #d3e7e3;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--cd-muted);
 }
 
-.course-details-page .disabled-overlay {
-    text-align: center;
-    color: #a0c4bf;
-    padding: 0 16px;
+
+/* 5. STARS (used in several places) ------------------------------------- */
+.course-details-page .cd-stars {
+    display: inline-flex;
+    gap: 2px;
+    font-size: 18px;
+    line-height: 1;
 }
 
-.course-details-page .disabled-overlay i {
-    font-size: 40px;
-    margin-bottom: 12px;
+.course-details-page .cd-stars-lg {
+    font-size: 22px;
 }
 
-.course-details-page .disabled-overlay p {
-    font-weight: 600;
-    font-size: 15px;
-}
+/* Filled star = gold, empty star = light grey */
+.course-details-page .cd-star-full  { color: var(--cd-gold); }
+.course-details-page .cd-star-empty { color: #d5dedc; }
 
-/* Overview & reviews card */
-.course-details-page .overview-review-card {
-    background-color: #ffffff;
+
+/* 6. PURCHASE CARD -------------------------------------------------------
+   position: sticky keeps the card on screen while the page scrolls.
+   align-self:start (from the grid) is required for sticky to work.         */
+.course-details-page .cd-card {
+    position: sticky;
+    top: 16px;
+    overflow: hidden;               /* clips the thumbnail to the rounded corners */
+    background: #ffffff;
+    border: 1px solid var(--cd-line);
     border-radius: 16px;
-    border: 1px solid #e1f0ed;
-    padding: 24px;
-    margin-top: 24px;
+    box-shadow: 0 10px 28px rgba(18, 124, 113, 0.12);
 }
 
-.course-details-page .tabs-header {
-    display: flex;
-    gap: 12px;
-    border-bottom: 2px solid #edf7f5;
-    padding-bottom: 12px;
-    margin-bottom: 20px;
+/* --- Thumbnail: fixed 16:9 box --- */
+.course-details-page .cd-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--cd-green-100);
+    overflow: hidden;
 }
 
-.course-details-page .cd-tab-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    font-weight: 700;
-    color: #5e7e7a;
-    cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 6px;
-    transition: 0.25s;
+.course-details-page .cd-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;              /* fills the box, crops instead of stretching */
 }
 
-.course-details-page .cd-tab-btn.active {
-    color: #127c71;
-    background-color: #e6f4f2;
-}
-
-.course-details-page .cd-tab-content.hidden {
+/* BUG FIX: "display:block" above overrides the HTML hidden attribute, which made the
+   empty <img> show its alt text ("Course thumbnail") and a broken-image icon.
+   This rule makes hidden images really hidden until the picture has loaded. */
+.course-details-page .cd-thumb img[hidden] {
     display: none;
 }
 
-.course-details-page .cd-tab-content h3 {
-    font-size: 18px;
-    margin-bottom: 12px;
+/* Placeholder icon (shown while loading and if the image fails) */
+.course-details-page .cd-thumb-placeholder {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 44px;
+    color: #a9cfc9;
 }
 
-.course-details-page .cd-tab-content p {
-    line-height: 1.6;
-    color: #334155;
+/* Hidden once the real image is visible */
+.course-details-page .cd-thumb.loaded .cd-thumb-placeholder {
+    display: none;
+}
+
+/* Soft shimmer while the image is loading */
+.course-details-page .cd-thumb.loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: cd-shimmer 1.4s linear infinite;
+}
+
+@keyframes cd-shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+/* --- Card body --- */
+.course-details-page .cd-card-body {
+    padding: 22px;
+}
+
+.course-details-page .price-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.course-details-page .price-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--cd-muted);
+}
+
+.course-details-page .price-row.total {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--cd-ink);
+}
+
+.course-details-page .cd-divider {
+    border: none;
+    border-top: 1px dashed #d3e7e3;
+    margin: 0;
+}
+
+.course-details-page .btn-purchase {
+    width: 100%;
+    background-color: var(--cd-green-600);
+    color: #ffffff;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.25s;
+}
+
+.course-details-page .btn-purchase:hover {
+    background-color: var(--cd-green-700);
+}
+
+.course-details-page .btn-purchase:focus-visible {
+    outline: 3px solid rgba(18, 124, 113, 0.4);
+    outline-offset: 3px;
+}
+
+/* --- "This course includes" --- */
+.course-details-page .cd-includes {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--cd-line);
+}
+
+.course-details-page .cd-includes h4 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 700;
 }
 
 .course-details-page .course-highlights {
     list-style: none;
-    margin-top: 16px;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -124,101 +271,222 @@
 .course-details-page .course-highlights li {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-size: 14px;
 }
 
 .course-details-page .course-highlights i {
-    color: #127c71;
+    width: 18px;
+    text-align: center;
+    color: var(--cd-green-600);
 }
 
-/* Reviews */
-.course-details-page .review-item {
-    border-top: 1px solid #eef2f7;
-    padding: 12px 0;
+
+/* 7. BODY SECTIONS + RATING BOX ----------------------------------------- */
+.course-details-page .cd-section {
+    margin-bottom: 28px;
 }
 
-.course-details-page .review-item .rating {
-    margin-left: 10px;
+.course-details-page .cd-section-title {
+    margin: 0 0 14px;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+/* Rating box: big average on the left, distribution bars on the right */
+.course-details-page .cd-rating-box {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+    padding: 24px;
+    background: var(--cd-green-50);
+    border: 1px solid var(--cd-line);
+    border-radius: 16px;
+}
+
+.course-details-page .cd-rating-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.course-details-page .cd-avg-number {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--cd-green-600);
+}
+
+.course-details-page .cd-total-reviews {
     font-size: 13px;
+    color: var(--cd-muted);
+}
+
+/* Distribution bars (one row per star level) */
+.course-details-page .cd-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.course-details-page .cd-bar-row {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--cd-muted);
+}
+
+.course-details-page .cd-bar-label {
+    font-weight: 700;
+    color: var(--cd-ink);
+    white-space: nowrap;
+}
+
+.course-details-page .cd-bar-label span {
+    color: var(--cd-gold);
+}
+
+.course-details-page .cd-bar-track {
+    height: 10px;
+    background: #d9ebe7;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.course-details-page .cd-bar-fill {
+    height: 100%;
+    width: 0;                       /* JS sets the real width in % */
+    background: var(--cd-gold);
+    border-radius: 999px;
+}
+
+.course-details-page .cd-bar-count {
+    text-align: right;
+}
+
+
+/* 8. REVIEWS -------------------------------------------------------------- */
+.course-details-page .cd-review-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0 0 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--cd-muted);
+    background: #fffaf0;
+    border: 1px solid #fde9bf;
+    border-radius: 10px;
+}
+
+.course-details-page .cd-review-note i {
+    margin-top: 3px;
+    color: #c98a00;
+}
+
+.course-details-page .cd-empty {
+    padding: 12px 0;
     color: #64748b;
 }
 
-.course-details-page .review-item p {
-    margin-top: 6px;
+.course-details-page .review-item {
+    display: flex;
+    gap: 14px;
+    padding: 18px 0;
+    border-top: 1px solid #eef2f7;
 }
 
-/* Purchase card */
-.course-details-page .purchase-card {
-    background-color: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e1f0ed;
-    padding: 24px;
-    position: sticky;
-    top: 0;
+/* Round avatar with initials */
+.course-details-page .cd-avatar {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cd-green-600);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
 }
 
-.course-details-page .course-title {
-    font-size: 20px;
-    font-weight: 800;
-    margin-bottom: 20px;
+.course-details-page .review-body {
+    flex: 1;
+    min-width: 0;
 }
 
-.course-details-page .price-breakdown {
+.course-details-page .review-header {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 4px;
 }
 
-.course-details-page .price-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: #5e7e7a;
-}
-
-.course-details-page .price-row.total {
-    font-size: 16px;
-    font-weight: 800;
-    color: #0a3d37;
-}
-
-.course-details-page .cd-divider {
-    border: none;
-    border-top: 1px dashed #d3e7e3;
-}
-
-.course-details-page .btn-purchase {
-    width: 100%;
-    background-color: #127c71;
-    color: #ffffff;
-    padding: 14px;
-    border: none;
-    border-radius: 10px;
-    font-weight: 700;
+.course-details-page .review-header strong {
     font-size: 15px;
-    cursor: pointer;
-    transition: 0.25s;
 }
 
-.course-details-page .btn-purchase:hover {
-    background-color: #0d6860;
+.course-details-page .review-header .cd-stars {
+    font-size: 15px;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-    .course-details-page .course-detail-layout {
-        grid-template-columns: 1fr;
+.course-details-page .review-body p {
+    margin: 8px 0 0;
+    line-height: 1.6;
+    color: #334155;
+    overflow-wrap: anywhere;
+}
+
+
+/* 9. RESPONSIVE ----------------------------------------------------------- */
+
+/* Tablet / phone: one column. Order = head, card, body. */
+@media (max-width: 960px) {
+    .course-details-page .cd-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "head"
+            "card"
+            "body";
+        grid-template-rows: auto;
     }
 
-    .course-details-page .purchase-card {
+    /* Sticky makes no sense in a single column */
+    .course-details-page .cd-card {
         position: static;
     }
 }
 
-@media (max-width: 500px) {
-    .course-details-page .media-viewer.disabled {
-        height: 220px;
+@media (max-width: 560px) {
+    .course-details-page .cd-title {
+        font-size: 24px;
+    }
+
+    .course-details-page .cd-description {
+        font-size: 15px;
+    }
+
+    /* Rating box stacks: average on top, bars below */
+    .course-details-page .cd-rating-box {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 18px;
+    }
+}
+
+
+/* 10. REDUCED MOTION ------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    .course-details-page .cd-thumb.loading::after {
+        animation: none;
+    }
+
+    .course-details-page .btn-purchase {
+        transition: none;
     }
 }

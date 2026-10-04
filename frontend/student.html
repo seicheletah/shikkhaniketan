@@ -2,28 +2,38 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
+    <!-- Makes the page scale correctly on mobile screens -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillHub - Dashboard</title>
+
+    <!-- Main stylesheet for the whole dashboard layout -->
     <link rel="stylesheet" href="student.css">
-    <!-- FontAwesome Icons -->
+
+    <!-- FontAwesome: icon library used for the menu button, logo, etc. -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Root wrapper: sidebar on the left, main content on the right -->
     <div class="app-container">
-        <!-- মোবাইলের জন্য মেনু বাটন -->
+
+        <!-- Hamburger button: only visible on mobile (<= 768px) to open/close the sidebar -->
         <button class="mobile-toggle" id="menuToggle">
             <i class="fa-solid fa-bars"></i>
         </button>
 
-        <!-- ফিক্সড সবুজ সাইডবার -->
+        <!-- ===================== SIDEBAR (fixed, green) ===================== -->
         <aside class="sidebar" id="sidebar">
+            <!-- Logo + site name; clicking it goes to the home page -->
             <div class="brand">
                 <i class="fa-solid fa-graduation-cap brand-icon"></i>
                 <a href="index.html" style="text-decoration: none; color: inherit;">
                     <h2>SkillHub</h2>
                 </a>
             </div>
-            
+
+            <!-- Navigation menu.
+                 Links with a "data-page" attribute load that page inside the
+                 content area via JavaScript (no full page reload). -->
             <nav class="nav-menu">
                 <a href="courses.html" class="nav-link active" data-page="courses.html">
                     <span>Courses</span>
@@ -34,40 +44,50 @@
                 <a href="settings.html" class="nav-link" data-page="settings.html">
                     <span>Settings</span>
                 </a>
-                <a href="#logout" class="nav-link" data-page="logout">
+
+                <!-- Logout link:
+                     - It has NO "data-page" attribute on purpose, so the page-loader
+                       in student.js ignores it.
+                     - It has its own id so student.js can attach the logout logic. -->
+                <a href="#logout" class="nav-link" id="logoutBtn">
                     <span>Logout</span>
                 </a>
             </nav>
         </aside>
 
-        <!-- মোবাইলের জন্য ব্যাকড্রপ ব্যাকগ্রাউন্ড -->
+        <!-- Dark transparent backdrop shown behind the sidebar on mobile -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- প্রধান কন্টেন্ট ও টপবার র‍্যাপার -->
+        <!-- ===================== MAIN AREA (topbar + content) ===================== -->
         <div class="main-wrapper">
-            <!-- ফিক্সড টপবার -->
+
+            <!-- TOPBAR: welcome text on the left, profile picture on the right -->
             <header class="topbar">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" placeholder="Search your courses...">
+                <!-- LEFT SIDE: "Welcome to Student Dashboard, <name>"
+                     The <span> with id="studentUserName" is filled with the
+                     real first name by student.js after the profile loads.
+                     "Student" is just the fallback shown until then. -->
+                <div class="welcome-text">
+                    Welcome to Student Dashboard,
+                    <span class="user-name" id="studentUserName">Student</span>
                 </div>
-                <marquee> Welcome, to your dashboard, <span class="user-name" id="studentUserName">Student</span>
-                          
-                </marquee>
+
+                <!-- RIGHT SIDE: profile picture (src is replaced by student.js) -->
                 <div class="user-profile">
                     <img src="https://i.pravatar.cc/100?img=32" alt="User Profile" class="profile-img">
-                    
                 </div>
             </header>
 
-            <!-- স্ক্রোলযোগ্য মেইন কন্টেন্ট এরিয়া (লাল বর্ডারযুক্ত অংশ) -->
+            <!-- Scrollable content area.
+                 Other pages (courses, quiz, settings) are loaded here with fetch(). -->
             <main class="content-area" id="main-content">
-                <!-- Fetch API-এর মাধ্যমে এখানে আলাদা আলাদা পেজ লোড হবে -->
             </main>
         </div>
     </div>
-   
+
+    <!-- Main dashboard logic (navigation, profile, logout) -->
     <script src="student.js"></script>
+    <!-- Profile update logic (unchanged) -->
     <script src="update_profile.js"></script>
 </body>
 </html>

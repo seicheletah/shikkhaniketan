@@ -1,99 +1,195 @@
+<!--
+==========================================================================
+ update_profile.html  -  Update Profile form (student + teacher)
+==========================================================================
+ DESIGN NOTE
+   This page now has EXACTLY the same design language as settings.html:
+     - same title area, same card, same green banner
+     - same big round picture overlapping the banner
+     - same icon-badge tiles (here each tile contains an input)
+     - same green gradient buttons
+   Only the content differs: editable inputs instead of read-only text.
+
+ RULES (do not break update_profile.js)
+   1. Every id="up-..." and every name="..." is unchanged. Only visual
+      wrappers (tiles, icons, banner) were added or rearranged.
+   2. HTML fragment (no <html>/<head>/<body>), as before.
+   3. Font Awesome ("fa-solid" icons) must be loaded by the dashboard.
+==========================================================================
+-->
+
 <link rel="stylesheet" href="update_profile.css">
 
+<!-- Outer wrapper: every CSS rule of this page is scoped to #update-wrapper -->
 <div id="update-wrapper">
+
+    <!-- Page title area (same structure as on the Settings page) -->
+    <header class="pf-page-head">
+        <h1 class="pf-title">Update Profile</h1>
+        <p class="pf-subtitle">Change your details and save.</p>
+    </header>
+
+    <!-- Main card -->
     <div class="up-card">
 
-        <div class="up-header">
-            <h2>Update Profile</h2>
-            <p>Change your details and save.</p>
-        </div>
+        <!-- Green banner behind the picture (purely decorative) -->
+        <div class="pf-banner" aria-hidden="true"></div>
 
+        <!-- novalidate: your JS shows its own friendly messages -->
         <form id="updateProfileForm" novalidate>
 
-            <div class="up-avatar" style="text-align:center; margin-bottom:20px;">
-                <img id="up-pic-preview" src="https://i.pravatar.cc/100?img=32"
-                     alt="Profile Picture"
-                     style="width:110px; height:110px; border-radius:50%; object-fit:cover;">
-                <div style="margin-top:10px;">
-                    <input type="file" id="up-pic-input"
-                           accept="image/png, image/jpeg, image/webp">
+            <!-- ============ PROFILE PICTURE (same position/size as Settings) ============ -->
+            <div class="up-avatar">
+                <div class="pf-avatar-ring">
+                    <!-- Preview image: your JS replaces src with the current / newly chosen photo -->
+                    <img id="up-pic-preview"
+                         class="pf-avatar"
+                         src="https://i.pravatar.cc/200?img=32"
+                         alt="Profile picture preview">
                 </div>
+
+                <!--
+                    The real file input keeps its id (used by JS) but is visually hidden.
+                    The <label for="up-pic-input"> below is the pretty green pill that opens
+                    the same file chooser.
+                -->
+                <input type="file" id="up-pic-input" class="up-file-hidden"
+                       accept="image/png, image/jpeg, image/webp">
+                <label for="up-pic-input" class="pf-pill pf-pill-action">
+                    <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                    Change photo
+                </label>
             </div>
 
+            <!-- ============ PERSONAL DETAILS (tiles identical to Settings) ============ -->
             <div class="up-grid">
 
+                <!-- First name -->
                 <div class="up-group">
-                    <label for="up-first-name">First Name</label>
-                    <input type="text" id="up-first-name" name="first_name" required>
+                    <span class="pf-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-first-name">First Name</label>
+                        <input type="text" id="up-first-name" name="first_name" required>
+                    </div>
                 </div>
 
+                <!-- Last name -->
                 <div class="up-group">
-                    <label for="up-last-name">Last Name</label>
-                    <input type="text" id="up-last-name" name="last_name" required>
+                    <span class="pf-icon"><i class="fa-solid fa-user-tag" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-last-name">Last Name</label>
+                        <input type="text" id="up-last-name" name="last_name" required>
+                    </div>
                 </div>
 
+                <!-- Phone -->
                 <div class="up-group">
-                    <label for="up-phone">Phone Number</label>
-                    <input type="tel" id="up-phone" name="phone_no" required>
+                    <span class="pf-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-phone">Phone Number</label>
+                        <input type="tel" id="up-phone" name="phone_no" required>
+                    </div>
                 </div>
 
+                <!-- Gender (values m / f / o unchanged: the backend expects them) -->
                 <div class="up-group">
-                    <label for="up-gender">Gender</label>
-                    <select id="up-gender" name="gender" required>
-                        <option value="" disabled selected hidden>Gender</option>
-                        <option value="m">Male</option>
-                        <option value="f">Female</option>
-                        <option value="o">Other</option>
-                    </select>
+                    <span class="pf-icon"><i class="fa-solid fa-venus-mars" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-gender">Gender</label>
+                        <select id="up-gender" name="gender" required>
+                            <option value="" disabled selected hidden>Select gender</option>
+                            <option value="m">Male</option>
+                            <option value="f">Female</option>
+                            <option value="o">Other</option>
+                        </select>
+                    </div>
                 </div>
 
+                <!-- Date of birth -->
                 <div class="up-group">
-                    <label for="up-dob">Date of Birth</label>
-                    <input type="date" id="up-dob" name="date_of_birth" required>
+                    <span class="pf-icon"><i class="fa-solid fa-cake-candles" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-dob">Date of Birth</label>
+                        <input type="date" id="up-dob" name="date_of_birth" required>
+                    </div>
                 </div>
 
+                <!-- Address (full width) -->
                 <div class="up-group up-full">
-                    <label for="up-address">Address</label>
-                    <input type="text" id="up-address" name="address">
+                    <span class="pf-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-address">Address</label>
+                        <input type="text" id="up-address" name="address">
+                    </div>
                 </div>
 
+                <!-- About (full width, tall) -->
                 <div class="up-group up-full">
-                    <label for="up-about">About</label>
-                    <textarea id="up-about" name="about" rows="3"></textarea>
+                    <span class="pf-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
+                    <div class="pf-text">
+                        <label for="up-about">About</label>
+                        <textarea id="up-about" name="about" rows="3"></textarea>
+                    </div>
                 </div>
 
             </div>
 
-            <!-- আলাদা বক্স: Email ও Password -->
-            <div class="up-account-box"
-                 style="margin-top:20px; padding:16px; border:1px solid #d0d7de; border-radius:10px;">
-                <h3 style="margin-bottom:12px;">Account Settings</h3>
+            <!-- ============ ACCOUNT SETTINGS (separate section, same tiles) ============ -->
+            <div class="up-account-box">
+                <h3>
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    Account Settings
+                </h3>
 
-                <div class="up-group up-full">
-                    <label for="up-email">Email</label>
-                    <input type="email" id="up-email" name="email" required>
-                </div>
+                <div class="up-account-grid">
 
-                <div class="up-group up-full">
-                    <label for="up-password">New Password</label>
-                    <input type="password" id="up-password" name="password"
-                           placeholder="Leave empty to keep your current password"
-                           autocomplete="new-password">
-                </div>
+                    <!-- Email -->
+                    <div class="up-group up-full">
+                        <span class="pf-icon"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                        <div class="pf-text">
+                            <label for="up-email">Email</label>
+                            <input type="email" id="up-email" name="email" required>
+                        </div>
+                    </div>
 
-                <div class="up-group up-full">
-                    <label for="up-confirm-password">Confirm Password</label>
-                    <input type="password" id="up-confirm-password"
-                           placeholder="Re-enter new password"
-                           autocomplete="new-password">
+                    <!-- New password (empty = keep the current password) -->
+                    <div class="up-group up-full">
+                        <span class="pf-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+                        <div class="pf-text">
+                            <label for="up-password">New Password</label>
+                            <input type="password" id="up-password" name="password"
+                                   placeholder="Leave empty to keep your current password"
+                                   autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <!-- Confirm password (no name: only compared in JS, never sent) -->
+                    <div class="up-group up-full">
+                        <span class="pf-icon"><i class="fa-solid fa-key" aria-hidden="true"></i></span>
+                        <div class="pf-text">
+                            <label for="up-confirm-password">Confirm Password</label>
+                            <input type="password" id="up-confirm-password"
+                                   placeholder="Re-enter new password"
+                                   autocomplete="new-password">
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
+            <!-- Status line: JS adds the class "error" (red) or "success" (green) -->
             <p id="up-message" class="up-message" role="status" aria-live="polite"></p>
 
+            <!-- ============ ACTION BUTTONS ============ -->
             <div class="up-actions">
-                <button type="submit" id="up-save-btn" class="up-btn up-btn-primary">Save changes</button>
-                <button type="button" id="up-delete-btn" class="up-btn up-btn-danger">Delete account</button>
+                <button type="submit" id="up-save-btn" class="up-btn up-btn-primary">
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                    Save changes
+                </button>
+                <button type="button" id="up-delete-btn" class="up-btn up-btn-danger">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    Delete account
+                </button>
             </div>
 
         </form>

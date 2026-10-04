@@ -1,3 +1,8 @@
+/* ==========================================================
+   GLOBAL RESET
+   Remove default browser spacing and make sizing predictable
+   (padding/border are included inside width and height).
+   ========================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -5,26 +10,34 @@
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 
+/* ==========================================================
+   DESIGN TOKENS (CSS variables)
+   Change a color or size here and it updates everywhere.
+   ========================================================== */
 :root {
-    --sidebar-bg: #096858;       /* ছবির মতো অরিজিনাল সবুজ/টিল কালার */
+    --sidebar-bg: #096858;       /* main green/teal brand color */
     --sidebar-text: #ffffff;
-    --active-bg: #ffffff;
+    --active-bg: #ffffff;        /* background of the selected menu item */
     --active-text: #096858;
     --topbar-bg: #ffffff;
-    --bg-light: #eef7f4;         /* ছবির মতো হাল্কা সবুজ-সাদা টোন */
-    --search-bg: #e2f0eb;
+    --bg-light: #eef7f4;         /* light green page background */
     --text-dark: #1e3a34;
     --sidebar-width: 240px;
     --topbar-height: 70px;
 }
 
+/* ==========================================================
+   BODY
+   The body itself never scrolls; only .content-area scrolls.
+   ========================================================== */
 body {
     background-color: var(--bg-light);
     color: var(--text-dark);
     height: 100vh;
-    overflow: hidden; /* মূল বডি স্ক্রোল বন্ধ রেখে কন্টেন্ট এরিয়া স্ক্রোল করবে */
+    overflow: hidden;
 }
 
+/* Root flex container: sidebar + main area */
 .app-container {
     display: flex;
     height: 100vh;
@@ -32,13 +45,16 @@ body {
     position: relative;
 }
 
-/* মোবাইল নেভিগেশন বাটন */
+/* ==========================================================
+   MOBILE MENU BUTTON
+   Hidden on desktop, shown only inside the mobile media query.
+   ========================================================== */
 .mobile-toggle {
     display: none;
     position: fixed;
     top: 18px;
     left: 15px;
-    z-index: 1001;
+    z-index: 1001; /* above the sidebar so it is always clickable */
     background: var(--sidebar-bg);
     color: #fff;
     border: none;
@@ -48,22 +64,25 @@ body {
     cursor: pointer;
 }
 
-/* ১. ফিক্সড সাইডবার ডিজাইন */
+/* ==========================================================
+   SIDEBAR (fixed on the left)
+   ========================================================== */
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--sidebar-bg);
     color: var(--sidebar-text);
     height: 100vh;
-    position: fixed;
+    position: fixed;  /* stays in place while content scrolls */
     top: 0;
     left: 0;
     z-index: 1000;
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease; /* smooth slide in/out on mobile */
 }
 
+/* Logo row: icon + site name */
 .brand {
     display: flex;
     align-items: center;
@@ -74,7 +93,7 @@ body {
 
 .brand-icon {
     font-size: 24px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2); /* soft translucent square behind icon */
     padding: 8px;
     border-radius: 8px;
     color: #ffffff;
@@ -86,6 +105,7 @@ body {
     color: #ffffff;
 }
 
+/* Vertical list of menu links */
 .nav-menu {
     display: flex;
     flex-direction: column;
@@ -100,7 +120,7 @@ body {
     font-size: 15px;
     font-weight: 600;
     border-radius: 12px;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease; /* smooth hover effect */
 }
 
 .nav-link:hover {
@@ -108,7 +128,7 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* অ্যাক্টিভ লিংকের ওপর সাদা রঙের ব্যাকগ্রাউন্ড (ছবি অনুযায়ী) */
+/* Currently selected menu item: white pill with green text */
 .nav-link.active {
     background-color: var(--active-bg);
     color: var(--active-text);
@@ -120,7 +140,10 @@ body {
     margin-top: 25px;
 }
 
-/* মূল লেআউট র‍্যাপার */
+/* ==========================================================
+   MAIN WRAPPER
+   Pushed right by the sidebar width so nothing hides behind it.
+   ========================================================== */
 .main-wrapper {
     margin-left: var(--sidebar-width);
     width: calc(100% - var(--sidebar-width));
@@ -129,7 +152,11 @@ body {
     height: 100vh;
 }
 
-/* ২. ফিক্সড টপবার ডিজাইন */
+/* ==========================================================
+   TOPBAR
+   Layout: [ Welcome text ........................ Profile pic ]
+   "space-between" pushes the two children to opposite edges.
+   ========================================================== */
 .topbar {
     height: var(--topbar-height);
     background-color: var(--topbar-bg);
@@ -140,64 +167,55 @@ body {
     position: sticky;
     top: 0;
     z-index: 900;
-    border-bottom: 1px solid rgba(0,0,0,0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
-.search-box {
-    display: flex;
-    align-items: center;
-    background-color: var(--search-bg);
-    padding: 10px 18px;
-    border-radius: 12px;
-    width: 320px;
+/* Left side text: "Welcome to Student Dashboard, <name>" */
+.welcome-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+    /* If the text is too long, show "..." instead of breaking the layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 15px;
 }
 
-.search-icon {
-    color: #096858;
-    margin-right: 10px;
-    font-size: 14px;
+/* The student's name inside the welcome text (highlighted in green) */
+.user-name {
+    font-weight: 700;
+    color: var(--sidebar-bg);
 }
 
-.search-box input {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-    font-size: 14px;
-    color: #333;
-}
-
-.search-box input::placeholder {
-    color: #6d9c91;
-}
-
+/* Right side: container for the profile picture */
 .user-profile {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0; /* never let the picture get squeezed smaller */
 }
 
+/* Round profile picture */
 .profile-img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: cover; /* crop to fill the circle without stretching */
 }
 
-.user-name {
-    font-weight: 700;
-    font-size: 15px;
-    color: #1e3a34;
-}
-
-/* ৩. স্ক্রোলযোগ্য কন্টেন্ট এরিয়া (ছবিতে চিহ্নিত লাল বক্স) */
+/* ==========================================================
+   SCROLLABLE CONTENT AREA
+   Pages (courses, quiz, settings) are injected here.
+   ========================================================== */
 .content-area {
-    flex: 1;
+    flex: 1;               /* take all remaining height under the topbar */
     padding: 40px 35px;
-    overflow-y: auto; /* কন্টেন্ট বড় হলে শুধু এই বক্সের ভেতরেই স্ক্রোল হবে */
+    overflow-y: auto;      /* only this box scrolls when content is long */
     background-color: var(--bg-light);
 }
-/* কন্টেন্ট বক্সের ভেতরের লিংকের ডিজাইন */
+
+/* Green button-style link used inside loaded pages */
 .content-link {
     display: inline-block;
     background-color: var(--sidebar-bg);
@@ -211,7 +229,7 @@ body {
 }
 
 .content-link:hover {
-    background-color: #064d41;
+    background-color: #064d41; /* darker green on hover */
 }
 
 .page-title {
@@ -226,7 +244,10 @@ body {
     font-size: 16px;
 }
 
-/* ৪. মোবাইল রেসপনসিভনেস */
+/* ==========================================================
+   MOBILE OVERLAY
+   Dark layer behind the open sidebar; click it to close the menu.
+   ========================================================== */
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -238,40 +259,43 @@ body {
     z-index: 999;
 }
 
-
-
-
+/* ==========================================================
+   RESPONSIVE RULES (screens 768px wide or smaller)
+   ========================================================== */
 @media (max-width: 768px) {
+    /* Show the hamburger button */
     .mobile-toggle {
         display: block;
     }
 
+    /* Hide the sidebar off-screen to the left */
     .sidebar {
         transform: translateX(-100%);
     }
 
+    /* JS adds .open to slide the sidebar into view */
     .sidebar.open {
         transform: translateX(0);
     }
 
+    /* JS adds .active to show the dark backdrop */
     .sidebar-overlay.active {
         display: block;
     }
 
+    /* Content takes the full width since the sidebar is hidden */
     .main-wrapper {
         margin-left: 0;
         width: 100%;
     }
 
+    /* Left padding leaves room for the hamburger button */
     .topbar {
         padding: 0 20px 0 65px;
     }
 
-    .search-box {
-        width: 180px;
-    }
-
-    .user-name {
-        display: none; /* ছোট স্ক্রিনে শুধুমাত্র প্রোফাইল ছবি দেখাবে */
+    /* Slightly smaller welcome text so it fits on small screens */
+    .welcome-text {
+        font-size: 14px;
     }
 }

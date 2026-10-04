@@ -1,59 +1,142 @@
+<!--
+==========================================================================
+ settings.html  -  Student Profile (read-only view)
+==========================================================================
+ DESIGN NOTE
+   This page and update_profile.html now share ONE design language:
+     - same page title area (title + subtitle)
+     - same white card with a green banner on top
+     - same big round profile picture overlapping the banner
+     - same icon-badge tiles for every detail / field
+     - same green gradient buttons
+   Only the content differs: here the values are read-only text,
+   there they are editable inputs.
+
+ RULES (do not break the JavaScript)
+   1. Every id="disp-..." is filled by your existing JS. Do NOT rename or
+      remove any id.
+   2. This is an HTML fragment (no <html>/<head>/<body>) because the
+      dashboard injects it with fetch().
+   3. Do NOT add a <script> tag here - scripts inserted via innerHTML
+      never run.
+   4. Font Awesome ("fa-solid" icons) must be loaded by the dashboard,
+      as it already is.
+==========================================================================
+-->
+
 <link rel="stylesheet" href="settings.css">
 
+<!-- Outer wrapper: every CSS rule of this page is scoped to #settings-wrapper -->
 <div id="settings-wrapper">
-    <div class="profile-card">
+
+    <!-- Page title area (same structure as on the Update Profile page) -->
+    <header class="pf-page-head">
+        <h1 class="pf-title">Student Profile</h1>
+        <p class="pf-subtitle">Your personal details at a glance.</p>
+    </header>
+
+    <!-- Main card -->
+    <section class="profile-card">
+
+        <!-- Green banner behind the picture (purely decorative) -->
+        <div class="pf-banner" aria-hidden="true"></div>
+
+        <!-- Big round profile picture overlapping the banner, then the User ID -->
         <div class="profile-header">
-            <img id="disp-profile-pic" src="https://i.pravatar.cc/100?img=32"
-                 alt="Profile Picture"
-                 style="width:90px; height:90px; border-radius:50%; object-fit:cover;">
-            <h2>Student Profile</h2>
-            <span class="badge">Active Student</span>
+            <div class="pf-avatar-ring">
+                <!-- id="disp-profile-pic" is updated by your JS; the URL is just a placeholder -->
+                <img id="disp-profile-pic"
+                     class="pf-avatar"
+                     src="https://i.pravatar.cc/200?img=32"
+                     alt="Profile picture">
+            </div>
+
+            <!-- User ID pill (id="disp-id" is filled by JS) -->
+            <div class="pf-pill">
+                <i class="fa-solid fa-fingerprint" aria-hidden="true"></i>
+                <span class="pf-pill-label">User ID</span>
+                <span id="disp-id" class="pf-pill-value">-</span>
+            </div>
         </div>
 
+        <!-- Details: 2 columns on desktop, 1 on phones. Each tile = icon badge + label + value -->
         <div class="profile-grid">
+
+            <div class="profile-item">
+                <span class="pf-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>First Name</label>
+                    <span id="disp-first-name">-</span>
+                </div>
+            </div>
+
+            <div class="profile-item">
+                <span class="pf-icon"><i class="fa-solid fa-user-tag" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>Last Name</label>
+                    <span id="disp-last-name">-</span>
+                </div>
+            </div>
+
+            <div class="profile-item">
+                <span class="pf-icon"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>Email</label>
+                    <span id="disp-email">-</span>
+                </div>
+            </div>
+
+            <div class="profile-item">
+                <span class="pf-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>Phone Number</label>
+                    <span id="disp-phone">-</span>
+                </div>
+            </div>
+
+            <div class="profile-item">
+                <span class="pf-icon"><i class="fa-solid fa-venus-mars" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>Gender</label>
+                    <span id="disp-gender">-</span>
+                </div>
+            </div>
+
+            <div class="profile-item">
+                <span class="pf-icon"><i class="fa-solid fa-cake-candles" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>Date of Birth</label>
+                    <span id="disp-dob">-</span>
+                </div>
+            </div>
+
+            <!-- Full-width tiles span both columns -->
             <div class="profile-item full-width">
-                <label>User ID:</label>
-                <span id="disp-id" style="word-break:break-all;">-</span>
+                <span class="pf-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>Address</label>
+                    <span id="disp-address">-</span>
+                </div>
             </div>
-            <div class="profile-item">
-                <label>First Name:</label>
-                <span id="disp-first-name">-</span>
-            </div>
-            <div class="profile-item">
-                <label>Last Name:</label>
-                <span id="disp-last-name">-</span>
-            </div>
-            <div class="profile-item">
-                <label>Email:</label>
-                <span id="disp-email">-</span>
-            </div>
-            <div class="profile-item">
-                <label>Phone Number:</label>
-                <span id="disp-phone">-</span>
-            </div>
-            <div class="profile-item">
-                <label>Gender:</label>
-                <span id="disp-gender">-</span>
-            </div>
-            <div class="profile-item">
-                <label>Date of Birth:</label>
-                <span id="disp-dob">-</span>
-            </div>
+
             <div class="profile-item full-width">
-                <label>Address:</label>
-                <span id="disp-address">-</span>
+                <span class="pf-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
+                <div class="pf-text">
+                    <label>About</label>
+                    <span id="disp-about">-</span>
+                </div>
             </div>
-            <div class="profile-item full-width">
-                <label>About:</label>
-                <span id="disp-about">-</span>
-            </div>
+
         </div>
 
+        <!-- Action area -->
         <div class="profile-actions">
             <a href="update_profile.html" class="btn-update-link">
-                <i class="fa-solid fa-pen-to-square"></i> Update Profile
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                Update Profile
             </a>
         </div>
-    </div>
+
+    </section>
 </div>
-<!-- এখানে কোনো <script> রাখবেন না -->
+<!-- Do not add any <script> here -->

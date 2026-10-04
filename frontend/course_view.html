@@ -1,67 +1,97 @@
+<!-- Styles for this page only (scoped to .course-view-page) -->
 <link rel="stylesheet" href="course_view.css">
 
 <div class="course-view-page">
 
-    <button class="cv-back-btn" id="cvBackBtn">
-        <i class="fa-solid fa-arrow-left"></i> Back to Course
-    </button>
+    <!-- ================= TOP CARD: title + player ================= -->
+    <div class="cv-card cv-top">
 
-    <div class="course-player-container">
+        <button class="cv-back-btn" id="cvBackBtn">
+            <i class="fa-solid fa-arrow-left"></i> Back to course
+        </button>
 
-        <!-- MEDIA VIEWER (VIDEO & PDF) -->
-        <div class="media-viewer-card">
+        <span class="cv-badge">
+            <i class="fa-regular fa-circle-check"></i> Purchased
+        </span>
 
-            <div class="media-toggle-bar">
-                <button class="toggle-btn active" data-media="video">
-                    <i class="fa-solid fa-circle-play"></i> Video Player
-                </button>
-                <button class="toggle-btn" data-media="pdf">
-                    <i class="fa-solid fa-file-pdf"></i> PDF Reader
-                </button>
-            </div>
+        <h1 class="cv-title" id="cvTitle">Course</h1>
+        <p class="cv-desc" id="cvOverview">Loading course details...</p>
 
-            <!-- VIDEO -->
-            <div class="media-box" id="videoPlayerBox">
-                <video controls>
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-
-            <!-- PDF -->
-            <div class="media-box hidden" id="pdfReaderBox">
-                <iframe width="100%" height="500px"></iframe>
-            </div>
-
+        <!-- Video / Documents toggle -->
+        <div class="media-toggle-bar">
+            <button class="toggle-btn active" data-media="video">
+                <i class="fa-regular fa-circle-play"></i> Video
+            </button>
+            <button class="toggle-btn" data-media="pdf">
+                <i class="fa-regular fa-file-lines"></i> Documents
+            </button>
         </div>
 
-        <!-- OVERVIEW & REVIEWS -->
-        <div class="overview-review-card">
-
-            <div class="tabs-header">
-                <button class="cv-tab-btn active" data-tab="overview">Overview</button>
-                <button class="cv-tab-btn" data-tab="reviews">Reviews</button>
-            </div>
-
-            <!-- OVERVIEW -->
-            <div class="cv-tab-content" id="overviewTab">
-                <h3 id="cvTitle">Course</h3>
-                <p id="cvOverview">Welcome to the premium course module. Access all video lectures, course slides, and downloadable resource materials directly from this viewer.</p>
-
-                <div class="resource-list">
-                    <h4>Course Resources</h4>
-                    <ul id="cvResourceList">
-                        <li>Loading resources...</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- REVIEWS -->
-            <div class="cv-tab-content hidden" id="reviewsTab">
-                <h3>Student Feedback</h3>
-            </div>
-
+        <!-- Video player -->
+        <div class="media-box" id="videoPlayerBox">
+            <video controls>
+                Your browser does not support the video tag.
+            </video>
         </div>
 
+        <!-- PDF reader -->
+        <div class="media-box hidden" id="pdfReaderBox">
+            <iframe title="PDF Reader"></iframe>
+        </div>
+
+    </div>
+
+    <!-- ================= COURSE RESOURCES ================= -->
+    <div class="cv-card cv-section">
+        <div class="cv-section-head">
+            <h3>Course resources</h3>
+            <span class="cv-meta" id="cvFileCount">0 files</span>
+        </div>
+        <ul id="cvResourceList">
+            <li class="cv-empty">Loading resources...</li>
+        </ul>
+    </div>
+
+    <!-- ================= WRITE A REVIEW ================= -->
+    <div class="cv-card cv-section" id="reviewFormCard">
+        <div class="cv-section-head">
+            <h3>Write a review</h3>
+        </div>
+
+        <div class="cv-form">
+
+            <!-- 5 clickable stars. data-value is the rating sent to the API -->
+            <label class="cv-label">Your rating</label>
+            <div class="cv-star-picker" id="cvStarPicker">
+                <button type="button" class="cv-star-btn" data-value="1" aria-label="1 star">★</button>
+                <button type="button" class="cv-star-btn" data-value="2" aria-label="2 stars">★</button>
+                <button type="button" class="cv-star-btn" data-value="3" aria-label="3 stars">★</button>
+                <button type="button" class="cv-star-btn" data-value="4" aria-label="4 stars">★</button>
+                <button type="button" class="cv-star-btn" data-value="5" aria-label="5 stars">★</button>
+                <span class="cv-star-text" id="cvStarText">Select a rating</span>
+            </div>
+
+            <!-- Comment box -->
+            <label class="cv-label" for="cvComment">Your comment</label>
+            <textarea id="cvComment" rows="4" maxlength="1000"
+                      placeholder="Share your experience with this course..."></textarea>
+
+            <!-- Success / error message after submitting -->
+            <p class="cv-form-msg hidden" id="cvFormMsg"></p>
+
+            <button type="button" class="cv-submit-btn" id="cvSubmitReview">Submit review</button>
+        </div>
+    </div>
+
+    <!-- ================= STUDENT REVIEWS ================= -->
+    <div class="cv-card cv-section" id="reviewsTab">
+        <div class="cv-section-head">
+            <h3>Student reviews</h3>
+            <span class="cv-meta" id="cvAvgRating"></span>
+        </div>
+        <div id="cvReviewList">
+            <p class="cv-empty">Loading reviews...</p>
+        </div>
     </div>
 
 </div>
