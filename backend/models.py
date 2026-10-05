@@ -527,6 +527,7 @@ class Course(CourseBase, table=True):
         Index("ix_course_paid", "course_paid"),
         Index("ix_course_tags", "course_tags", postgresql_using="gin"),
         Index("ix_course_search_vector", "search_vector", postgresql_using="gin"),
+        Index("ix_course_teacher_id", "teacher_id"),
     )
 
     teacher: Teacher = Relationship(back_populates="course")
@@ -650,6 +651,8 @@ class Media(SQLModel, table=True):
             nullable=False,
         )
     )
+    __table_args__ = (Index("ix_media_course_id", "course_id"),)
+
     course: Course = Relationship(back_populates="media")
 
 
@@ -710,6 +713,11 @@ class Purchase(PurchaseBase, table=True):
             nullable=False,
         )
     )
+    __table_args__ = (
+        Index("ix_purchase_student_id", "student_id"),
+        Index("ix_purchase_course_id", "course_id"),
+    )
+
     student: Student = Relationship(back_populates="purchase")
     course: Course = Relationship(back_populates="purchase")
 
