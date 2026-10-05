@@ -9,11 +9,13 @@ from sqlmodel import (
     Uuid,
     ForeignKey,
     Relationship,
+    Index,
+    Computed,
 )
 from pydantic import EmailStr, model_validator, HttpUrl, field_validator
 from datetime import datetime, date
 from enum import Enum
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
 
 
 # generic message model
@@ -436,11 +438,18 @@ class CourseTags(str, Enum):
     architecture = "architecture"
 
 
+# course language model
+class CourseLanguage(str, Enum):
+    english = "english"
+    bengali = "bengali"
+    hindi = "hindi"
+
+
 # course base model
 class CourseBase(SQLModel):
     course_name: str
     course_details: str
-    course_language: str
+    course_language: CourseLanguage = Field(sa_column=Column(String, nullable=False))
     course_resource_type: CourseResourceType = Field(
         sa_column=Column(String, nullable=False)
     )
@@ -448,7 +457,11 @@ class CourseBase(SQLModel):
     course_price: int = Field(ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR", nullable=False)
     course_tags: list[CourseTags] = Field(
-        default=[], sa_column=Column(ARRAY(String), nullable=False)
+        default=[],
+        sa_column=Column(
+            ARRAY(String),
+            nullable=False,
+        ),
     )
 
 
@@ -461,6 +474,12 @@ class Course(CourseBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
+    search_vector: str | None = Field(
+        default=None,
+        sa_column=Column(
+            TSVECTOR, Computed("to_tsvector('english', course_name)", persisted=True)
+        ),
+    )
     teacher_id: str = Field(
         sa_column=Column(
             String,
@@ -468,6 +487,14 @@ class Course(CourseBase, table=True):
             nullable=False,
         )
     )
+    __table_args__ = (
+        Index("ix_course_language", "course_language"),
+        Index("ix_course_resource_type", "course_resource_type"),
+        Index("ix_course_paid", "course_paid"),
+        Index("ix_course_tags", "course_tags", postgresql_using="gin"),
+        Index("ix_course_search_vector", "search_vector", postgresql_using="gin"),
+    )
+
     teacher: Teacher = Relationship(back_populates="course")
     purchase: Purchase = Relationship(back_populates="course")
     student: list[Student] = Relationship(
@@ -503,7 +530,7 @@ class CourseCreate(CourseBase):
 class CourseUpdate(SQLModel):
     course_name: str | None = None
     course_details: str | None = None
-    course_language: str | None = None
+    course_language: CourseLanguage | None = None
     course_paid: bool | None = None
     course_price: int | None = Field(default=None, ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
