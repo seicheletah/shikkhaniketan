@@ -10,9 +10,10 @@ from sqlmodel import (
     ForeignKey,
     Relationship,
 )
-from pydantic import EmailStr, model_validator, HttpUrl
+from pydantic import EmailStr, model_validator, HttpUrl, field_validator
 from datetime import datetime, date
 from enum import Enum
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
 # generic message model
@@ -267,6 +268,174 @@ class CourseResourceType(str, Enum):
     video = "video"
 
 
+# course tags model
+class CourseTags(str, Enum):
+    diploma = "diploma"
+    polytechnic_diploma = "polytechnic_diploma"
+    ba = "ba"
+    bsc = "bsc"
+    bcom = "bcom"
+    btech = "btech"
+    be = "be"
+    bca = "bca"
+    bba = "bba"
+    barch = "barch"
+    bfa = "bfa"
+    bed = "bed"
+    mbbs = "mbbs"
+    bds = "bds"
+    bams = "bams"
+    bhms = "bhms"
+    bpharma = "bpharma"
+    bsc_nursing = "bsc_nursing"
+    llb = "llb"
+    ba_llb = "ba_llb"
+    bba_llb = "bba_llb"
+    ma = "ma"
+    msc = "msc"
+    mcom = "mcom"
+    mtech = "mtech"
+    me = "me"
+    mca = "mca"
+    mba = "mba"
+    md = "md"
+    ms_medical = "ms_medical"
+    llm = "llm"
+    med = "med"
+    phd = "phd"
+
+    class_1 = "class_1"
+    class_2 = "class_2"
+    class_3 = "class_3"
+    class_4 = "class_4"
+    class_5 = "class_5"
+    class_6 = "class_6"
+    class_7 = "class_7"
+    class_8 = "class_8"
+    class_9 = "class_9"
+    class_10 = "class_10"
+    class_11 = "class_11"
+    class_12 = "class_12"
+
+    mathematics = "mathematics"
+    algebra = "algebra"
+    geometry = "geometry"
+    calculus = "calculus"
+    trigonometry = "trigonometry"
+    statistics = "statistics"
+    discrete_math = "discrete_math"
+    logic = "logic"
+
+    computer_science = "computer_science"
+    software_engineering = "software_engineering"
+    data_science = "data_science"
+    artificial_intelligence = "artificial_intelligence"
+    cybersecurity = "cybersecurity"
+    web_development = "web_development"
+    mobile_development = "mobile_development"
+    data_structures = "data_structures"
+
+    python = "python"
+    javascript = "javascript"
+    typescript = "typescript"
+    java = "java"
+    c_sharp = "c_sharp"
+    c_plus_plus = "c_plus_plus"
+    go_lang = "go_lang"
+    rust = "rust"
+    swift = "swift"
+    kotlin = "kotlin"
+    php = "php"
+    ruby = "ruby"
+    sql = "sql"
+
+    physics = "physics"
+    mechanics = "mechanics"
+    thermodynamics = "thermodynamics"
+    quantum_physics = "quantum_physics"
+    astrophysics = "astrophysics"
+
+    chemistry = "chemistry"
+    organic_chemistry = "organic_chemistry"
+    inorganic_chemistry = "inorganic_chemistry"
+    biochemistry = "biochemistry"
+
+    biology = "biology"
+    genetics = "genetics"
+    microbiology = "microbiology"
+    ecology = "ecology"
+
+    astronomy = "astronomy"
+    earth_science = "earth_science"
+    environmental_science = "environmental_science"
+
+    psychology = "psychology"
+    cognitive_psychology = "cognitive_psychology"
+    clinical_psychology = "clinical_psychology"
+
+    economics = "economics"
+    microeconomics = "microeconomics"
+    macroeconomics = "macroeconomics"
+
+    sociology = "sociology"
+    political_science = "political_science"
+    anthropology = "anthropology"
+
+    history = "history"
+    ancient_history = "ancient_history"
+    modern_history = "modern_history"
+
+    philosophy = "philosophy"
+    ethics = "ethics"
+
+    visual_arts = "visual_arts"
+    graphic_design = "graphic_design"
+    fine_arts = "fine_arts"
+    photography = "photography"
+
+    music = "music"
+    music_theory = "music_theory"
+    music_production = "music_production"
+
+    literature = "literature"
+    linguistics = "linguistics"
+    creative_writing = "creative_writing"
+
+    finance = "finance"
+    corporate_finance = "corporate_finance"
+    investment_banking = "investment_banking"
+
+    accounting = "accounting"
+    taxation = "taxation"
+
+    management = "management"
+    project_management = "project_management"
+    human_resources = "human_resources"
+
+    marketing = "marketing"
+    digital_marketing = "digital_marketing"
+    seo_sem = "seo_sem"
+    entrepreneurship = "entrepreneurship"
+
+    engineering = "engineering"
+    mechanical_engineering = "mechanical_engineering"
+    electrical_engineering = "electrical_engineering"
+    civil_engineering = "civil_engineering"
+
+    medicine = "medicine"
+    anatomy = "anatomy"
+    pharmacology = "pharmacology"
+    nursing = "nursing"
+
+    law = "law"
+    constitutional_law = "constitutional_law"
+    corporate_law = "corporate_law"
+
+    education = "education"
+    pedagogy = "pedagogy"
+    architecture = "architecture"
+
+
 # course base model
 class CourseBase(SQLModel):
     course_name: str
@@ -277,7 +446,10 @@ class CourseBase(SQLModel):
     )
     course_paid: bool
     course_price: int = Field(ge=0, le=15000)
-    course_price_currency: str | None = Field(default="INR")
+    course_price_currency: str | None = Field(default="INR", nullable=False)
+    course_tags: list[CourseTags] = Field(
+        default=[], sa_column=Column(ARRAY(String), nullable=False)
+    )
 
 
 # course table model
@@ -307,6 +479,14 @@ class Course(CourseBase, table=True):
 
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
+
+    @field_validator("course_tags", mode="after")
+    @classmethod
+    def has_duplicates(cls, tags: list[CourseTags]):
+        if len(tags) != len(set(tags)):
+            raise ValueError("duplicate tags are not allowed")
+        return tags
+
     @model_validator(mode="after")
     def check_valid_price(self):
         if self.course_paid == True and self.course_price <= 0:
