@@ -136,7 +136,7 @@ class Enrollment(SQLModel, table=True):
 class StudentBase(SQLModel):
     first_name: str
     last_name: str
-    phone_no: str = Field(primary_key=True, max_length=16)
+    phone_no: str = Field(primary_key=True, max_length=10)
     gender: str = Field(max_length=1)
     date_of_birth: date
     address: str
@@ -168,18 +168,35 @@ class Student(StudentBase, table=True):
 
 # create student model with pydantic vlidation
 class StudentCreate(StudentBase):
-    pass
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
 
 # update student model with pydantic vlidation
 class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    phone_no: str | None = Field(default=None, max_length=16)
+    phone_no: str | None = Field(default=None, max_length=10)
     gender: str | None = Field(default=None, max_length=1)
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
     @model_validator(mode="after")
     def check_empty_payload(self):
@@ -199,7 +216,7 @@ class StudentResponse(StudentBase):
 class TeacherBase(SQLModel):
     first_name: str
     last_name: str
-    phone_no: str = Field(primary_key=True, max_length=16)
+    phone_no: str = Field(primary_key=True, max_length=10)
     gender: str = Field(max_length=1)
     date_of_birth: date
     address: str
@@ -229,18 +246,35 @@ class Teacher(TeacherBase, table=True):
 
 # create student model with pydantic vlidation
 class TeacherCreate(TeacherBase):
-    pass
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
 
 # update teacher model with pydantic vlidation
 class TeacherUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    phone_no: str | None = Field(default=None, max_length=16)
+    phone_no: str | None = Field(default=None, max_length=10)
     gender: str | None = Field(default=None, max_length=1)
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
     @model_validator(mode="after")
     def check_empty_payload(self):
