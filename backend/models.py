@@ -482,10 +482,13 @@ class CourseCreate(CourseBase):
 
     @field_validator("course_tags", mode="after")
     @classmethod
-    def has_duplicates(cls, tags: list[CourseTags]):
-        if len(tags) != len(set(tags)):
-            raise ValueError("duplicate tags are not allowed")
-        return tags
+    def validate_tags(cls, course_tags: list[CourseTags]):
+        if course_tags:
+            if len(course_tags) != len(set(course_tags)):
+                raise ValueError("duplicate tags are not allowed")
+            if len(course_tags) > 5:
+                raise ValueError("maximum of 5 tags only")
+        return course_tags
 
     @model_validator(mode="after")
     def check_valid_price(self):
@@ -504,6 +507,17 @@ class CourseUpdate(SQLModel):
     course_paid: bool | None = None
     course_price: int | None = Field(default=None, ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
+    course_tags: list[CourseTags] | None = None
+
+    @field_validator("course_tags", mode="after")
+    @classmethod
+    def validate_tags(cls, course_tags: list[CourseTags]):
+        if course_tags:
+            if len(course_tags) != len(set(course_tags)):
+                raise ValueError("duplicate tags are not allowed")
+            if len(course_tags) > 5:
+                raise ValueError("maximum of 5 tags only")
+        return course_tags
 
     @model_validator(mode="after")
     def check_empty_payload(self):
