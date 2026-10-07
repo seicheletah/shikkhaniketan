@@ -118,31 +118,3 @@ def get_review(
         review_dict["last_name"] = last_name
         formatted_review.append(review_dict)
     return formatted_review
-
-
-@api_router.get("/{id}/rating", response_model=RatingPublicResponse)
-def get_rating(
-    id: uuid.UUID,
-    db_session: SessionDep,
-):
-    """
-    Get total ratings on a specific course by ID.
-    """
-    course = db_session.get(Course, id)
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
-        )
-    rating = db_session.exec(
-        select(
-            func.count(col(Review.rate)).label("total_reviews"),
-            func.avg(col(Review.rate)).label("average_rating"),
-        ).where(Review.course_id == id)
-    ).first()
-    total_reviews = rating[0] if rating and rating[0] else 0
-    raw_avg = rating[1] if rating and rating[1] is not None else 0.0
-    return RatingPublicResponse(
-        course_id=id,
-        total_reviews=total_reviews,
-        average_rating=round(raw_avg, 1),
-    )
