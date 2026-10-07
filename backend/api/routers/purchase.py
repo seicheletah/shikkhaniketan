@@ -130,6 +130,13 @@ def verify_payment(
         "razorpay_signature": data.razorpay_signature,
     }
     try:
+        razorpay_client.utility.verify_payment_signature(verify_data)  # type: ignore
+    except razorpay.errors.SignatureVerificationError:  # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="payment verification failed: invalid signature",
+        )
+    try:
         purchase = db_session.exec(
             select(Purchase).where(Purchase.razorpay_order_id == data.razorpay_order_id)
         ).first()
