@@ -130,23 +130,40 @@ def verify_payment(
         "razorpay_signature": data.razorpay_signature,
     }
     try:
-        razorpay_client.utility.verify_payment_signature(verify_data)  # type: ignore
-    except razorpay.errors.SignatureVerificationError:  # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="payment verification failed: invalid signature",
-        )
-    purchase = db_session.exec(
-        select(Purchase).where(Purchase.razorpay_order_id == data.razorpay_order_id)
-    ).first()
-    if purchase:
+        purchase = db_session.exec(
+            select(Purchase).where(Purchase.razorpay_order_id == data.razorpay_order_id)
+        ).first()
+        if not purchase:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"order id not found",
+            )
         purchase.status = "paid"
         purchase.razorpay_payment_id = data.razorpay_payment_id
         purchase.razorpay_signature = data.razorpay_signature
         db_session.add(purchase)
-    enrollment = db_session.get(Enrollment, (student.phone_no, data.course_id))
-    if not enrollment:
-        enrollment = Enrollment(student_id=student.phone_no, course_id=data.course_id)
-        db_session.add(enrollment)
-    db_session.commit()
+        enrollment = db_session.get(Enrollment, (student.phone_no, purchase.course_id))
+        if not enrollment:
+            enrollment = Enrollment(
+                student_id=student.phone_no, course_id=purchase.course_id
+            )
+            course = db_session.exec(
+                select(Course).where(Course.id == purchase.course_id).with_for_update()
+            ).first()
+            if not course:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"course not found",
+                )
+            current_enrollment_count = course.total_enrollment or 0
+            course.total_enrollment = current_enrollment_count + 1
+            db_session.add(enrollment)
+            db_session.add(course)
+            db_session.commit()
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
     return {"detail": "success"}
