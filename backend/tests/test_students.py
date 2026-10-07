@@ -78,7 +78,6 @@ def test_create_student_success(
         json=request_body_student_create,
         headers={"Authorization": f"Bearer {login_response["token"]}"},
     )
-    print(response.json())
     StudentResponse(**response.json())
     assert response.status_code == 201
     assert response.json()["first_name"] == request_body_student_create["first_name"]

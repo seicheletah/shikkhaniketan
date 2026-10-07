@@ -9,10 +9,13 @@ from sqlmodel import (
     Uuid,
     ForeignKey,
     Relationship,
+    Index,
+    Computed,
 )
-from pydantic import EmailStr, model_validator, HttpUrl
+from pydantic import EmailStr, model_validator, HttpUrl, field_validator
 from datetime import datetime, date
 from enum import Enum
+from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
 
 
 # generic message model
@@ -133,7 +136,7 @@ class Enrollment(SQLModel, table=True):
 class StudentBase(SQLModel):
     first_name: str
     last_name: str
-    phone_no: str = Field(primary_key=True, max_length=16)
+    phone_no: str = Field(primary_key=True, max_length=10)
     gender: str = Field(max_length=1)
     date_of_birth: date
     address: str
@@ -165,18 +168,35 @@ class Student(StudentBase, table=True):
 
 # create student model with pydantic vlidation
 class StudentCreate(StudentBase):
-    pass
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
 
 # update student model with pydantic vlidation
 class StudentUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    phone_no: str | None = Field(default=None, max_length=16)
+    phone_no: str | None = Field(default=None, max_length=10)
     gender: str | None = Field(default=None, max_length=1)
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
     @model_validator(mode="after")
     def check_empty_payload(self):
@@ -196,7 +216,7 @@ class StudentResponse(StudentBase):
 class TeacherBase(SQLModel):
     first_name: str
     last_name: str
-    phone_no: str = Field(primary_key=True, max_length=16)
+    phone_no: str = Field(primary_key=True, max_length=10)
     gender: str = Field(max_length=1)
     date_of_birth: date
     address: str
@@ -226,18 +246,35 @@ class Teacher(TeacherBase, table=True):
 
 # create student model with pydantic vlidation
 class TeacherCreate(TeacherBase):
-    pass
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
 
 # update teacher model with pydantic vlidation
 class TeacherUpdate(SQLModel):
     first_name: str | None = None
     last_name: str | None = None
-    phone_no: str | None = Field(default=None, max_length=16)
+    phone_no: str | None = Field(default=None, max_length=10)
     gender: str | None = Field(default=None, max_length=1)
     date_of_birth: date | None = None
     address: str | None = None
     about: str | None = None
+
+    @field_validator("phone_no", mode="after")
+    @classmethod
+    def validate_phone_no(cls, value: str):
+        if not value.isdigit():
+            raise ValueError("phone number must contain numbers only")
+        if len(value) != 10:
+            raise ValueError("phone number must be exactly 10 digits long")
+        return value
 
     @model_validator(mode="after")
     def check_empty_payload(self):
@@ -267,17 +304,203 @@ class CourseResourceType(str, Enum):
     video = "video"
 
 
+# course tags model
+class CourseTags(str, Enum):
+    diploma = "diploma"
+    polytechnic_diploma = "polytechnic_diploma"
+    ba = "ba"
+    bsc = "bsc"
+    bcom = "bcom"
+    btech = "btech"
+    be = "be"
+    bca = "bca"
+    bba = "bba"
+    barch = "barch"
+    bfa = "bfa"
+    bed = "bed"
+    mbbs = "mbbs"
+    bds = "bds"
+    bams = "bams"
+    bhms = "bhms"
+    bpharma = "bpharma"
+    bsc_nursing = "bsc_nursing"
+    llb = "llb"
+    ba_llb = "ba_llb"
+    bba_llb = "bba_llb"
+    ma = "ma"
+    msc = "msc"
+    mcom = "mcom"
+    mtech = "mtech"
+    me = "me"
+    mca = "mca"
+    mba = "mba"
+    md = "md"
+    ms_medical = "ms_medical"
+    llm = "llm"
+    med = "med"
+    phd = "phd"
+
+    class_1 = "class_1"
+    class_2 = "class_2"
+    class_3 = "class_3"
+    class_4 = "class_4"
+    class_5 = "class_5"
+    class_6 = "class_6"
+    class_7 = "class_7"
+    class_8 = "class_8"
+    class_9 = "class_9"
+    class_10 = "class_10"
+    class_11 = "class_11"
+    class_12 = "class_12"
+
+    mathematics = "mathematics"
+    algebra = "algebra"
+    geometry = "geometry"
+    calculus = "calculus"
+    trigonometry = "trigonometry"
+    statistics = "statistics"
+    discrete_math = "discrete_math"
+    logic = "logic"
+
+    computer_science = "computer_science"
+    software_engineering = "software_engineering"
+    data_science = "data_science"
+    artificial_intelligence = "artificial_intelligence"
+    cybersecurity = "cybersecurity"
+    web_development = "web_development"
+    mobile_development = "mobile_development"
+    data_structures = "data_structures"
+
+    python = "python"
+    javascript = "javascript"
+    typescript = "typescript"
+    java = "java"
+    c_sharp = "c_sharp"
+    c_plus_plus = "c_plus_plus"
+    go_lang = "go_lang"
+    rust = "rust"
+    swift = "swift"
+    kotlin = "kotlin"
+    php = "php"
+    ruby = "ruby"
+    sql = "sql"
+
+    physics = "physics"
+    mechanics = "mechanics"
+    thermodynamics = "thermodynamics"
+    quantum_physics = "quantum_physics"
+    astrophysics = "astrophysics"
+
+    chemistry = "chemistry"
+    organic_chemistry = "organic_chemistry"
+    inorganic_chemistry = "inorganic_chemistry"
+    biochemistry = "biochemistry"
+
+    biology = "biology"
+    genetics = "genetics"
+    microbiology = "microbiology"
+    ecology = "ecology"
+
+    astronomy = "astronomy"
+    earth_science = "earth_science"
+    environmental_science = "environmental_science"
+
+    psychology = "psychology"
+    cognitive_psychology = "cognitive_psychology"
+    clinical_psychology = "clinical_psychology"
+
+    economics = "economics"
+    microeconomics = "microeconomics"
+    macroeconomics = "macroeconomics"
+
+    sociology = "sociology"
+    political_science = "political_science"
+    anthropology = "anthropology"
+
+    history = "history"
+    ancient_history = "ancient_history"
+    modern_history = "modern_history"
+
+    philosophy = "philosophy"
+    ethics = "ethics"
+
+    visual_arts = "visual_arts"
+    graphic_design = "graphic_design"
+    fine_arts = "fine_arts"
+    photography = "photography"
+
+    music = "music"
+    music_theory = "music_theory"
+    music_production = "music_production"
+
+    literature = "literature"
+    linguistics = "linguistics"
+    creative_writing = "creative_writing"
+
+    finance = "finance"
+    corporate_finance = "corporate_finance"
+    investment_banking = "investment_banking"
+
+    accounting = "accounting"
+    taxation = "taxation"
+
+    management = "management"
+    project_management = "project_management"
+    human_resources = "human_resources"
+
+    marketing = "marketing"
+    digital_marketing = "digital_marketing"
+    seo_sem = "seo_sem"
+    entrepreneurship = "entrepreneurship"
+
+    engineering = "engineering"
+    mechanical_engineering = "mechanical_engineering"
+    electrical_engineering = "electrical_engineering"
+    civil_engineering = "civil_engineering"
+
+    medicine = "medicine"
+    anatomy = "anatomy"
+    pharmacology = "pharmacology"
+    nursing = "nursing"
+
+    law = "law"
+    constitutional_law = "constitutional_law"
+    corporate_law = "corporate_law"
+
+    education = "education"
+    pedagogy = "pedagogy"
+    architecture = "architecture"
+
+
+# course language model
+class CourseLanguage(str, Enum):
+    english = "english"
+    bengali = "bengali"
+    hindi = "hindi"
+
+
 # course base model
 class CourseBase(SQLModel):
     course_name: str
     course_details: str
-    course_language: str
+    course_language: CourseLanguage = Field(sa_column=Column(String, nullable=False))
     course_resource_type: CourseResourceType = Field(
         sa_column=Column(String, nullable=False)
     )
     course_paid: bool
     course_price: int = Field(ge=0, le=15000)
-    course_price_currency: str | None = Field(default="INR")
+    course_price_currency: str | None = Field(default="INR", nullable=False)
+    course_tags: list[CourseTags] = Field(
+        default=[],
+        sa_column=Column(
+            ARRAY(String),
+            nullable=False,
+        ),
+    )
+    total_enrollment: int | None = None
+    total_comment: int | None = None
+    total_rating: int | None = None
+    avg_rating: float | None = None
 
 
 # course table model
@@ -289,6 +512,12 @@ class Course(CourseBase, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
+    search_vector: str | None = Field(
+        default=None,
+        sa_column=Column(
+            TSVECTOR, Computed("to_tsvector('english', course_name)", persisted=True)
+        ),
+    )
     teacher_id: str = Field(
         sa_column=Column(
             String,
@@ -296,6 +525,16 @@ class Course(CourseBase, table=True):
             nullable=False,
         )
     )
+    __table_args__ = (
+        Index("ix_course_language", "course_language"),
+        Index("ix_course_resource_type", "course_resource_type"),
+        Index("ix_course_paid", "course_paid"),
+        Index("ix_course_tags", "course_tags", postgresql_using="gin"),
+        Index("ix_course_created_at", "created_at"),
+        Index("ix_course_search_vector", "search_vector", postgresql_using="gin"),
+        Index("ix_course_teacher_id", "teacher_id"),
+    )
+
     teacher: Teacher = Relationship(back_populates="course")
     purchase: Purchase = Relationship(back_populates="course")
     student: list[Student] = Relationship(
@@ -307,12 +546,27 @@ class Course(CourseBase, table=True):
 
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
+
+    @field_validator(
+        "total_enrollment", "total_comment", "total_rating", "avg_rating", mode="after"
+    )
+    @classmethod
+    def check_none_values(cls, value):
+        if value is not None:
+            raise ValueError("needs to be none")
+        return value
+
     @model_validator(mode="after")
-    def check_valid_price(self):
+    def validate_values(self):
         if self.course_paid == True and self.course_price <= 0:
             raise ValueError("paid course price needs to be more than 0")
-        elif self.course_paid == False and self.course_price > 0:
+        if self.course_paid == False and self.course_price > 0:
             raise ValueError("free course price needs to be 0")
+        if self.course_tags:
+            if len(self.course_tags) != len(set(self.course_tags)):
+                raise ValueError("duplicate tags are not allowed")
+            if len(self.course_tags) > 5:
+                raise ValueError("maximum of 5 tags only")
         return self
 
 
@@ -320,10 +574,21 @@ class CourseCreate(CourseBase):
 class CourseUpdate(SQLModel):
     course_name: str | None = None
     course_details: str | None = None
-    course_language: str | None = None
+    course_language: CourseLanguage | None = None
     course_paid: bool | None = None
     course_price: int | None = Field(default=None, ge=0, le=15000)
     course_price_currency: str | None = Field(default="INR")
+    course_tags: list[CourseTags] | None = None
+
+    @field_validator("course_tags", mode="after")
+    @classmethod
+    def validate_tags(cls, course_tags: list[CourseTags]):
+        if course_tags:
+            if len(course_tags) != len(set(course_tags)):
+                raise ValueError("duplicate tags are not allowed")
+            if len(course_tags) > 5:
+                raise ValueError("maximum of 5 tags only")
+        return course_tags
 
     @model_validator(mode="after")
     def check_empty_payload(self):
@@ -370,6 +635,7 @@ class MediaUploadFileType(str, Enum):
     mp4 = "mp4"
     pdf = "pdf"
     jpg = "jpg"
+    jpeg = "jpeg"
     png = "png"
 
 
@@ -395,6 +661,8 @@ class Media(SQLModel, table=True):
             nullable=False,
         )
     )
+    __table_args__ = (Index("ix_media_course_id", "course_id"),)
+
     course: Course = Relationship(back_populates="media")
 
 
@@ -455,6 +723,11 @@ class Purchase(PurchaseBase, table=True):
             nullable=False,
         )
     )
+    __table_args__ = (
+        Index("ix_purchase_student_id", "student_id"),
+        Index("ix_purchase_course_id", "course_id"),
+    )
+
     student: Student = Relationship(back_populates="purchase")
     course: Course = Relationship(back_populates="purchase")
 
@@ -511,7 +784,14 @@ class Review(ReviewBase, table=True):
 
 # create review model with pydantic vlidation
 class ReviewCreate(ReviewBase):
-    pass
+
+    @model_validator(mode="after")
+    def check_empty_rating(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        if self.rate is None:
+            raise ValueError("rating cannot be none")
+        return self
 
 
 # update Review model with pydantic vlidation
@@ -528,15 +808,15 @@ class ReviewUpdate(SQLModel):
 
 # review response model for response body
 class ReviewResponse(SQLModel):
-    comment: str
-    rate: int
+    comment: str | None
+    rate: int | None
     course_id: uuid.UUID
 
 
 # review public response model for response body
 class ReviewPublicResponse(SQLModel):
-    comment: str
-    rate: int
+    comment: str | None
+    rate: int | None
     first_name: str
     last_name: str
     course_id: uuid.UUID
