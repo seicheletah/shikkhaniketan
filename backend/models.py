@@ -497,10 +497,10 @@ class CourseBase(SQLModel):
             nullable=False,
         ),
     )
-    total_enrollment: int | None
-    total_comment: int | None
-    total_rating: int | None
-    avg_rating: float | None
+    total_enrollment: int | None = None
+    total_comment: int | None = None
+    total_rating: int | None = None
+    avg_rating: float | None = None
 
 
 # course table model
@@ -547,22 +547,26 @@ class Course(CourseBase, table=True):
 # create course model with pydantic vlidation
 class CourseCreate(CourseBase):
 
-    @field_validator("course_tags", mode="after")
+    @field_validator(
+        "total_enrollment", "total_comment", "total_rating", "avg_rating", mode="after"
+    )
     @classmethod
-    def validate_tags(cls, course_tags: list[CourseTags]):
-        if course_tags:
-            if len(course_tags) != len(set(course_tags)):
-                raise ValueError("duplicate tags are not allowed")
-            if len(course_tags) > 5:
-                raise ValueError("maximum of 5 tags only")
-        return course_tags
+    def check_none_values(cls, value):
+        if value is not None:
+            raise ValueError("needs to be none")
+        return value
 
     @model_validator(mode="after")
-    def check_valid_price(self):
+    def validate_values(self):
         if self.course_paid == True and self.course_price <= 0:
             raise ValueError("paid course price needs to be more than 0")
-        elif self.course_paid == False and self.course_price > 0:
+        if self.course_paid == False and self.course_price > 0:
             raise ValueError("free course price needs to be 0")
+        if self.course_tags:
+            if len(self.course_tags) != len(set(self.course_tags)):
+                raise ValueError("duplicate tags are not allowed")
+            if len(self.course_tags) > 5:
+                raise ValueError("maximum of 5 tags only")
         return self
 
 
