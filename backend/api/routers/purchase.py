@@ -41,7 +41,9 @@ def purchase_course(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
-    course = db_session.get(Course, id)
+    course = db_session.exec(
+        select(Course).where(Course.id == id).with_for_update()
+    ).first()
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
@@ -58,8 +60,11 @@ def purchase_course(
         )
     if not course.course_paid:
         enrollment = Enrollment(student_id=student.phone_no, course_id=id)
+        current_enrollment_count = course.total_enrollment or 0
+        course.total_enrollment = current_enrollment_count + 1
         try:
             db_session.add(enrollment)
+            db_session.add(course)
             db_session.commit()
         except SQLAlchemyError:
             db_session.rollback()

@@ -497,6 +497,10 @@ class CourseBase(SQLModel):
             nullable=False,
         ),
     )
+    total_enrollment: int | None
+    total_comment: int | None
+    total_rating: int | None
+    avg_rating: float | None
 
 
 # course table model
@@ -526,6 +530,7 @@ class Course(CourseBase, table=True):
         Index("ix_course_resource_type", "course_resource_type"),
         Index("ix_course_paid", "course_paid"),
         Index("ix_course_tags", "course_tags", postgresql_using="gin"),
+        Index("ix_course_created_at", "created_at"),
         Index("ix_course_search_vector", "search_vector", postgresql_using="gin"),
         Index("ix_course_teacher_id", "teacher_id"),
     )
@@ -626,6 +631,7 @@ class MediaUploadFileType(str, Enum):
     mp4 = "mp4"
     pdf = "pdf"
     jpg = "jpg"
+    jpeg = "jpeg"
     png = "png"
 
 
@@ -774,7 +780,14 @@ class Review(ReviewBase, table=True):
 
 # create review model with pydantic vlidation
 class ReviewCreate(ReviewBase):
-    pass
+
+    @model_validator(mode="after")
+    def check_empty_rating(self):
+        if not self.model_fields_set:
+            raise ValueError("no value")
+        if self.rate is None:
+            raise ValueError("rating cannot be none")
+        return self
 
 
 # update Review model with pydantic vlidation
@@ -791,15 +804,15 @@ class ReviewUpdate(SQLModel):
 
 # review response model for response body
 class ReviewResponse(SQLModel):
-    comment: str
-    rate: int
+    comment: str | None
+    rate: int | None
     course_id: uuid.UUID
 
 
 # review public response model for response body
 class ReviewPublicResponse(SQLModel):
-    comment: str
-    rate: int
+    comment: str | None
+    rate: int | None
     first_name: str
     last_name: str
     course_id: uuid.UUID

@@ -39,7 +39,9 @@ def create_review(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
-    course = db_session.get(Course, id)
+    course = db_session.exec(
+        select(Course).where(Course.id == id).with_for_update()
+    ).first()
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
@@ -67,8 +69,19 @@ def create_review(
         course_id=id,
         **reviewdata.model_dump(),
     )
+    current_ratings_count = course.total_rating or 0
+    current_avg = course.avg_rating or 0.0
+    current_comments_count = course.total_comment or 0
+    if reviewdata.rate is not None:
+        total_stars = (current_avg * current_ratings_count) + reviewdata.rate
+        new_ratings_count = current_ratings_count + 1
+        course.total_rating = new_ratings_count
+        course.avg_rating = round(total_stars / new_ratings_count, 1)
+    if reviewdata.comment is not None:
+        course.total_comment = current_comments_count + 1
     try:
         db_session.add(review)
+        db_session.add(course)
         db_session.commit()
         db_session.refresh(review)
         return review
