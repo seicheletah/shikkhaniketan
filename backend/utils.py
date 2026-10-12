@@ -1,9 +1,14 @@
 import razorpay
 import boto3
 import filetype
+import io
+import uuid
 from backend.core.config import settings
 from fastapi import UploadFile, HTTPException, status
 from botocore.exceptions import BotoCoreError, ClientError
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from datetime import datetime
 
 # razorpay client initialization
 razorpay_client = razorpay.Client(
@@ -79,3 +84,45 @@ def check_valid_file(file: UploadFile, type: str):
         )
     file.file.seek(0)
     return
+
+
+# generate invoice pdf
+def generate_invoice_pdf(
+    transaction_id: uuid.UUID,
+    order_id: str,
+    payment_id: str,
+    order_date: datetime,
+    student_id: str,
+    course_id: uuid.UUID,
+    course_name: str,
+    course_type: str,
+    amount: int,
+    currency: str = "INR",
+):
+    buffer = io.BytesIO()
+
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    pdf.setTitle(f"Invoice_{order_id}")
+    pdf.setFont("Helvetica-Bold", 24)
+    pdf.drawString(50, 670, "INVOICE")
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(50, 630, f"Transaction ID: {transaction_id}")
+    pdf.drawString(50, 610, f"Order ID: {order_id}")
+    pdf.drawString(50, 590, f"Payment ID: {payment_id}")
+    pdf.drawString(50, 570, f"Date(UTC): {order_date.strftime('%Y-%m-%d %H:%M')}")
+    pdf.drawString(50, 550, f"Student ID: {student_id}")
+    pdf.line(50, 530, 605, 530)
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(50, 500, "Description")
+    pdf.drawString(520, 500, "Amount")
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(50, 470, f"Course Enrollment (ID: {course_id})")
+    pdf.drawString(50, 450, f"Course Name: {course_name}")
+    pdf.drawString(50, 430, f"Course Type: {course_type}")
+    pdf.drawString(520, 470, f"{currency} {amount / 100:.2f}")
+
+    pdf.showPage()
+    pdf.save()
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
