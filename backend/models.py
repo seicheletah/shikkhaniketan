@@ -827,3 +827,14 @@ class RatingPublicResponse(SQLModel):
     total_reviews: int
     average_rating: int | float
     course_id: uuid.UUID
+
+
+# past transaction details response model
+class TransactionResponse(SQLModel):
+    id: uuid.UUID
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    student_id: str
+    course_id: uuid.UUID
+    amount: int
+    created_at: datetime
