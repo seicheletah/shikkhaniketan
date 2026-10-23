@@ -1,5 +1,5 @@
 import uuid
-from fastapi import status, HTTPException, APIRouter, Response
+from fastapi import status, HTTPException, APIRouter, Response, Query
 from backend.core.database import SessionDep
 from backend.core.security import TeacherDep, AdminDep
 from backend.models import (
@@ -9,9 +9,13 @@ from backend.models import (
     CourseResponse,
     CoursePublicResponse,
     CourseUpdate,
+    CourseTags,
+    CourseLanguage,
+    CourseResourceType,
 )
-from sqlmodel import select, col
+from sqlmodel import select, col, func
 from sqlalchemy.exc import SQLAlchemyError
+from typing import Annotated
 
 api_router = APIRouter(prefix="/courses", tags=["Courses"])
 
@@ -47,16 +51,46 @@ def create_course(
 
 
 @api_router.get("/search", response_model=list[CoursePublicResponse])
-def search_courses(db_session: SessionDep, q: str, limit: int = 5, offset: int = 0):
+def search_courses(
+    db_session: SessionDep,
+    name: str | None = None,
+    tags: Annotated[list[CourseTags] | None, Query()] = None,
+    language: CourseLanguage | None = None,
+    paid: bool | None = None,
+    type: CourseResourceType | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+):
     """
     Search courses using query parameters.
     """
-    course = db_session.exec(
-        select(Course)
-        .where(col(Course.course_name).ilike(f"%{q.strip()}%"))
-        .offset(offset)
-        .limit(limit)
-    ).all()
+    statement = select(Course)
+    if name:
+        statement = statement.where(
+            col(Course.search_vector).op("@@")(
+                func.websearch_to_tsquery("english", name)
+            )
+        )
+    if tags:
+        statement = statement.where(col(Course.course_tags).op("@>")(tags))
+    if language:
+        statement = statement.where(Course.course_language == language)
+    if paid:
+        statement = statement.where(Course.course_paid == paid)
+    if type:
+        statement = statement.where(Course.course_resource_type == type)
+    if offset is not None:
+        statement = statement.offset(offset)
+    if limit is not None:
+        statement = statement.limit(limit)
+
+    try:
+        course = db_session.exec(statement).all()
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
     return course
 
 
@@ -75,11 +109,15 @@ def get_course(id: uuid.UUID, db_session: SessionDep):
 
 
 @api_router.get("/", response_model=list[CoursePublicResponse])
-def get_courses(db_session: SessionDep):
+def get_courses(
+    db_session: SessionDep,
+    limit: int | None = None,
+    offset: int | None = None,
+):
     """
     Get all existing courses details.
     """
-    return db_session.exec(select(Course)).all()
+    return db_session.exec(select(Course).offset(offset).limit(limit)).all()
 
 
 @api_router.patch("/{id}", response_model=CourseResponse)

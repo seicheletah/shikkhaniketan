@@ -1,0 +1,57 @@
+<!-- ==========================================================
+     transactions.html
+     This is NOT a full HTML document. It is only a "fragment"
+     that student.js downloads with fetch() and puts inside
+     <main id="main-content"> of student.html.
+     (Same idea as courses.html and settings.html.)
+     ========================================================== -->
+
+<!-- Styles for this page only (every rule is scoped to .transactions-page) -->
+<link rel="stylesheet" href="transactions.css">
+
+<div class="transactions-page">
+
+    <!-- ================= PAGE HEADER ================= -->
+    <header class="tx-header">
+        <div class="tx-header-icon">
+            <i class="fa-solid fa-receipt"></i>
+        </div>
+        <div>
+            <h1 class="tx-title">My Transactions</h1>
+            <p class="tx-subtitle">All the courses you have purchased, with downloadable invoices.</p>
+        </div>
+    </header>
+
+    <!-- ================= SUMMARY CARDS =================
+         Filled by transactions.js once the data has loaded.
+         They stay hidden until then. -->
+    <section class="tx-summary hidden" id="txSummary">
+        <div class="tx-stat">
+            <div class="tx-stat-icon"><i class="fa-solid fa-book-open"></i></div>
+            <div>
+                <span class="tx-stat-label">Courses purchased</span>
+                <strong class="tx-stat-value" id="txCount">0</strong>
+            </div>
+        </div>
+
+        <div class="tx-stat">
+            <div class="tx-stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+            <div>
+                <span class="tx-stat-label">Total spent</span>
+                <strong class="tx-stat-value" id="txTotal">0</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= TRANSACTION CARDS =================
+         transactions.js puts the spinner, an error/empty message,
+         or the list of purchased-course cards in here. -->
+    <section class="tx-grid" id="txGrid"></section>
+
+    <!-- Small pop-up message at the bottom (e.g. "Invoice downloaded") -->
+    <div class="tx-toast hidden" id="txToast"></div>
+
+</div>
+
+<!-- The page logic. student.js re-creates this <script> tag so it really runs. -->
+<script src="transactions.js"></script>

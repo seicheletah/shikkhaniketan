@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
 
     const API = "http://127.0.0.1:8000/api/v1";
@@ -45,6 +44,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const toast =
         document.getElementById("toast");
+
+    // NEW: elements of the "Delete course" feature
+    const deleteCourseBtn =
+        document.getElementById("deleteCourseBtn");   // red button in the danger zone
+
+    const deleteModal =
+        document.getElementById("deleteModal");       // dark overlay + pop-up
+
+    const dcCourseName =
+        document.getElementById("dcCourseName");      // course name inside the pop-up text
+
+    const dcCancelBtn =
+        document.getElementById("dcCancelBtn");       // "No, keep it"
+
+    const dcConfirmBtn =
+        document.getElementById("dcConfirmBtn");      // "Yes, delete"
+
+    // NEW: remembers the name of the loaded course so the pop-up can show it
+    let loadedCourseName = "";
 
     // ---------------- HEADERS ----------------
 
@@ -208,6 +226,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Course loaded:",
                 course
             );
+
+            // NEW: keep the name for the delete pop-up
+            loadedCourseName =
+                course.course_name || "";
 
             // ---------------- COURSE NAME ----------------
 
@@ -643,6 +665,249 @@ document.addEventListener("DOMContentLoaded", () => {
             "teacher.html";
 
     };
+
+
+    /* ==========================================================
+       NEW: DELETE COURSE
+       API: DELETE /teachers/me/courses/{id}
+            -> 204 (success, no body)
+            -> 422 (validation error)
+
+       Flow:
+       1. Teacher clicks the red "Delete course" button.
+       2. A confirm pop-up opens (nothing is deleted yet).
+       3. "Yes, delete" sends the DELETE request.
+       4. On success we go back to the teacher dashboard.
+       ========================================================== */
+
+    /** Opens the confirm pop-up and writes the course name into it. */
+    function openDeleteModal() {
+
+        if (!deleteModal) return;
+
+        // Show the real name; use a friendly fallback if it is not loaded yet
+        dcCourseName.textContent =
+            loadedCourseName
+                ? `"${loadedCourseName}"`
+                : "this course";
+
+        deleteModal.classList.add("is-open");
+        deleteModal.setAttribute("aria-hidden", "false");
+
+    }
+
+    /** Closes the pop-up (does nothing while a delete request is running). */
+    function closeDeleteModal() {
+
+        if (!deleteModal) return;
+
+        // Do not let the teacher close it in the middle of the request
+        if (dcConfirmBtn && dcConfirmBtn.disabled) return;
+
+        deleteModal.classList.remove("is-open");
+        deleteModal.setAttribute("aria-hidden", "true");
+
+    }
+
+    /**
+     * Turns a failed API response into a readable message.
+     * FastAPI sends { detail: "text" } or, for 422,
+     * { detail: [ { msg: "text", ... } ] }.
+     */
+    async function readDeleteError(response) {
+
+        let message =
+            "Failed to delete course.";
+
+        try {
+
+            const errorData =
+                await response.json();
+
+            if (typeof errorData.detail === "string") {
+
+                message = errorData.detail;
+
+            } else if (
+                Array.isArray(errorData.detail) &&
+                errorData.detail[0] &&
+                errorData.detail[0].msg
+            ) {
+
+                message = errorData.detail[0].msg;
+
+            }
+
+        } catch (error) {
+
+            // The response had no JSON body: keep the default message
+            console.error(
+                "Error reading delete error:",
+                error
+            );
+
+        }
+
+        return message;
+
+    }
+
+    /** Sends the DELETE request. Called by the "Yes, delete" button. */
+    async function deleteCourse() {
+
+        // Disable both buttons so nobody clicks twice
+        dcConfirmBtn.disabled = true;
+        dcCancelBtn.disabled = true;
+        dcConfirmBtn.textContent = "Deleting...";
+
+        try {
+
+            // Teacher-specific endpoint (same family as the PATCH above)
+            const response = await fetch(
+                `${API}/teachers/me/courses/${courseId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        Accept: "application/json"
+                    }
+                }
+            );
+
+            // ---------------- AUTH ERROR ----------------
+
+            if (response.status === 401) {
+
+                localStorage.clear();
+                location.href = "login.html";
+
+                return;
+            }
+
+            // ---------------- NOT ALLOWED ----------------
+
+            if (response.status === 403) {
+
+                showToast(
+                    "You are not allowed to delete this course.",
+                    "#b91c1c"
+                );
+
+                return;
+            }
+
+            // ---------------- ALREADY GONE ----------------
+
+            if (response.status === 404) {
+
+                showToast(
+                    "Course not found. It may already be deleted.",
+                    "#b91c1c"
+                );
+
+                return;
+            }
+
+            // ---------------- OTHER ERRORS (422, 500 ...) ----------------
+
+            if (!response.ok) {
+
+                showToast(
+                    await readDeleteError(response),
+                    "#b91c1c"
+                );
+
+                return;
+            }
+
+            // ---------------- SUCCESS (204) ----------------
+
+            // Forget the "selected course" so no page tries to open a deleted course
+            if (localStorage.getItem("selected_course_id") === courseId) {
+
+                localStorage.removeItem("selected_course_id");
+
+            }
+
+            // Re-enable first, otherwise closeDeleteModal() refuses to close
+            dcConfirmBtn.disabled = false;
+            dcCancelBtn.disabled = false;
+            closeDeleteModal();
+
+            showToast(
+                "Course deleted successfully.",
+                "#0f4c5c"
+            );
+
+            // Back to the teacher dashboard
+            setTimeout(() => {
+
+                location.href =
+                    "teacher.html";
+
+            }, 1200);
+
+        } catch (error) {
+
+            console.error(
+                "Course delete error:",
+                error
+            );
+
+            showToast(
+                "Something went wrong while deleting the course.",
+                "#b91c1c"
+            );
+
+        } finally {
+
+            // Always give the buttons back (the page may stay open after an error)
+            dcConfirmBtn.disabled = false;
+            dcCancelBtn.disabled = false;
+            dcConfirmBtn.textContent = "Yes, delete";
+
+            // After an error, close the pop-up so the toast message is visible
+            closeDeleteModal();
+
+        }
+
+    }
+
+    // ---------------- DELETE: EVENTS ----------------
+
+    if (deleteCourseBtn) {
+        deleteCourseBtn.addEventListener("click", openDeleteModal);
+    }
+
+    if (dcCancelBtn) {
+        dcCancelBtn.addEventListener("click", closeDeleteModal);
+    }
+
+    if (dcConfirmBtn) {
+        dcConfirmBtn.addEventListener("click", deleteCourse);
+    }
+
+    // Clicking the dark area outside the white box closes the pop-up
+    if (deleteModal) {
+
+        deleteModal.addEventListener("click", event => {
+
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+
+        });
+
+    }
+
+    // The Escape key closes the pop-up
+    document.addEventListener("keydown", event => {
+
+        if (event.key === "Escape") {
+            closeDeleteModal();
+        }
+
+    });
 
     // ---------------- START ----------------
 

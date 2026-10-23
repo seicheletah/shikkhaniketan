@@ -52,10 +52,44 @@
         </ul>
     </div>
 
-    <!-- ================= WRITE A REVIEW ================= -->
+    <!-- ================= YOUR REVIEW (NEW) =================
+         Shown ONLY when the student has already reviewed this course.
+         It displays the saved rating + comment and has the
+         Edit (PATCH) and Delete (DELETE) buttons.
+         While it is visible, the "Write a review" form below is hidden. -->
+    <div class="cv-card cv-section hidden" id="myReviewCard">
+        <div class="cv-section-head">
+            <h3>Your review</h3>
+            <span class="cv-meta">You can edit or delete it anytime</span>
+        </div>
+
+        <div class="cv-my-review">
+            <!-- Gold stars are drawn here by course_view.js -->
+            <div class="cv-stars cv-my-stars" id="cvMyStars"></div>
+            <p class="cv-my-comment" id="cvMyComment"></p>
+        </div>
+
+        <!-- Success / error message for edit & delete -->
+        <p class="cv-my-msg hidden" id="cvMyMsg"></p>
+
+        <div class="cv-my-actions">
+            <button type="button" class="cv-edit-btn" id="cvEditReview">
+                <i class="fa-solid fa-pen"></i> Edit
+            </button>
+            <button type="button" class="cv-delete-btn" id="cvDeleteReview">
+                <i class="fa-solid fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= WRITE / EDIT A REVIEW =================
+         Same form is used for two things:
+           - no review yet  -> "Write a review"  (POST)
+           - Edit clicked   -> "Edit your review" (PATCH)
+         The title and button texts are changed by course_view.js -->
     <div class="cv-card cv-section" id="reviewFormCard">
         <div class="cv-section-head">
-            <h3>Write a review</h3>
+            <h3 id="cvFormTitle">Write a review</h3>
         </div>
 
         <div class="cv-form">
@@ -79,7 +113,12 @@
             <!-- Success / error message after submitting -->
             <p class="cv-form-msg hidden" id="cvFormMsg"></p>
 
-            <button type="button" class="cv-submit-btn" id="cvSubmitReview">Submit review</button>
+            <div class="cv-form-actions">
+                <button type="button" class="cv-submit-btn" id="cvSubmitReview">Submit review</button>
+
+                <!-- NEW: only visible while editing; goes back without saving -->
+                <button type="button" class="cv-cancel-btn hidden" id="cvCancelEdit">Cancel</button>
+            </div>
         </div>
     </div>
 

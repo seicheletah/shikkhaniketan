@@ -3,6 +3,17 @@
    Shows the "Recommended" and "Enrolled" course lists inside
    the student dashboard.
 
+   SPEED IMPROVEMENTS in this version (compared to the old one):
+   1. The course list and the student profile are requested at the
+      SAME TIME (before: one after the other).
+   2. The card structure (name, details, price, language) is drawn
+      first. Thumbnails are loaded afterwards, slowly, in the background.
+   3. Thumbnails are loaded ONLY for cards that are visible on screen
+      (lazy loading with IntersectionObserver), and only a few at a time.
+   4. Every thumbnail link is remembered (cache), so typing in the
+      search box or changing the sort never downloads them again.
+   5. The artificial wait when switching tabs is much shorter.
+
    Everything is wrapped in an IIFE (Immediately Invoked Function
    Expression) so our variables never leak into the global scope
    and never clash with other page scripts.
@@ -18,9 +29,16 @@
     const STUDENT_ME_ENDPOINT = `${API_BASE}/students/me`;
 
     // How long (ms) the spinner stays visible when the user switches
-    // between the Videos / Documents tabs. It gives a smooth,
-    // consistent "loading" feel on every tab.
-    const TAB_SWITCH_DELAY = 500;
+    // between the Videos / Documents tabs. It was 500 before; now it is
+    // short, just enough to show a smooth "loading" feel.
+    const TAB_SWITCH_DELAY = 200;
+
+    // Picture shown until the real thumbnail arrives (or if it fails)
+    const DEFAULT_THUMB = "image/myyy.png";
+
+    // How many thumbnail requests may run at the same moment.
+    // A small number keeps the browser free for more important requests.
+    const THUMB_CONCURRENCY = 3;
 
     /* ------------------------------------------------------
        DOM ELEMENTS
@@ -77,6 +95,19 @@
        HELPERS
        ========================================== */
 
+    /**
+     * Makes text safe before it is placed inside innerHTML,
+     * so a course name containing "<" or quotes can not break the page.
+     */
+    function escapeHtml(value) {
+        return String(value === undefined || value === null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
     /** The backend may send the paid flag as true / 1 / "1" / "true". */
     function isPaid(course) {
         return (
@@ -119,31 +150,130 @@
 
 
     /* ==========================================
-       COURSE THUMBNAIL
+       COURSE THUMBNAILS  (cache + queue + lazy loading)
        ========================================== */
-    async function getThumbnailUrl(courseId) {
-        try {
-            const res = await fetch(
-                `${API_BASE}/courses/${courseId}/media/thumbnail/access`,
-                { method: "GET", headers: getAuthHeaders() }
-            );
 
-            // No thumbnail available -> use the default image
-            if (!res.ok) {
-                return "image/myyy.png";
+    // courseId -> thumbnail url that we already know.
+    // Filtering / searching re-draws the cards many times; thanks to this
+    // cache the same thumbnail is never requested twice.
+    const thumbCache = new Map();
+
+    // courseId -> a request that is running right now.
+    // If two cards ask for the same thumbnail at the same time, they share it.
+    const thumbInflight = new Map();
+
+    /** Asks the backend for the thumbnail link of ONE course (cached). */
+    function getThumbnailUrl(courseId) {
+
+        // 1) Already known -> answer immediately
+        if (thumbCache.has(courseId)) {
+            return Promise.resolve(thumbCache.get(courseId));
+        }
+
+        // 2) Already being requested -> reuse that request
+        if (thumbInflight.has(courseId)) {
+            return thumbInflight.get(courseId);
+        }
+
+        // 3) New request
+        const request = (async () => {
+            let url = DEFAULT_THUMB;
+
+            try {
+                const res = await fetch(
+                    `${API_BASE}/courses/${courseId}/media/thumbnail/access`,
+                    { method: "GET", headers: getAuthHeaders() }
+                );
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.stream_url) {
+                        url = data.stream_url;
+                    }
+                }
+            } catch (error) {
+                console.log(`Thumbnail loading error for course ${courseId}:`, error);
             }
 
-            const data = await res.json();
+            thumbCache.set(courseId, url);   // remember the answer
+            thumbInflight.delete(courseId);  // the request is finished
+            return url;
+        })();
 
-            if (data && data.stream_url) {
-                return data.stream_url;
-            }
+        thumbInflight.set(courseId, request);
+        return request;
+    }
 
-            return "image/myyy.png";
+    /* ---- A tiny queue: only THUMB_CONCURRENCY jobs run at the same time ---- */
+    const thumbQueue = [];     // jobs waiting for their turn
+    let activeThumbJobs = 0;   // jobs running right now
 
-        } catch (error) {
-            console.log(`Thumbnail loading error for course ${courseId}:`, error);
-            return "image/myyy.png";
+    /** Starts waiting jobs while there is free room. */
+    function pumpThumbQueue() {
+        while (activeThumbJobs < THUMB_CONCURRENCY && thumbQueue.length) {
+            const job = thumbQueue.shift();
+            activeThumbJobs++;
+
+            job().finally(() => {
+                activeThumbJobs--;
+                pumpThumbQueue(); // a place became free -> start the next one
+            });
+        }
+    }
+
+    /** Puts one thumbnail job at the end of the queue. */
+    function enqueueThumbJob(job) {
+        thumbQueue.push(job);
+        pumpThumbQueue();
+    }
+
+    /** Puts the real thumbnail into an <img> (queued, so it is gentle). */
+    function loadThumbnailInto(img, courseId) {
+        enqueueThumbJob(async () => {
+            const url = await getThumbnailUrl(courseId);
+
+            // If the image fails to load, fall back to the default image
+            img.onerror = () => {
+                img.onerror = null;
+                img.src = DEFAULT_THUMB;
+            };
+            img.src = url;
+        });
+    }
+
+    /**
+     * Watches the cards: the moment a card comes close to the visible
+     * screen area, its thumbnail starts loading. Cards far below are
+     * not loaded until the student scrolls near them.
+     * "rootMargin: 200px" = start a little BEFORE the card is visible.
+     */
+    const thumbObserver = ("IntersectionObserver" in window)
+        ? new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+
+                const img = entry.target;
+                thumbObserver.unobserve(img); // load only once per image
+                loadThumbnailInto(img, img.dataset.courseId);
+            });
+        }, { rootMargin: "200px" })
+        : null;
+
+    /** Connects one card image to the lazy loader. */
+    function attachThumbnail(img, courseId) {
+
+        // Known from before -> show it right away, no waiting
+        if (thumbCache.has(courseId)) {
+            img.src = thumbCache.get(courseId);
+            return;
+        }
+
+        img.dataset.courseId = courseId;
+
+        if (thumbObserver) {
+            thumbObserver.observe(img);           // modern browsers: lazy
+        } else {
+            loadThumbnailInto(img, courseId);     // very old browsers: load now
         }
     }
 
@@ -177,6 +307,30 @@
     /* ==========================================
        ENROLLED COURSES
        ========================================== */
+
+    /**
+     * Downloads the student's profile (/students/me).
+     * Returns the data, or null when the request fails.
+     * This is started at the SAME TIME as loadCourses() to save time.
+     */
+    async function fetchStudentProfile() {
+        try {
+            const res = await fetch(STUDENT_ME_ENDPOINT, {
+                method: "GET",
+                headers: getAuthHeaders()
+            });
+
+            if (!res.ok) {
+                throw new Error(`Failed to load student profile: ${res.status}`);
+            }
+
+            return await res.json();
+
+        } catch (error) {
+            console.log("Enrolled course loading error:", error);
+            return null;
+        }
+    }
 
     /** Finds the list of enrolled courses inside the /students/me response. */
     function findEnrolledList(data) {
@@ -245,7 +399,11 @@
         return null;
     }
 
-    async function loadEnrolledCourses() {
+    /**
+     * Fills `enrolledCourses` from the already-downloaded profile data.
+     * (`profileData` is null when the profile request failed.)
+     */
+    async function loadEnrolledCourses(profileData) {
 
         // Visitors / non-students never see the Enrolled section
         if (!hasStudentAccount) {
@@ -255,28 +413,16 @@
 
         enrolledSection.classList.remove("hidden");
 
-        try {
-            const res = await fetch(STUDENT_ME_ENDPOINT, {
-                method: "GET",
-                headers: getAuthHeaders()
-            });
-
-            if (!res.ok) {
-                throw new Error(`Failed to load student profile: ${res.status}`);
-            }
-
-            const data = await res.json();
-
-            const list = findEnrolledList(data);
-            const resolved = await Promise.all(list.map(resolveCourse));
-
-            enrolledCourses = resolved.filter(Boolean);
-
-        } catch (error) {
-            console.log("Enrolled course loading error:", error);
+        if (profileData === null) {
             enrolledCourses = [];
             enrolledFailed = true;
+            return;
         }
+
+        const list = findEnrolledList(profileData);
+        const resolved = await Promise.all(list.map(resolveCourse));
+
+        enrolledCourses = resolved.filter(Boolean);
     }
 
 
@@ -295,6 +441,9 @@
     }
 
     function applyFilters() {
+
+        // The old cards are about to be thrown away, so stop watching them
+        if (thumbObserver) thumbObserver.disconnect();
 
         // ---------- RECOMMENDED ----------
         if (coursesFailed) {
@@ -376,17 +525,25 @@
 
     /* ==========================================
        RENDER COURSE CARDS
+       The card (name, details, language, price) is drawn FIRST with the
+       default picture. The real thumbnail is attached afterwards by
+       attachThumbnail(), lazily and gently.
+       This function is no longer "async": it does not wait for thumbnails.
        ========================================== */
-    async function renderCourses(courses, grid, isEnrolled, emptyMessage) {
+    function renderCourses(courses, grid, isEnrolled, emptyMessage) {
 
         grid.innerHTML = "";
 
         if (!courses.length) {
-            grid.innerHTML = `<p class='grid-message'>${emptyMessage}</p>`;
+            grid.innerHTML = `<p class='grid-message'>${escapeHtml(emptyMessage)}</p>`;
             return;
         }
 
-        const cards = courses.map(course => {
+        // A DocumentFragment lets us build all cards "off-screen" and add
+        // them to the page in ONE step, which is faster than adding one by one.
+        const fragment = document.createDocumentFragment();
+
+        courses.forEach(course => {
 
             const card = document.createElement("div");
             card.className = "card";
@@ -394,21 +551,21 @@
             // Right side of the card: "Enrolled" badge or the price
             const rightSide = isEnrolled
                 ? `<span class="enrolled-badge">Enrolled</span>`
-                : `<strong>${isPaid(course) ? "₹" + (course.course_price || 0) : "Free"}</strong>`;
+                : `<strong>${isPaid(course) ? "₹" + escapeHtml(course.course_price || 0) : "Free"}</strong>`;
 
             card.innerHTML = `
                 <img
                     class="course-thumb"
-                    src="image/myyy.png"
-                    alt="${course.course_name || "Course"}"
+                    src="${DEFAULT_THUMB}"
+                    alt="${escapeHtml(course.course_name || "Course")}"
                 >
 
                 <div class="course-body">
-                    <h3>${course.course_name || ""}</h3>
-                    <p>${course.course_details || ""}</p>
+                    <h3>${escapeHtml(course.course_name || "")}</h3>
+                    <p>${escapeHtml(course.course_details || "")}</p>
 
                     <div class="course-meta">
-                        <span>${course.course_language || ""}</span>
+                        <span>${escapeHtml(course.course_language || "")}</span>
                         ${rightSide}
                     </div>
                 </div>
@@ -416,27 +573,13 @@
 
             card.addEventListener("click", () => openCourse(course, isEnrolled));
 
-            grid.appendChild(card);
+            // Connect the thumbnail loader (lazy, cached, queued)
+            attachThumbnail(card.querySelector(".course-thumb"), getCourseId(course));
 
-            return { course, card };
+            fragment.appendChild(card);
         });
 
-        // Load the real thumbnails in parallel (placeholder is shown first)
-        await Promise.all(
-            cards.map(async ({ course, card }) => {
-
-                const thumbnail = card.querySelector(".course-thumb");
-                const thumbnailUrl = await getThumbnailUrl(getCourseId(course));
-
-                thumbnail.src = thumbnailUrl;
-
-                // If the image fails to load, fall back to the default image
-                thumbnail.onerror = () => {
-                    thumbnail.onerror = null;
-                    thumbnail.src = "image/myyy.png";
-                };
-            })
-        );
+        grid.appendChild(fragment);
     }
 
 
@@ -489,10 +632,20 @@
             showLoader(enrolledGrid);
         }
 
-        // All courses first, then enrolled (enrolled lookup may need all courses)
-        await loadCourses();
-        await loadEnrolledCourses();
+        // Start BOTH requests at the same time (before: one after the other)
+        const coursesPromise = loadCourses();
+        const profilePromise = hasStudentAccount
+            ? fetchStudentProfile()
+            : Promise.resolve(null);
 
+        // Wait until both have finished
+        await coursesPromise;
+        const profileData = await profilePromise;
+
+        // The enrolled lookup may need the full course list, so it comes after
+        await loadEnrolledCourses(profileData);
+
+        // Draw the cards. Thumbnails are loaded later by the lazy loader.
         applyFilters();
     }
 
