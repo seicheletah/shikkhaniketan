@@ -11,42 +11,48 @@
 
 <div class="transactions-page">
 
-    <!-- ================= PAGE HEADER ================= -->
-    <header class="tx-header">
-        <div class="tx-header-icon">
-            <i class="fa-solid fa-receipt"></i>
-        </div>
-        <div>
-            <h1 class="tx-title">My Transactions</h1>
-            <p class="tx-subtitle">All the courses you have purchased, with downloadable invoices.</p>
-        </div>
-    </header>
+    <!-- ================= HERO HEADER =================
+         Big green banner with the title "My Transactions".
+         The two summary chips (courses purchased / total spent)
+         are inside it and are filled by transactions.js. -->
+    <header class="tx-hero">
 
-    <!-- ================= SUMMARY CARDS =================
-         Filled by transactions.js once the data has loaded.
-         They stay hidden until then. -->
-    <section class="tx-summary hidden" id="txSummary">
-        <div class="tx-stat">
-            <div class="tx-stat-icon"><i class="fa-solid fa-book-open"></i></div>
+        <div class="tx-hero-top">
+            <div class="tx-hero-icon">
+                <!-- Receipt icon (inline SVG, so it never depends on FontAwesome) -->
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1 .7V2l-1 .7-3-2-3 2-3-2-3 2z"></path>
+                    <line x1="8" y1="9" x2="16" y2="9"></line>
+                    <line x1="8" y1="13" x2="14" y2="13"></line>
+                </svg>
+            </div>
+
             <div>
-                <span class="tx-stat-label">Courses purchased</span>
-                <strong class="tx-stat-value" id="txCount">0</strong>
+                <h1 class="tx-title">My Transactions</h1>
+                <p class="tx-subtitle">All the courses you have purchased, with downloadable invoices.</p>
             </div>
         </div>
 
-        <div class="tx-stat">
-            <div class="tx-stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-            <div>
+        <!-- Summary chips: hidden until the data has loaded -->
+        <div class="tx-summary hidden" id="txSummary">
+            <div class="tx-stat">
+                <span class="tx-stat-label">Courses purchased</span>
+                <strong class="tx-stat-value" id="txCount">0</strong>
+            </div>
+
+            <div class="tx-stat">
                 <span class="tx-stat-label">Total spent</span>
                 <strong class="tx-stat-value" id="txTotal">0</strong>
             </div>
         </div>
-    </section>
 
-    <!-- ================= TRANSACTION CARDS =================
-         transactions.js puts the spinner, an error/empty message,
-         or the list of purchased-course cards in here. -->
-    <section class="tx-grid" id="txGrid"></section>
+    </header>
+
+    <!-- ================= PURCHASE LIST =================
+         transactions.js puts the spinner, an error / empty message,
+         or the numbered rows (1, 2, 3 ...) in here. -->
+    <section class="tx-list" id="txGrid"></section>
 
     <!-- Small pop-up message at the bottom (e.g. "Invoice downloaded") -->
     <div class="tx-toast hidden" id="txToast"></div>

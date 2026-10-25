@@ -1,6 +1,9 @@
 /* ==========================================================
    transactions.css
-   Modern styling for the Transactions page.
+   Modern LIST design of the Transactions page:
+   - a big green hero banner with the title "My Transactions"
+   - one white panel with numbered rows (1, 2, 3 ...)
+   - the download button at the right end of every row
 
    IMPORTANT: every rule starts with ".transactions-page" so these
    styles can never leak out and break the dashboard sidebar,
@@ -26,175 +29,197 @@
 
 
 /* ==========================================================
-   HEADER (icon + title + subtitle)
+   HERO HEADER  (green gradient banner)
    ========================================================== */
-.transactions-page .tx-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.transactions-page .tx-hero {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 24px;
+  padding: 28px 32px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0d5f56 0%, #127c71 55%, #1fa596 100%);
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(18, 124, 113, 0.28);
 }
 
-.transactions-page .tx-header-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
+/* Two soft decorative circles in the corner (pure CSS, no images) */
+.transactions-page .tx-hero::before,
+.transactions-page .tx-hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.transactions-page .tx-hero::before {
+  width: 220px;
+  height: 220px;
+  top: -90px;
+  right: -60px;
+}
+
+.transactions-page .tx-hero::after {
+  width: 140px;
+  height: 140px;
+  bottom: -70px;
+  right: 160px;
+}
+
+.transactions-page .tx-hero-top {
+  position: relative;      /* stays above the decorative circles */
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.transactions-page .tx-hero-icon {
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  color: #ffffff;
-  /* Soft green gradient for a modern look */
-  background: linear-gradient(135deg, #127c71, #1fa596);
-  box-shadow: 0 8px 18px rgba(18, 124, 113, 0.28);
   flex-shrink: 0;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 18px;
+  backdrop-filter: blur(6px);
 }
 
 .transactions-page .tx-title {
   margin: 0;
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 800;
-  color: #0a3d37;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
+  color: #ffffff;
 }
 
 .transactions-page .tx-subtitle {
   margin: 4px 0 0;
   font-size: 14px;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-
-/* ==========================================================
-   SUMMARY CARDS (courses purchased / total spent)
-   ========================================================== */
+/* ---------- Summary chips inside the hero ---------- */
 .transactions-page .tx-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
 }
 
 .transactions-page .tx-stat {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  min-width: 170px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-}
-
-.transactions-page .tx-stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: #127c71;
-  background: #e6f4f2;
-  flex-shrink: 0;
+  backdrop-filter: blur(6px);
 }
 
 .transactions-page .tx-stat-label {
   display: block;
-  font-size: 13px;
-  color: #64748b;
   margin-bottom: 2px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .transactions-page .tx-stat-value {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
-  color: #0a3d37;
+  color: #ffffff;
 }
 
 
 /* ==========================================================
-   CARD GRID
-   auto-fill = as many 300px+ columns as fit; on a phone it
-   automatically becomes a single column.
+   THE LIST (one white panel, rows separated by thin lines)
    ========================================================== */
-.transactions-page .tx-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-
-/* ==========================================================
-   ONE TRANSACTION CARD
-   ========================================================== */
-.transactions-page .tx-card {
-  display: flex;
-  flex-direction: column;
+.transactions-page .tx-list {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
 }
 
-.transactions-page .tx-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 26px rgba(18, 124, 113, 0.16);
+
+/* ==========================================================
+   ONE ROW  =  one purchased course
+   Desktop layout (left -> right):
+   [number] [thumbnail] [name + details + info] [price] [download]
+   ========================================================== */
+.transactions-page .tx-row {
+  display: grid;
+  grid-template-columns: 40px 124px minmax(0, 1fr) auto auto;
+  grid-template-areas: "num thumb info price action";
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #eef2f7;
+  transition: background 0.2s ease;
 }
 
-/* Thumbnail area on top of the card */
+.transactions-page .tx-row:last-child {
+  border-bottom: none;
+}
+
+.transactions-page .tx-row:hover {
+  background: #f6fbfa;
+}
+
+/* ---------- Row number (1, 2, 3 ...) ---------- */
+.transactions-page .tx-num {
+  grid-area: num;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #127c71;
+  background: #e6f4f2;
+  border-radius: 50%;
+}
+
+/* ---------- Thumbnail ---------- */
 .transactions-page .tx-thumb-wrap {
-  position: relative;
-  height: 160px;
-  background: #e6f4f2; /* shown while the real thumbnail is still loading */
+  grid-area: thumb;
+  width: 124px;
+  height: 80px;
+  overflow: hidden;
+  background: #e6f4f2;     /* shown while the real thumbnail is still loading */
+  border-radius: 14px;
 }
 
 .transactions-page .tx-thumb {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
-/* "Paid" badge floating on the top-left of the thumbnail */
-.transactions-page .tx-paid-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #0a5c52;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 20px;
-  backdrop-filter: blur(4px);
-}
-
-/* Card text area */
-.transactions-page .tx-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px;
-  flex: 1;
+/* ---------- Name, details and small info ---------- */
+.transactions-page .tx-info-block {
+  grid-area: info;
+  min-width: 0;            /* lets long text shrink instead of stretching the row */
 }
 
 .transactions-page .tx-course-name {
-  margin: 0;
-  font-size: 18px;
+  margin: 0 0 4px;
+  font-size: 17px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.35;
   color: #1f2937;
 }
 
 /* Course description: maximum 2 lines, then "..." */
 .transactions-page .tx-course-desc {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 13px;
   line-height: 1.55;
   color: #64748b;
@@ -204,56 +229,64 @@
   overflow: hidden;
 }
 
-/* Small info rows (language, date, payment id) */
-.transactions-page .tx-info {
+/* Language / date / payment id shown as small pills */
+.transactions-page .tx-meta {
   list-style: none;
-  margin: 4px 0 0;
-  padding: 12px 0 0;
-  border-top: 1px dashed #e2e8f0;
+  margin: 0;
+  padding: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.transactions-page .tx-info li {
-  display: flex;
+.transactions-page .tx-meta li {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 10px;
+  font-size: 12px;
   color: #475569;
-  min-width: 0;
+  background: #f1f5f9;
+  border-radius: 20px;
 }
 
-.transactions-page .tx-info li i {
-  width: 16px;
-  text-align: center;
-  color: #127c71;
+.transactions-page .tx-meta svg {
   flex-shrink: 0;
+  color: #127c71;
 }
 
-/* Long ids must not break the card: cut them with "..." */
-.transactions-page .tx-info li span {
+/* A long payment id must not break the layout: cut it with "..." */
+.transactions-page .tx-meta li span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Bottom bar: price on the left, download button on the right */
-.transactions-page .tx-footer {
-  display: flex;
+/* ---------- Price block ("Paid" pill + amount) ---------- */
+.transactions-page .tx-price-block {
+  grid-area: price;
+  text-align: right;
+}
+
+.transactions-page .tx-paid-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
-  background: #f8fafc;
-  border-top: 1px solid #eef2f7;
+  gap: 5px;
+  margin-bottom: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0a5c52;
+  background: #e6f4f2;
+  border-radius: 20px;
 }
 
 .transactions-page .tx-price-label {
   display: block;
   font-size: 11px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
   color: #94a3b8;
 }
 
@@ -261,14 +294,17 @@
   font-size: 20px;
   font-weight: 800;
   color: #127c71;
+  white-space: nowrap;
 }
 
-/* Download invoice button */
+/* ---------- Download button (right end of the row) ---------- */
 .transactions-page .tx-download-btn {
+  grid-area: action;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 11px 18px;
   font-size: 14px;
   font-weight: 600;
   color: #ffffff;
@@ -294,9 +330,9 @@
 
 /* ==========================================================
    LOADING SPINNER + EMPTY / ERROR MESSAGE
+   (both are shown inside the white list panel)
    ========================================================== */
 .transactions-page .tx-loader {
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -326,12 +362,8 @@
 }
 
 .transactions-page .tx-message {
-  grid-column: 1 / -1;
   text-align: center;
   padding: 60px 20px;
-  background: #ffffff;
-  border: 1px dashed #cbd5e1;
-  border-radius: 18px;
   color: #64748b;
 }
 
@@ -372,14 +404,62 @@
 
 
 /* ==========================================================
-   MOBILE
+   TABLET / SMALL LAPTOP  (price goes under the info)
    ========================================================== */
-@media (max-width: 768px) {
-  .transactions-page .tx-title {
-    font-size: 22px;
+@media (max-width: 1000px) {
+  .transactions-page .tx-row {
+    grid-template-columns: 40px 110px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "num  thumb info  info"
+      "num  thumb price action";
+    row-gap: 12px;
   }
 
-  .transactions-page .tx-grid {
-    grid-template-columns: 1fr;
+  .transactions-page .tx-thumb-wrap {
+    width: 110px;
+    height: 74px;
+  }
+
+  .transactions-page .tx-price-block {
+    text-align: left;
+  }
+}
+
+
+/* ==========================================================
+   MOBILE  (everything stacks neatly)
+   ========================================================== */
+@media (max-width: 640px) {
+  .transactions-page .tx-hero {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .transactions-page .tx-title {
+    font-size: 24px;
+  }
+
+  .transactions-page .tx-stat {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .transactions-page .tx-row {
+    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-areas:
+      "num   thumb"
+      "info  info"
+      "price action";
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .transactions-page .tx-thumb-wrap {
+    width: 100%;
+    height: 130px;
+  }
+
+  .transactions-page .tx-download-btn {
+    justify-self: end;
   }
 }

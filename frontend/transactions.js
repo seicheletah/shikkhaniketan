@@ -10,8 +10,8 @@
             course_id, amount, created_at }]
    3. For every purchase it calls   GET /api/v1/courses/{course_id}
       to get the course name, details and language.
-   4. Draws one modern card per purchased course (the structure,
-      name, price and details appear first).
+   4. Draws one numbered ROW per purchased course (1, 2, 3 ...), with the
+      download button at the right end (name, price and details appear first).
    5. Loads the course thumbnails slowly in the background.
    6. When the student clicks the download button on a card it calls
          GET /api/v1/students/me/transactions/{id}/invoice
@@ -36,9 +36,11 @@
     // Picture used when a course has no thumbnail (or it fails to load)
     const DEFAULT_THUMB = "image/myyy.png";
 
-    // If your backend stores "amount" in paise (Razorpay style, 100 paise = 1 rupee)
-    // change this number to 100. If it already stores rupees, keep it 1.
-    const AMOUNT_DIVISOR = 1;
+    // Razorpay (and so our backend) stores "amount" in PAISE, not rupees.
+    // 100 paise = 1 rupee, so 59900 in the database means Rs. 599.
+    // We divide by 100 before showing the price.
+    // (If you ever store rupees directly, change this back to 1.)
+    const AMOUNT_DIVISOR = 100;
 
     // How many thumbnails may download at the same moment.
     // A small number keeps the browser free for other requests.
@@ -283,7 +285,7 @@
         // Disable the button + show a spinner icon so nobody double-clicks
         const originalHtml = button.innerHTML;
         button.disabled = true;
-        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+        button.textContent = "Generating...";
 
         try {
             const res = await fetch(
@@ -333,11 +335,31 @@
        RENDER
        ========================================== */
 
-    /** Builds ONE card element for one transaction + its course. */
-    function buildCard(transaction, course) {
+    /* ---- Small inline SVG icons (no FontAwesome needed, they always show) ---- */
+    const ICON_LANGUAGE =
+        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>';
 
-        const card = document.createElement("article");
-        card.className = "tx-card";
+    const ICON_CALENDAR =
+        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+
+    const ICON_HASH =
+        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>';
+
+    const ICON_CHECK =
+        '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+    const ICON_DOWNLOAD =
+        '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+
+    /**
+     * Builds ONE list row for one transaction + its course.
+     * `number` is the position in the list (1, 2, 3 ...).
+     * Layout (left -> right): number, thumbnail, name/details/info, price, download button.
+     */
+    function buildRow(transaction, course, number) {
+
+        const row = document.createElement("article");
+        row.className = "tx-row";
 
         // If the course could not be loaded, show a safe fallback text
         const name = course ? (course.course_name || "Untitled course") : "Course unavailable";
@@ -346,54 +368,45 @@
 
         const amount = toRupees(transaction.amount);
 
-        card.innerHTML = `
+        row.innerHTML = `
+            <div class="tx-num">${number}</div>
+
             <div class="tx-thumb-wrap">
                 <img class="tx-thumb" src="${DEFAULT_THUMB}" alt="${escapeHtml(name)}">
-                <span class="tx-paid-badge">
-                    <i class="fa-solid fa-circle-check"></i> Paid
-                </span>
             </div>
 
-            <div class="tx-body">
+            <div class="tx-info-block">
                 <h3 class="tx-course-name">${escapeHtml(name)}</h3>
                 <p class="tx-course-desc">${escapeHtml(details)}</p>
 
-                <ul class="tx-info">
-                    <li>
-                        <i class="fa-solid fa-language"></i>
-                        <span>${escapeHtml(language)}</span>
-                    </li>
-                    <li>
-                        <i class="fa-regular fa-calendar"></i>
-                        <span>${formatDate(transaction.created_at)}</span>
-                    </li>
+                <ul class="tx-meta">
+                    <li>${ICON_LANGUAGE}<span>${escapeHtml(language)}</span></li>
+                    <li>${ICON_CALENDAR}<span>${formatDate(transaction.created_at)}</span></li>
                     <li title="${escapeHtml(transaction.razorpay_payment_id)}">
-                        <i class="fa-solid fa-hashtag"></i>
-                        <span>${escapeHtml(transaction.razorpay_payment_id || "-")}</span>
+                        ${ICON_HASH}<span>${escapeHtml(transaction.razorpay_payment_id || "-")}</span>
                     </li>
                 </ul>
             </div>
 
-            <div class="tx-footer">
-                <div>
-                    <span class="tx-price-label">Amount paid</span>
-                    <span class="tx-price">${formatMoney(amount)}</span>
-                </div>
-
-                <button type="button" class="tx-download-btn" title="Download invoice">
-                    <i class="fa-solid fa-download"></i> Invoice
-                </button>
+            <div class="tx-price-block">
+                <span class="tx-paid-badge">${ICON_CHECK} Paid</span>
+                <span class="tx-price-label">Amount paid</span>
+                <span class="tx-price">${formatMoney(amount)}</span>
             </div>
+
+            <button type="button" class="tx-download-btn" title="Download invoice">
+                ${ICON_DOWNLOAD} Invoice
+            </button>
         `;
 
-        // Connect the download button of THIS card to THIS transaction
-        const button = card.querySelector(".tx-download-btn");
+        // Connect the download button of THIS row to THIS transaction
+        const button = row.querySelector(".tx-download-btn");
         button.addEventListener("click", () => downloadInvoice(transaction, button));
 
-        return card;
+        return row;
     }
 
-    /** Fills the two summary cards (count + total spent). */
+    /** Fills the two summary chips in the green banner (count + total spent). */
     function renderSummary(transactions) {
         const total = transactions.reduce((sum, t) => sum + toRupees(t.amount), 0);
 
@@ -431,20 +444,21 @@
                 transactions.map(t => getCourse(t.course_id))
             );
 
-            // 3) Draw the summary and all cards at once
+            // 3) Draw the summary and all rows at once
             renderSummary(transactions);
 
             grid.innerHTML = "";
             const thumbJobs = [];
 
             transactions.forEach((transaction, index) => {
-                const card = buildCard(transaction, courses[index]);
-                grid.appendChild(card);
+                // index + 1 -> the visible row number: 1, 2, 3 ...
+                const row = buildRow(transaction, courses[index], index + 1);
+                grid.appendChild(row);
 
                 // Remember which <img> belongs to which course
                 thumbJobs.push({
                     courseId: transaction.course_id,
-                    img: card.querySelector(".tx-thumb")
+                    img: row.querySelector(".tx-thumb")
                 });
             });
 

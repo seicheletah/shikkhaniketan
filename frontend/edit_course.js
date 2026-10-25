@@ -713,34 +713,57 @@ document.addEventListener("DOMContentLoaded", () => {
      * Turns a failed API response into a readable message.
      * FastAPI sends { detail: "text" } or, for 422,
      * { detail: [ { msg: "text", ... } ] }.
+     * BUT when the server crashes (HTTP 500) it often sends plain text
+     * ("Internal Server Error"), which is NOT JSON. So we read the body as
+     * text first and only then try to parse it as JSON.
      */
     async function readDeleteError(response) {
 
+        // Default message. A 5xx status means the BACKEND crashed (not this page).
         let message =
-            "Failed to delete course.";
+            response.status >= 500
+                ? `Server error (${response.status}). The course could not be deleted. Check the backend terminal for the error.`
+                : "Failed to delete course.";
 
         try {
 
-            const errorData =
-                await response.json();
+            // Read the body as plain text first. A crashed server often sends
+            // the text "Internal Server Error", which is NOT valid JSON, and
+            // calling response.json() on it would throw the error you saw.
+            const bodyText =
+                await response.text();
 
-            if (typeof errorData.detail === "string") {
+            try {
 
-                message = errorData.detail;
+                const errorData =
+                    JSON.parse(bodyText);
 
-            } else if (
-                Array.isArray(errorData.detail) &&
-                errorData.detail[0] &&
-                errorData.detail[0].msg
-            ) {
+                if (typeof errorData.detail === "string") {
 
-                message = errorData.detail[0].msg;
+                    message = errorData.detail;
+
+                } else if (
+                    Array.isArray(errorData.detail) &&
+                    errorData.detail[0] &&
+                    errorData.detail[0].msg
+                ) {
+
+                    message = errorData.detail[0].msg;
+
+                }
+
+            } catch (parseError) {
+
+                // Not JSON: keep the default message above
+                console.log(
+                    "Delete error body (not JSON):",
+                    bodyText
+                );
 
             }
 
         } catch (error) {
 
-            // The response had no JSON body: keep the default message
             console.error(
                 "Error reading delete error:",
                 error
