@@ -1,148 +1,117 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Course Form</title>
-  <link rel="stylesheet" href="edit_course.css">
+<!--
+==========================================================================
+ edit_course.html  -  Edit Course (HTML fragment)
+ Opens INSIDE the teacher dashboard (teacher.html) via fetch().
+ The course id is passed from teacher_courses.js through window.editCourseId.
+ (Tailwind and edit_course.css are no longer needed: styles are in teacher_pages.css)
+==========================================================================
+-->
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  
-</head>
-<body>
+<link rel="stylesheet" href="teacher_pages.css">
 
-  <div class="page-wrapper">
-    <h1 class="page-title">Edit Course</h1>
+<div class="tp-page" id="ec-wrapper">
 
-    <div class="main-card">
-      <form id="courseForm" onsubmit="handleSubmit(event)">
-        
-        <div class="form-grid">
-          
-          <!-- Field 1: Course Name -->
-          <div class="field-box">
-            <label class="field-label" for="courseName">Course Name</label>
-            <input type="text" id="courseName" class="field-input" placeholder="Enter Course Name" required>
-          </div>
+    <!-- Back to the Teacher Dashboard (courses) page, inside the dashboard -->
+    <button type="button" class="tp-back" id="ecBackBtn"
+            onclick="window.loadDashboardPage ? window.loadDashboardPage('teacher_courses.html') : (window.location.href = 'teacher.html')">
+        <span class="tp-back-icon"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></span>
+        Back to Courses
+    </button>
 
-          <!-- Field 2: Course Details -->
-          <div class="field-box">
-            <!-- (typo fixed: it said "Course detailsa") -->
-            <label class="field-label" for="courseDetails">Course details</label>
-            <input type="text" id="courseDetails" class="field-input" placeholder="Enter Course details">
-          </div>
+    <header class="tp-head">
+        <div>
+            <h1 class="tp-title">Edit Course</h1>
+            <p class="tp-subtitle">Change the course details and save.</p>
+        </div>
+    </header>
 
-          <!-- Field 3: Course Language Custom Dropdown -->
-          <div class="field-box custom-dropdown-container" id="langDropdownContainer">
-            <label class="field-label">Course Language</label>
-            <button type="button" class="select-btn" id="langBtn" onclick="toggleDropdown('langDropdownContainer')">
-              <span id="langText">Course Language</span>
-              <svg class="arrow-icon" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-              </svg>
-            </button>
-            <ul class="dropdown-menu">
-              <li class="dropdown-option" onclick="selectOption('langDropdownContainer', 'langText', 'English')">English</li>
-              <li class="dropdown-option" onclick="selectOption('langDropdownContainer', 'langText', 'Hindi (हिंदी)')">Hindi (हिंदी)</li>
-              <li class="dropdown-option" onclick="selectOption('langDropdownContainer', 'langText', 'Bengali (বাংলা)')">Bengali (বাংলা)</li>
-            </ul>
-          </div>
+    <!-- ================= EDIT FORM ================= -->
+    <section class="tp-card">
+        <form id="ecForm" class="tp-form" novalidate>
 
-          <!-- Field 4: Course Type Custom Dropdown -->
-          <div class="field-box custom-dropdown-container" id="typeDropdownContainer">
-            <label class="field-label">Course paid</label>
-            <button type="button" class="select-btn" id="typeBtn" onclick="toggleDropdown('typeDropdownContainer')">
-              <span id="typeText">Course Type</span>
-              <svg class="arrow-icon" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-              </svg>
-            </button>
-            <ul class="dropdown-menu">
-              <li class="dropdown-option" onclick="selectOption('typeDropdownContainer', 'typeText', 'Yes')">Yes</li>
-              <li class="dropdown-option" onclick="selectOption('typeDropdownContainer', 'typeText', 'No')">No</li>
-            </ul>
-          </div>
+            <div class="tp-grid-2">
 
-          <!-- Field 5: Course Price -->
-          <div class="field-box full-width">
-            <label class="field-label" for="coursePrice">Course price</label>
-            <input type="text" id="coursePrice" class="field-input" placeholder="Enter Course Price">
-          </div>
+                <div class="tp-field">
+                    <label class="tp-label" for="ecName">Course Name</label>
+                    <input type="text" id="ecName" class="tp-input" placeholder="Enter Course Name">
+                </div>
 
+                <div class="tp-field">
+                    <label class="tp-label" for="ecLanguage">Course Language</label>
+                    <!-- values are exactly what the API accepts -->
+                    <select id="ecLanguage" class="tp-input">
+                        <option value="english">English</option>
+                        <option value="hindi">Hindi (हिंदी)</option>
+                        <option value="bengali">Bengali (বাংলা)</option>
+                    </select>
+                </div>
+
+                <div class="tp-field tp-field-full">
+                    <label class="tp-label" for="ecDetails">Course Details</label>
+                    <textarea id="ecDetails" class="tp-input" rows="3" placeholder="Enter Course details"></textarea>
+                </div>
+
+                <div class="tp-field">
+                    <label class="tp-label" for="ecPaid">Course Paid</label>
+                    <select id="ecPaid" class="tp-input">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                <div class="tp-field">
+                    <label class="tp-label" for="ecPrice">Course Price (INR)</label>
+                    <input type="number" id="ecPrice" class="tp-input" min="0" placeholder="Enter Course Price">
+                </div>
+            </div>
+
+            <div class="tp-actions">
+                <button type="button" class="tp-btn tp-btn-light" id="ecCancelBtn">Cancel</button>
+                <button type="submit" class="tp-btn" id="ecSaveBtn">
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                    Submit
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- ================= DANGER ZONE ================= -->
+    <div class="tp-danger-zone">
+        <div>
+            <h2>Delete this course</h2>
+            <p>This permanently removes the course. Students will no longer see it. This can not be undone.</p>
         </div>
 
-        <div class="action-bar">
-          <button type="button" class="btn btn-delete" onclick="handleCancel()">Cancel</button>
-          <button type="submit" class="btn btn-submit">Submit</button>
+        <button type="button" class="tp-btn tp-btn-danger" id="ecDeleteBtn">
+            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+            Delete course
+        </button>
+    </div>
+
+    <!-- ================= CONFIRM POP-UP ================= -->
+    <div class="tp-modal-overlay" id="ecModal" aria-hidden="true">
+        <div class="tp-modal" role="dialog" aria-modal="true" aria-labelledby="ecModalTitle">
+            <div class="tp-modal-icon">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            </div>
+
+            <h3 id="ecModalTitle">Delete this course?</h3>
+
+            <p>
+                You are about to permanently delete
+                <strong id="ecModalName">this course</strong>.
+                Students will not be able to see it anymore. This action can not be undone.
+            </p>
+
+            <div class="tp-modal-actions">
+                <button type="button" class="tp-btn tp-btn-light" id="ecModalCancel">No, keep it</button>
+                <button type="button" class="tp-btn tp-btn-danger" id="ecModalConfirm">Yes, delete</button>
+            </div>
         </div>
-
-      </form>
     </div>
 
-    <!-- ================= NEW: DANGER ZONE =================
-         A separate red-bordered box under the form, so the teacher can
-         not click "Delete course" by accident while editing.
-         The button only OPENS the confirm pop-up; nothing is deleted yet. -->
-    <div class="dc-danger-zone">
-      <div class="dc-danger-text">
-        <h2 class="dc-danger-title">Delete this course</h2>
-        <p class="dc-danger-desc">
-          This permanently removes the course. Students will no longer see it.
-          This can not be undone.
-        </p>
-      </div>
+    <!-- Toast message -->
+    <div class="tp-toast" id="ecToast"></div>
+</div>
 
-      <button type="button" class="dc-open-btn" id="deleteCourseBtn">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-          <path d="M10 11v6"></path>
-          <path d="M14 11v6"></path>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-        </svg>
-        Delete course
-      </button>
-    </div>
-  </div>
-
-  <!-- ================= NEW: CONFIRM POP-UP =================
-       Hidden until the teacher clicks "Delete course".
-       course_name is filled in by edit_course.js. -->
-  <div class="dc-overlay" id="deleteModal" aria-hidden="true">
-    <div class="dc-modal" role="dialog" aria-modal="true" aria-labelledby="dcModalTitle">
-
-      <div class="dc-modal-icon">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
-      </div>
-
-      <h3 class="dc-modal-title" id="dcModalTitle">Delete this course?</h3>
-
-      <p class="dc-modal-text">
-        You are about to permanently delete
-        <strong id="dcCourseName">this course</strong>.
-        Students will not be able to see it anymore. This action can not be undone.
-      </p>
-
-      <div class="dc-modal-actions">
-        <button type="button" class="dc-cancel-btn" id="dcCancelBtn">No, keep it</button>
-        <button type="button" class="dc-confirm-btn" id="dcConfirmBtn">Yes, delete</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Notification Toast -->
-  <div id="toast" class="toast">Action performed successfully!</div>
-
-  
 <script src="edit_course.js"></script>
-
-</body>
-</html>

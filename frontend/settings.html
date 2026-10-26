@@ -1,24 +1,29 @@
 <!--
 ==========================================================================
- settings.html  -  Student Profile (read-only view)
+ settings.html  -  Profile (read-only view)  -  shared by STUDENT and TEACHER
 ==========================================================================
+ NEW: the page title is now chosen automatically.
+   - opened inside student.html  ->  "Student Profile"
+   - opened inside teacher.html  ->  "Teacher Profile"
+ The small script at the bottom looks at which dashboard is hosting this
+ page (teacher.html has an element with id="teacherUserName", student.html
+ has id="studentUserName") and writes the right title.
+
  DESIGN NOTE
-   This page and update_profile.html now share ONE design language:
+   This page and update_profile.html share ONE design language:
      - same page title area (title + subtitle)
      - same white card with a green banner on top
      - same big round profile picture overlapping the banner
      - same icon-badge tiles for every detail / field
      - same green gradient buttons
-   Only the content differs: here the values are read-only text,
-   there they are editable inputs.
 
  RULES (do not break the JavaScript)
-   1. Every id="disp-..." is filled by your existing JS. Do NOT rename or
-      remove any id.
+   1. Every id="disp-..." is filled by the dashboard JS (student.js /
+      teacher.js). Do NOT rename or remove any id.
    2. This is an HTML fragment (no <html>/<head>/<body>) because the
       dashboard injects it with fetch().
-   3. Do NOT add a <script> tag here - scripts inserted via innerHTML
-      never run.
+   3. The dashboards re-create <script> tags after injecting a page, so the
+      small script at the bottom DOES run.
    4. Font Awesome ("fa-solid" icons) must be loaded by the dashboard,
       as it already is.
 ==========================================================================
@@ -31,7 +36,8 @@
 
     <!-- Page title area (same structure as on the Update Profile page) -->
     <header class="pf-page-head">
-        <h1 class="pf-title">Student Profile</h1>
+        <!-- id="disp-page-title": the text is replaced by the script at the bottom -->
+        <h1 class="pf-title" id="disp-page-title">Student Profile</h1>
         <p class="pf-subtitle">Your personal details at a glance.</p>
     </header>
 
@@ -139,4 +145,18 @@
 
     </section>
 </div>
-<!-- Do not add any <script> here -->
+
+<!-- Chooses "Student Profile" or "Teacher Profile" depending on the hosting dashboard -->
+<script>
+    (function () {
+        var title = document.getElementById('disp-page-title');
+        if (!title) return;
+
+        // teacher.html has id="teacherUserName"; student.html has id="studentUserName"
+        if (document.getElementById('teacherUserName')) {
+            title.textContent = 'Teacher Profile';
+        } else {
+            title.textContent = 'Student Profile';
+        }
+    })();
+</script>

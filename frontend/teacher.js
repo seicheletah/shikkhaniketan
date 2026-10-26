@@ -1,866 +1,254 @@
-document.addEventListener("DOMContentLoaded", () => {
+/* ==========================================================
+   teacher.js  -  Teacher dashboard shell logic
+   Works exactly like student.js:
+   - sidebar + topbar stay fixed
+   - every page is downloaded with fetch() and shown in #main-content
+   ========================================================== */
 
-    const API = "http://127.0.0.1:8000/api/v1";
-    const token = localStorage.getItem("access_token");
+/* ---------- CONFIGURATION ---------- */
+const API_BASE_URL = 'http://127.0.0.1:8000';
+const DEFAULT_PIC = 'https://i.pravatar.cc/100?img=32';
+const LOGIN_PAGE = 'login.html';      // change if your login page has another name
+const TOKEN_KEY = 'access_token';
 
+/* ---------- SMALL HELPERS ---------- */
+
+// Writes text into an element by id ("-" when empty)
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value || '-';
+}
+
+// m / f / o  ->  Male / Female / Other
+function formatGender(g) {
+    const map = { m: 'Male', f: 'Female', o: 'Other' };
+    return map[g] || g || '-';
+}
+
+// Builds a full image URL from the path saved in the database
+function buildPicUrl(path) {
+    if (!path) return DEFAULT_PIC;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE_URL}/${path.replace(/^\/+/, '')}?t=${Date.now()}`;
+}
+
+/* ---------- LOGOUT ---------- */
+function logoutUser() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem('token_type');
+    window.location.replace(LOGIN_PAGE);
+}
+
+/* ==========================================================
+   LOAD TEACHER PROFILE (GET /api/v1/teachers/me)
+   Fills the topbar (name + picture) and, if the Settings
+   page is open, the profile fields there as well.
+   ========================================================== */
+async function loadTeacherProfile() {
+    const token = localStorage.getItem(TOKEN_KEY);
+
+    // Not logged in -> go to the login page
     if (!token) {
-        location.href = "login.html";
+        window.location.replace(LOGIN_PAGE);
         return;
     }
 
-    // ---------------- ELEMENTS ----------------
-
-    const topBar = document.querySelector(".top-bar");
-    const navItems = document.querySelectorAll(".nav-item");
-    const sections = document.querySelectorAll(".page-section");
-
-    const teacherName = document.getElementById("teacherUserName");
-    const teacherImg = document.getElementById("teacherProfileImg");
-
-    const publishBtn = document.getElementById("publishCourseBtn");
-    const updateBtn = document.getElementById("openUpdateProfile");
-    const searchInput = document.getElementById("courseSearch");
-
-    const courseList = document.getElementById("courseList");
-    const templateCard = courseList?.querySelector("[data-course-card]");
-
-    let teacher = {};
-    let allCourses = [];
-
-
-    // ---------------- HEADERS ----------------
-
-    function headers() {
-        return {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json"
-        };
-    }
-
-
-    // ---------------- NAVIGATION ----------------
-
-    navItems.forEach(item => {
-
-        item.addEventListener("click", e => {
-
-            e.preventDefault();
-
-            const page = item.dataset.page;
-
-            if (page === "logout") {
-                localStorage.clear();
-                location.href = "login.html";
-                return;
-            }
-
-            navItems.forEach(n => n.classList.remove("active"));
-            sections.forEach(s => s.classList.remove("active"));
-
-            item.classList.add("active");
-
-            const section = document.getElementById(page);
-
-            if (section) {
-                section.classList.add("active");
-            }
-
-            // Hide Search Bar in Settings
-            if (page === "settings") {
-                topBar?.classList.add("hide-search");
-            } else {
-                topBar?.classList.remove("hide-search");
-            }
-
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/teachers/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
-    });
-
-
-    // ---------------- PROFILE ----------------
-
-    async function loadProfile() {
-
-        try {
-
-            const res = await fetch(`${API}/teachers/me`, {
-                headers: headers()
-            });
-
-            if (res.status === 401) {
-                localStorage.clear();
-                location.href = "login.html";
-                return;
-            }
-
-            if (!res.ok) {
-                console.error("Profile loading failed");
-                return;
-            }
-
-            teacher = await res.json();
-
-            const fullName =
-                `${teacher.first_name || ""} ${teacher.last_name || ""}`.trim();
-
-            if (teacherName) {
-                teacherName.textContent = fullName || "Teacher";
-            }
-
-            if (teacherImg && teacher.profile_pic) {
-                teacherImg.src = teacher.profile_pic;
-            }
-
-            setValue("teacherFirstName", teacher.first_name);
-            setValue("teacherLastName", teacher.last_name);
-            setValue("teacherEmail", teacher.user?.email_id);
-            setValue("teacherPhone", teacher.phone_no);
-            setValue("teacherGender", teacher.gender);
-            setValue("teacherDob", teacher.date_of_birth);
-            setValue("teacherAddress", teacher.address);
-            setValue("teacherAbout", teacher.about);
-
-        } catch (error) {
-
-            console.error("Profile Error:", error);
-
-        }
-
-    }
-
-
-    function setValue(id, value) {
-
-        const el = document.getElementById(id);
-
-        if (el) {
-            el.textContent = value || "-";
-        }
-
-    }
-
-
-    // ========================================================
-    // COURSE SORTING
-    // ========================================================
-
-    function getCourseCreatedTime(course) {
-
-        /*
-         * Backend যদি creation date পাঠায়,
-         * তাহলে সেটাই সবচেয়ে আগে ব্যবহার হবে।
-         */
-
-        const dateValue =
-            course.created_at ||
-            course.createdAt ||
-            course.created ||
-            course.creation_date ||
-            course.created_date ||
-            course.uploaded_at ||
-            course.uploadedAt;
-
-        if (dateValue) {
-
-            const time = new Date(dateValue).getTime();
-
-            if (!isNaN(time)) {
-                return time;
-            }
-
-        }
-
-
-        /*
-         * যদি backend creation date না পাঠায়,
-         * তাহলে UUID v7 ID থেকে timestamp বের করার চেষ্টা করা হবে।
-         *
-         * UUID v7-এর প্রথম 48 bit-এ creation timestamp থাকে।
-         */
-
-        const id = String(course.id || "");
-
-        const uuidV7Match =
-            id.match(
-                /^([0-9a-f]{8})-([0-9a-f]{4})-/i
-            );
-
-        if (uuidV7Match) {
-
-            try {
-
-                const firstPart =
-                    uuidV7Match[1] +
-                    uuidV7Match[2];
-
-                const timestamp =
-                    parseInt(firstPart, 16);
-
-                if (!isNaN(timestamp) && timestamp > 0) {
-                    return timestamp;
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    "Could not read course creation time from ID:",
-                    id
-                );
-
-            }
-
-        }
-
-
-        /*
-         * Creation date এবং UUID timestamp দুটোই না থাকলে
-         * course-কে নিচে রাখার জন্য 0 return করা হবে।
-         */
-
-        return 0;
-    }
-
-
-    function sortNewestFirst(courses) {
-
-        return [...courses].sort((a, b) => {
-
-            const timeA = getCourseCreatedTime(a);
-            const timeB = getCourseCreatedTime(b);
-
-            return timeB - timeA;
-
-        });
-
-    }
-
-
-    // ---------------- LOAD COURSES ----------------
-
-    async function loadCourses() {
-
-        try {
-
-            const res = await fetch(`${API}/teachers/me/courses`, {
-                headers: headers()
-            });
-
-            if (res.status === 401) {
-
-                localStorage.clear();
-                location.href = "login.html";
-                return;
-
-            }
-
-            if (!res.ok) {
-
-                if (courseList) {
-                    courseList.innerHTML =
-                        "<p>No courses found.</p>";
-                }
-
-                return;
-            }
-
-            const data = await res.json();
-
-            allCourses = Array.isArray(data)
-                ? data
-                : (data.courses || []);
-
-
-            // ====================================================
-            // NEWEST COURSE FIRST
-            // ====================================================
-
-            allCourses = sortNewestFirst(allCourses);
-
-
-            // Load rating separately for every course
-            await loadRatingsForCourses();
-
-
-            // Render newest course first
-            renderCourses(allCourses);
-
-        } catch (error) {
-
-            console.error("Course Loading Error:", error);
-
-            if (courseList) {
-                courseList.innerHTML =
-                    "<p>Failed to load courses.</p>";
-            }
-
-        }
-
-    }
-
-
-    // ---------------- LOAD RATINGS FOR EACH COURSE ----------------
-
-    async function loadRatingsForCourses() {
-
-        await Promise.all(
-
-            allCourses.map(async course => {
-
-                try {
-
-                    const res = await fetch(
-                        `${API}/courses/${course.id}/review`,
-                        {
-                            headers: headers()
-                        }
-                    );
-
-                    if (!res.ok) {
-
-                        course.average_rating = 0;
-                        course.total_reviews = 0;
-
-                        return;
-                    }
-
-                    const data = await res.json();
-
-                    let reviews = [];
-
-                    if (Array.isArray(data)) {
-
-                        reviews = data;
-
-                    } else if (Array.isArray(data.reviews)) {
-
-                        reviews = data.reviews;
-
-                    }
-
-
-                    // If backend directly sends average rating
-                    if (
-                        data &&
-                        !Array.isArray(data) &&
-                        data.average_rating !== undefined
-                    ) {
-
-                        course.average_rating =
-                            Number(data.average_rating) || 0;
-
-                        course.total_reviews =
-                            Number(
-                                data.total_reviews ??
-                                data.review_count ??
-                                reviews.length
-                            ) || 0;
-
-                        return;
-                    }
-
-
-                    // Calculate average rating from reviews
-                    if (reviews.length > 0) {
-
-                        const ratings = reviews
-                            .map(review => Number(review.rating))
-                            .filter(rating => !isNaN(rating));
-
-
-                        if (ratings.length > 0) {
-
-                            const total = ratings.reduce(
-                                (sum, rating) => sum + rating,
-                                0
-                            );
-
-                            course.average_rating =
-                                total / ratings.length;
-
-                            course.total_reviews =
-                                ratings.length;
-
-                        } else {
-
-                            course.average_rating = 0;
-                            course.total_reviews = 0;
-
-                        }
-
-                    } else {
-
-                        course.average_rating = 0;
-                        course.total_reviews = 0;
-
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        `Rating loading failed for course ${course.id}:`,
-                        error
-                    );
-
-                    course.average_rating = 0;
-                    course.total_reviews = 0;
-
-                }
-
-            })
-
-        );
-
-    }
-
-
-    // ---------------- RESOURCE TYPE ----------------
-
-    function getResourceType(course) {
-
-        const type =
-            course.course_resource_type ||
-            course.resource_type ||
-            course.course_type ||
-            course.type ||
-            "video";
-
-        const value = String(type).toLowerCase();
-
-        if (
-            value.includes("document") ||
-            value.includes("pdf") ||
-            value.includes("doc")
-        ) {
-
-            return "Document";
-
-        }
-
-        return "Video";
-    }
-
-
-    // ---------------- RATING DISPLAY ----------------
-
-    function getRating(course) {
-
-        const rating = Number(
-            course.average_rating ??
-            course.rating ??
-            course.course_rating ??
-            0
-        );
-
-        return isNaN(rating) ? 0 : rating;
-
-    }
-
-
-    // ---------------- ADD COURSE EXTRA INFO ----------------
-
-    function addCourseExtraInfo(card, course) {
-
-        const metrics = card.querySelector(".course-metrics");
-
-        if (!metrics) return;
-
-
-        // Remove previously added information
-
-        metrics
-            .querySelectorAll(".dynamic-course-info")
-            .forEach(el => el.remove());
-
-
-        // ---------------- RATING ----------------
-
-        const rating = getRating(course);
-
-        const totalReviews =
-            Number(
-                course.total_reviews ??
-                course.review_count ??
-                0
-            ) || 0;
-
-
-        const ratingMetric =
-            document.createElement("div");
-
-        ratingMetric.className =
-            "metric dynamic-course-info course-rating";
-
-        ratingMetric.innerHTML = `
-            <span>Rating</span>
-
-            <strong>
-                ⭐ ${rating > 0 ? rating.toFixed(1) : "No rating"}
-            </strong>
-
-            <small>
-                ${totalReviews}
-                ${totalReviews === 1 ? "Review" : "Reviews"}
-            </small>
-        `;
-
-        metrics.appendChild(ratingMetric);
-
-
-        // ---------------- RESOURCE TYPE ----------------
-
-        const resourceType =
-            getResourceType(course);
-
-        const typeMetric =
-            document.createElement("div");
-
-        typeMetric.className =
-            "metric dynamic-course-info course-resource-type";
-
-
-        const icon =
-            resourceType === "Document"
-                ? "fa-file-lines"
-                : "fa-video";
-
-
-        typeMetric.innerHTML = `
-            <span>Type</span>
-
-            <strong>
-                <i class="fa-solid ${icon}"></i>
-                ${resourceType}
-            </strong>
-        `;
-
-        metrics.appendChild(typeMetric);
-
-    }
-
-
-    // ---------------- RENDER COURSES ----------------
-
-    function renderCourses(courses) {
-
-        if (!courseList || !templateCard) return;
-
-        courseList.innerHTML = "";
-
-
-        if (courses.length === 0) {
-
-            courseList.innerHTML =
-                "<p>No courses found.</p>";
-
+        // Token expired -> log out
+        if (response.status === 401) {
+            logoutUser();
             return;
         }
 
+        if (!response.ok) {
+            throw new Error('Failed to load profile (' + response.status + ')');
+        }
 
-        /*
-         * Render করার আগেও newest-first sorting করা হচ্ছে।
-         * এতে Search/Back থেকেও order ঠিক থাকবে।
-         */
+        const data = await response.json();
 
-        const sortedCourses =
-            sortNewestFirst(courses);
+        // ---- Settings page fields (exist only when settings.html is loaded) ----
+        setText('disp-id', data.user ? data.user.id : '');
+        setText('disp-first-name', data.first_name);
+        setText('disp-last-name', data.last_name);
+        setText('disp-email', data.user ? data.user.email_id : '');
+        setText('disp-phone', data.phone_no);
+        setText('disp-gender', formatGender(data.gender));
+        setText('disp-dob', data.date_of_birth);
+        setText('disp-address', data.address);
+        setText('disp-about', data.about);
 
+        const pic = document.getElementById('disp-profile-pic');
+        if (pic) pic.src = buildPicUrl(data.profile_pic);
 
-        sortedCourses.forEach(course => {
+        // ---- Topbar: small picture + first name ----
+        const topPic = document.querySelector('.topbar .profile-img');
+        if (topPic) topPic.src = buildPicUrl(data.profile_pic);
 
-            const card =
-                templateCard.cloneNode(true);
+        const nameEl = document.getElementById('teacherUserName');
+        if (nameEl && data.first_name) nameEl.innerText = data.first_name;
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+    }
+}
 
-            card.style.display = "";
-
-
-            // ---------------- COURSE NAME ----------------
-
-            const courseName =
-                card.querySelector("[data-course-name]");
-
-            if (courseName) {
-
-                courseName.textContent =
-                    course.course_name || "Course Name";
-
-            }
-
-
-            // ---------------- COURSE DETAILS ----------------
-
-            const courseDetails =
-                card.querySelector("[data-course-details]");
-
-            if (courseDetails) {
-
-                courseDetails.textContent =
-                    course.course_details || "Course details";
-
-            }
-
-
-            // ---------------- LANGUAGE ----------------
-
-            const courseLanguage =
-                card.querySelector("[data-course-language]");
-
-            if (courseLanguage) {
-
-                courseLanguage.textContent =
-                    course.course_language || "-";
-
-            }
-
-
-            // ---------------- PRICE ----------------
-
-            const coursePrice =
-                card.querySelector("[data-course-price]");
-
-            if (coursePrice) {
-
-                const isPaid =
-                    course.course_paid === true ||
-                    course.course_paid === 1 ||
-                    course.course_paid === "true" ||
-                    course.course_paid === "1";
-
-
-                if (isPaid) {
-
-                    const currency =
-                        course.course_price_currency || "₹";
-
-                    coursePrice.textContent =
-                        `${currency} ${course.course_price ?? 0}`;
-
-                } else {
-
-                    coursePrice.textContent =
-                        "Free";
-
-                }
-
-            }
-
-
-            // ---------------- RATING + TYPE ----------------
-
-            addCourseExtraInfo(card, course);
-
-
-            // ---------------- EDIT BUTTON ----------------
-
-            const editBtn =
-                card.querySelector("[data-edit-course]");
-
-            if (editBtn) {
-
-                editBtn.textContent =
-                    "Edit Course";
-
-                editBtn.onclick = e => {
-
-                    e.stopPropagation();
-
-                    // Open Edit Course page with course ID
-                    location.href =
-                        `edit_course.html?id=${encodeURIComponent(course.id)}`;
-
-                };
-
-            }
-
-
-            // ---------------- COURSE CLICK ----------------
-
-            card.onclick = () => {
-    location.href = `course_details.html?id=${encodeURIComponent(course.id)}`;
+/* ==========================================================
+   PAGE -> SIDEBAR LINK MAP
+   Pages that have no sidebar link of their own highlight the
+   link they belong to.
+   ========================================================== */
+const PAGE_TO_NAV = {
+    'teacher_courses.html': 'teacher_courses.html',
+    'add_course.html': 'teacher_courses.html',
+    'edit_course.html': 'teacher_courses.html',
+    'settings.html': 'settings.html',
+    'update_profile.html': 'settings.html'
 };
 
+/* ==========================================================
+   MAIN SETUP (runs once the HTML is fully loaded)
+   ========================================================== */
+document.addEventListener('DOMContentLoaded', () => {
 
-            courseList.appendChild(card);
+    const navLinks = document.querySelectorAll('.nav-link[data-page]');
+    const mainContent = document.getElementById('main-content');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const logoutBtn = document.getElementById('logoutBtn');
 
+    // <script> tags inserted with innerHTML do NOT run, so we recreate them
+    function runScripts(container) {
+        container.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.getAttribute('src')) {
+                newScript.src = oldScript.getAttribute('src');
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            oldScript.replaceWith(newScript);
         });
-
     }
 
+    // Finds the sidebar link that belongs to a page (query string ignored)
+    function navFor(pageUrl) {
+        const clean = pageUrl.split('?')[0];
+        const key = PAGE_TO_NAV[clean] || clean;
+        return document.querySelector(`.nav-link[data-page="${key}"]`);
+    }
 
-    // ---------------- COURSE DETAILS ----------------
+    // Highlights one sidebar link, removes the highlight from the others
+    function updateActiveButton(targetLink) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        if (targetLink) targetLink.classList.add('active');
+    }
 
-    function showCourse(course) {
+    // Downloads a page and shows it inside the content area
+    async function fetchAndRenderPage(pageUrl) {
+        try {
+            mainContent.innerHTML = '<p style="color: #096858;">Loading page...</p>';
 
-        if (!courseList || !templateCard) return;
-
-        courseList.innerHTML = "";
-
-
-        const detailCard =
-            templateCard.cloneNode(true);
-
-        detailCard.style.display = "";
-
-
-        // ---------------- NAME ----------------
-
-        const courseName =
-            detailCard.querySelector("[data-course-name]");
-
-        if (courseName) {
-
-            courseName.textContent =
-                course.course_name || "Course Name";
-
-        }
-
-
-        // ---------------- DETAILS ----------------
-
-        const courseDetails =
-            detailCard.querySelector("[data-course-details]");
-
-        if (courseDetails) {
-
-            courseDetails.textContent =
-                course.course_details || "Course details";
-
-        }
-
-
-        // ---------------- LANGUAGE ----------------
-
-        const courseLanguage =
-            detailCard.querySelector("[data-course-language]");
-
-        if (courseLanguage) {
-
-            courseLanguage.textContent =
-                course.course_language || "-";
-
-        }
-
-
-        // ---------------- PRICE ----------------
-
-        const coursePrice =
-            detailCard.querySelector("[data-course-price]");
-
-        if (coursePrice) {
-
-            const isPaid =
-                course.course_paid === true ||
-                course.course_paid === 1 ||
-                course.course_paid === "true" ||
-                course.course_paid === "1";
-
-
-            if (isPaid) {
-
-                const currency =
-                    course.course_price_currency || "₹";
-
-                coursePrice.textContent =
-                    `${currency} ${course.course_price ?? 0}`;
-
-            } else {
-
-                coursePrice.textContent =
-                    "Free";
-
+            const response = await fetch(pageUrl, { cache: 'no-cache' });
+            if (!response.ok) {
+                throw new Error(`Page not found (${response.status})`);
             }
 
+            const htmlData = await response.text();
+            mainContent.innerHTML = htmlData;
+            runScripts(mainContent);
+
+            // The settings page needs the profile data
+            if (pageUrl.split('?')[0] === 'settings.html') {
+                loadTeacherProfile();
+            }
+
+            mainContent.scrollTop = 0;
+        } catch (error) {
+            mainContent.innerHTML = `
+                <div style="color: #d9534f;">
+                    <h2>ERROR!</h2>
+                    <p>Page missing or local file issue. Please check the file name: ${pageUrl}</p>
+                </div>
+            `;
+            console.error('Fetch Error:', error);
         }
-
-
-        // ---------------- RATING + TYPE ----------------
-
-        addCourseExtraInfo(detailCard, course);
-
-
-        // ---------------- BACK BUTTON ----------------
-
-        const backBtn =
-            detailCard.querySelector("[data-edit-course]");
-
-        if (backBtn) {
-
-            backBtn.textContent = "Back";
-
-            backBtn.onclick = e => {
-
-                e.stopPropagation();
-
-                renderCourses(allCourses);
-
-            };
-
-        }
-
-
-        // Prevent detail card click
-
-        detailCard.onclick = e => {
-
-            e.stopPropagation();
-
-        };
-
-
-        courseList.appendChild(detailCard);
-
     }
 
+    // Global helper: any page can open another page inside the dashboard
+    //   window.loadDashboardPage('add_course.html')
+    window.loadDashboardPage = function (pageUrl) {
+        updateActiveButton(navFor(pageUrl));
+        fetchAndRenderPage(pageUrl);
+    };
 
-    // ---------------- SEARCH ----------------
+    // Used by update_profile.js after "Save changes"
+    window.goToSettings = function () {
+        updateActiveButton(navFor('settings.html'));
+        fetchAndRenderPage('settings.html');
+        loadTeacherProfile();
+    };
 
-    searchInput?.addEventListener("input", () => {
+    // ---- Sidebar menu clicks (Courses, Settings) ----
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const pageToLoad = link.getAttribute('data-page');
 
-        const text =
-            searchInput.value.trim().toLowerCase();
+            updateActiveButton(link);
+            fetchAndRenderPage(pageToLoad);
 
-
-        const filtered =
-            allCourses.filter(course =>
-
-                (course.course_name || "")
-                    .toLowerCase()
-                    .includes(text)
-
-            );
-
-
-        /*
-         * Search result-ও newest course আগে দেখাবে।
-         */
-
-        renderCourses(
-            sortNewestFirst(filtered)
-        );
-
+            // On mobile, close the sidebar after choosing a page
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
     });
 
+    // ---- Logout ----
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoutUser();
+        });
+    }
 
-    // ---------------- PUBLISH BUTTON ----------------
+    // ---- Normal <a> links INSIDE loaded pages (e.g. "Update Profile" in settings.html) ----
+    mainContent.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
 
-    publishBtn?.addEventListener("click", () => {
+        const href = link.getAttribute('href');
+        // Ignore empty links, "#" anchors, external links and new-tab links
+        if (!href || href.startsWith('#') || href.startsWith('http') || link.target === '_blank') return;
 
-        location.href = "add_course.html";
-
+        e.preventDefault();
+        window.loadDashboardPage(href);
     });
 
+    // ---- Initial page ----
+    if (window.location.hash === '#settings') {
+        window.goToSettings();
+    } else {
+        window.loadDashboardPage('teacher_courses.html');
+    }
 
-    // ---------------- UPDATE PROFILE ----------------
+    // Name + picture for the topbar
+    loadTeacherProfile();
 
-    updateBtn?.addEventListener("click", () => {
+    // ---- Mobile sidebar open/close ----
+    if (menuToggle && sidebarOverlay) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        });
 
-        location.href = "update_profile.html";
-
-    });
-
-
-    // ---------------- INIT ----------------
-
-    loadProfile();
-    loadCourses();
-
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
 });

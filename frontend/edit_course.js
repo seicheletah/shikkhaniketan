@@ -1,939 +1,306 @@
-document.addEventListener("DOMContentLoaded", () => {
+/* ==========================================================
+   edit_course.js  (full file - replace your old one)
 
-    const API = "http://127.0.0.1:8000/api/v1";
-    const token = localStorage.getItem("access_token");
+   Runs every time edit_course.html is loaded INTO the teacher dashboard.
+   - course id comes from window.editCourseId (set by teacher_courses.js)
+   - loads the course:   GET    /courses/{id}
+   - saves changes:      PATCH  /teachers/me/courses/{id}
+   - deletes the course: DELETE /teachers/me/courses/{id}
+   - after save / delete / cancel it goes back to the courses page
+     inside the dashboard.
 
-    // ---------------- AUTH CHECK ----------------
+   FIX: the old version sent the visible text of the language dropdown
+   (e.g. "Bengali (বাংলা)") to the API, which only accepts
+   english / bengali / hindi. Now a normal <select> with those exact
+   values is used.
+   ========================================================== */
+(function () {
+
+    const root = document.getElementById('ec-wrapper');
+    if (!root) return; // page was replaced already
+
+    const API = 'http://127.0.0.1:8000/api/v1';
+    const token = localStorage.getItem('access_token');
 
     if (!token) {
-        location.href = "login.html";
+        window.location.replace('login.html');
         return;
     }
 
-    // ---------------- GET COURSE ID ----------------
+    // Back to the courses page (inside the dashboard)
+    function goToCourses() {
+        if (typeof window.loadDashboardPage === 'function') {
+            window.loadDashboardPage('teacher_courses.html');
+        } else {
+            window.location.href = 'teacher.html';
+        }
+    }
 
-    const params = new URLSearchParams(window.location.search);
-    const courseId = params.get("id");
-
+    // The id was saved by the "Edit Course" button
+    const courseId = window.editCourseId;
     if (!courseId) {
-
-        alert("Course ID not found.");
-        location.href = "teacher.html";
-
+        alert('Course ID not found.');
+        goToCourses();
         return;
     }
 
-    // ---------------- ELEMENTS ----------------
+    const $ = id => document.getElementById(id);
 
-    const form = document.getElementById("courseForm");
+    const form = $('ecForm');
+    const nameInput = $('ecName');
+    const detailsInput = $('ecDetails');
+    const languageInput = $('ecLanguage');
+    const paidInput = $('ecPaid');
+    const priceInput = $('ecPrice');
+    const saveBtn = $('ecSaveBtn');
 
-    const courseNameInput =
-        document.getElementById("courseName");
+    const deleteBtn = $('ecDeleteBtn');
+    const modal = $('ecModal');
+    const modalName = $('ecModalName');
+    const modalCancel = $('ecModalCancel');
+    const modalConfirm = $('ecModalConfirm');
+    const toast = $('ecToast');
 
-    const courseDetailsInput =
-        document.getElementById("courseDetails");
-
-    const coursePriceInput =
-        document.getElementById("coursePrice");
-
-    const langText =
-        document.getElementById("langText");
-
-    const typeText =
-        document.getElementById("typeText");
-
-    const toast =
-        document.getElementById("toast");
-
-    // NEW: elements of the "Delete course" feature
-    const deleteCourseBtn =
-        document.getElementById("deleteCourseBtn");   // red button in the danger zone
-
-    const deleteModal =
-        document.getElementById("deleteModal");       // dark overlay + pop-up
-
-    const dcCourseName =
-        document.getElementById("dcCourseName");      // course name inside the pop-up text
-
-    const dcCancelBtn =
-        document.getElementById("dcCancelBtn");       // "No, keep it"
-
-    const dcConfirmBtn =
-        document.getElementById("dcConfirmBtn");      // "Yes, delete"
-
-    // NEW: remembers the name of the loaded course so the pop-up can show it
-    let loadedCourseName = "";
-
-    // ---------------- HEADERS ----------------
+    let loadedCourseName = '';
 
     function headers() {
-
         return {
             Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json"
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
         };
-
     }
 
     // ---------------- TOAST ----------------
+    let toastTimer = null;
 
-    function showToast(message, bgColor = "#0f4c5c") {
-
-        if (!toast) return;
-
+    function showToast(message, bgColor = '#096858') {
         toast.textContent = message;
         toast.style.backgroundColor = bgColor;
-
-        toast.classList.add("show");
-
-        setTimeout(() => {
-
-            toast.classList.remove("show");
-
-        }, 3000);
-
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // ---------------- DROPDOWN ----------------
-
-    window.toggleDropdown = function (containerId) {
-
-        const container =
-            document.getElementById(containerId);
-
-        if (!container) return;
-
-        const isAlreadyOpen =
-            container.classList.contains("is-open");
-
-        document
-            .querySelectorAll(".custom-dropdown-container")
-            .forEach(el => {
-
-                el.classList.remove("is-open");
-
-            });
-
-        if (!isAlreadyOpen) {
-
-            container.classList.add("is-open");
-
+    // FastAPI error -> readable text (detail can be a string or a list)
+    function errorTextFrom(bodyText, fallback) {
+        try {
+            const data = JSON.parse(bodyText);
+            if (typeof data.detail === 'string') return data.detail;
+            if (Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
+                return data.detail[0].msg;
+            }
+        } catch (e) {
+            // not JSON (e.g. "Internal Server Error"): use the fallback
         }
+        return fallback;
+    }
 
-    };
-
-    // ---------------- SELECT OPTION ----------------
-
-    window.selectOption = function (
-        containerId,
-        textElementId,
-        value
-    ) {
-
-        const textElement =
-            document.getElementById(textElementId);
-
-        const container =
-            document.getElementById(containerId);
-
-        if (!textElement || !container) return;
-
-        textElement.textContent = value;
-
-        container
-            .querySelectorAll(".dropdown-option")
-            .forEach(option => {
-
-                if (
-                    option.textContent.trim() ===
-                    String(value).trim()
-                ) {
-
-                    option.classList.add("selected");
-
-                } else {
-
-                    option.classList.remove("selected");
-
-                }
-
-            });
-
-        container.classList.remove("is-open");
-
-    };
-
-    // ---------------- CLOSE DROPDOWN ----------------
-
-    document.addEventListener("click", event => {
-
-        if (
-            !event.target.closest(
-                ".custom-dropdown-container"
-            )
-        ) {
-
-            document
-                .querySelectorAll(".custom-dropdown-container")
-                .forEach(el => {
-
-                    el.classList.remove("is-open");
-
-                });
-
-        }
-
-    });
+    // ---------------- PRICE FIELD ----------------
+    // Free course -> price is 0 and the field is disabled
+    function togglePrice() {
+        const paid = paidInput.value === 'yes';
+        priceInput.disabled = !paid;
+        if (!paid) priceInput.value = '';
+    }
+    paidInput.addEventListener('change', togglePrice);
 
     // ---------------- LOAD COURSE ----------------
-
     async function loadCourse() {
-
         try {
-
-            const response = await fetch(
-                `${API}/courses/${courseId}`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        Accept: "application/json"
-                    }
-                }
-            );
-
-            if (response.status === 401) {
-
-                localStorage.clear();
-                location.href = "login.html";
-
-                return;
-            }
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `Failed to load course. Status: ${response.status}`
-                );
-
-            }
-
-            const course =
-                await response.json();
-
-            console.log(
-                "Course loaded:",
-                course
-            );
-
-            // NEW: keep the name for the delete pop-up
-            loadedCourseName =
-                course.course_name || "";
-
-            // ---------------- COURSE NAME ----------------
-
-            if (courseNameInput) {
-
-                courseNameInput.value =
-                    course.course_name || "";
-
-            }
-
-            // ---------------- COURSE DETAILS ----------------
-
-            if (courseDetailsInput) {
-
-                courseDetailsInput.value =
-                    course.course_details || "";
-
-            }
-
-            // ---------------- COURSE LANGUAGE ----------------
-
-            if (langText) {
-
-                langText.textContent =
-                    course.course_language ||
-                    "Course Language";
-
-                setSelectedOption(
-                    "langDropdownContainer",
-                    course.course_language
-                );
-
-            }
-
-            // ---------------- COURSE PAID ----------------
-
-            if (typeText) {
-
-                const isPaid =
-                    course.course_paid === true ||
-                    course.course_paid === 1 ||
-                    course.course_paid === "true" ||
-                    course.course_paid === "1";
-
-                typeText.textContent =
-                    isPaid ? "Yes" : "No";
-
-                setSelectedOption(
-                    "typeDropdownContainer",
-                    isPaid ? "Yes" : "No"
-                );
-
-            }
-
-            // ---------------- COURSE PRICE ----------------
-
-            if (coursePriceInput) {
-
-                coursePriceInput.value =
-                    course.course_price ?? "";
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Course loading error:",
-                error
-            );
-
-            showToast(
-                "Failed to load course information.",
-                "#b91c1c"
-            );
-
-        }
-
-    }
-
-    // ---------------- SELECTED OPTION STYLE ----------------
-
-    function setSelectedOption(
-        containerId,
-        selectedValue
-    ) {
-
-        const container =
-            document.getElementById(containerId);
-
-        if (!container || !selectedValue) return;
-
-        container
-            .querySelectorAll(".dropdown-option")
-            .forEach(option => {
-
-                if (
-                    option.textContent.trim() ===
-                    String(selectedValue).trim()
-                ) {
-
-                    option.classList.add("selected");
-
-                } else {
-
-                    option.classList.remove("selected");
-
-                }
-
+            const response = await fetch(`${API}/courses/${courseId}`, {
+                headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
             });
 
+            if (response.status === 401) {
+                localStorage.removeItem('access_token');
+                window.location.replace('login.html');
+                return;
+            }
+            if (!response.ok) {
+                throw new Error(`Failed to load course. Status: ${response.status}`);
+            }
+
+            const course = await response.json();
+
+            loadedCourseName = course.course_name || '';
+            nameInput.value = course.course_name || '';
+            detailsInput.value = course.course_details || '';
+
+            const lang = String(course.course_language || '').toLowerCase();
+            if (['english', 'hindi', 'bengali'].includes(lang)) languageInput.value = lang;
+
+            const isPaid = course.course_paid === true || course.course_paid === 1 ||
+                course.course_paid === 'true' || course.course_paid === '1';
+            paidInput.value = isPaid ? 'yes' : 'no';
+            priceInput.value = course.course_price ?? '';
+
+            togglePrice();
+        } catch (error) {
+            console.error('Course loading error:', error);
+            showToast('Failed to load course information.', '#b91c1c');
+        }
     }
 
-    // ---------------- SUBMIT / UPDATE COURSE ----------------
-
-    window.handleSubmit = async function (event) {
-
+    // ---------------- SAVE (PATCH) ----------------
+    form.addEventListener('submit', async event => {
         event.preventDefault();
 
-        // ---------------- COURSE NAME ----------------
-
-        const courseName =
-            courseNameInput?.value.trim();
-
+        const courseName = nameInput.value.trim();
         if (!courseName) {
-
-            showToast(
-                "Please enter course name.",
-                "#b91c1c"
-            );
-
+            showToast('Please enter course name.', '#b91c1c');
             return;
         }
 
-        // ---------------- COURSE DETAILS ----------------
-
-        const courseDetails =
-            courseDetailsInput?.value.trim() || "";
-
-        // ---------------- LANGUAGE ----------------
-
-        const courseLanguage =
-            langText?.textContent.trim();
-
-        if (
-            !courseLanguage ||
-            courseLanguage === "Course Language"
-        ) {
-
-            showToast(
-                "Please select course language.",
-                "#b91c1c"
-            );
-
-            return;
-        }
-
-        // ---------------- PAID / FREE ----------------
-
-        const paidText =
-            typeText?.textContent.trim();
-
-        if (
-            !paidText ||
-            paidText === "Course Type"
-        ) {
-
-            showToast(
-                "Please select course type.",
-                "#b91c1c"
-            );
-
-            return;
-        }
-
-        const coursePaid =
-            paidText === "Yes";
-
-        // ---------------- PRICE ----------------
-
-        const priceValue =
-            coursePriceInput?.value.trim() || "";
-
-        let coursePrice = null;
+        const coursePaid = paidInput.value === 'yes';
+        let coursePrice = 0;
 
         if (coursePaid) {
-
+            const priceValue = priceInput.value.trim();
             if (!priceValue) {
-
-                showToast(
-                    "Please enter course price.",
-                    "#b91c1c"
-                );
-
+                showToast('Please enter course price.', '#b91c1c');
                 return;
             }
-
-            coursePrice =
-                Number(priceValue);
-
-            if (
-                isNaN(coursePrice) ||
-                coursePrice < 0
-            ) {
-
-                showToast(
-                    "Please enter a valid course price.",
-                    "#b91c1c"
-                );
-
+            coursePrice = Number(priceValue);
+            if (isNaN(coursePrice) || coursePrice < 0) {
+                showToast('Please enter a valid course price.', '#b91c1c');
                 return;
             }
-
-        } else {
-
-            coursePrice = 0;
-
         }
-
-        // ---------------- UPDATE DATA ----------------
 
         const updateData = {
-
-            course_name:
-                courseName,
-
-            course_details:
-                courseDetails,
-
-            course_language:
-                courseLanguage,
-
-            course_paid:
-                coursePaid,
-
-            course_price:
-                coursePrice,
-
-            course_price_currency:
-                "INR"
-
+            course_name: courseName,
+            course_details: detailsInput.value.trim(),
+            course_language: languageInput.value,   // english | hindi | bengali
+            course_paid: coursePaid,
+            course_price: coursePrice,
+            course_price_currency: 'INR'
         };
 
-        console.log(
-            "Updating teacher course:",
-            courseId
-        );
-
-        console.log(
-            "Update data:",
-            updateData
-        );
+        saveBtn.disabled = true;
 
         try {
-
-            // IMPORTANT:
-            // Teacher-specific endpoint
-            // NOT admin endpoint
-
-            const response = await fetch(
-                `${API}/teachers/me/courses/${courseId}`,
-                {
-                    method: "PATCH",
-                    headers: headers(),
-                    body: JSON.stringify(updateData)
-                }
-            );
-
-            // ---------------- AUTH ERROR ----------------
+            // Teacher-specific endpoint (NOT the admin one)
+            const response = await fetch(`${API}/teachers/me/courses/${courseId}`, {
+                method: 'PATCH',
+                headers: headers(),
+                body: JSON.stringify(updateData)
+            });
 
             if (response.status === 401) {
-
-                localStorage.clear();
-                location.href = "login.html";
-
+                localStorage.removeItem('access_token');
+                window.location.replace('login.html');
                 return;
             }
-
-            // ---------------- PERMISSION ERROR ----------------
-
-            if (response.status === 403) {
-
-                let message =
-                    "You are not allowed to edit this course.";
-
-                try {
-
-                    const errorData =
-                        await response.json();
-
-                    if (errorData.detail) {
-
-                        message =
-                            typeof errorData.detail === "string"
-                                ? errorData.detail
-                                : JSON.stringify(
-                                    errorData.detail
-                                );
-
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        "403 error reading:",
-                        error
-                    );
-
-                }
-
-                showToast(
-                    message,
-                    "#b91c1c"
-                );
-
-                return;
-            }
-
-            // ---------------- NOT FOUND ----------------
-
-            if (response.status === 404) {
-
-                showToast(
-                    "Course not found.",
-                    "#b91c1c"
-                );
-
-                return;
-            }
-
-            // ---------------- VALIDATION / OTHER ERROR ----------------
 
             if (!response.ok) {
-
-                let errorMessage =
-                    "Failed to update course.";
-
-                try {
-
-                    const errorData =
-                        await response.json();
-
-                    if (errorData.detail) {
-
-                        if (
-                            typeof errorData.detail ===
-                            "string"
-                        ) {
-
-                            errorMessage =
-                                errorData.detail;
-
-                        } else {
-
-                            errorMessage =
-                                JSON.stringify(
-                                    errorData.detail
-                                );
-
-                        }
-
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        "Error reading API error:",
-                        error
-                    );
-
-                }
-
-                showToast(
-                    errorMessage,
-                    "#b91c1c"
-                );
-
+                const bodyText = await response.text();
+                let fallback = 'Failed to update course.';
+                if (response.status === 403) fallback = 'You are not allowed to edit this course.';
+                if (response.status === 404) fallback = 'Course not found.';
+                showToast(errorTextFrom(bodyText, fallback), '#b91c1c');
+                saveBtn.disabled = false;
                 return;
             }
 
-            // ---------------- SUCCESS ----------------
-
-            const updatedCourse =
-                await response.json();
-
-            console.log(
-                "Course updated successfully:",
-                updatedCourse
-            );
-
-            showToast(
-                "Course updated successfully!",
-                "#0f4c5c"
-            );
-
-            // Return to teacher dashboard
-            // after successful update
-
-            setTimeout(() => {
-
-                location.href =
-                    "teacher.html";
-
-            }, 1200);
+            showToast('Course updated successfully!');
+            setTimeout(goToCourses, 1000);
 
         } catch (error) {
-
-            console.error(
-                "Course update error:",
-                error
-            );
-
-            showToast(
-                "Something went wrong while updating course.",
-                "#b91c1c"
-            );
-
+            console.error('Course update error:', error);
+            showToast('Something went wrong while updating course.', '#b91c1c');
+            saveBtn.disabled = false;
         }
-
-    };
-
-    // ---------------- CANCEL ----------------
-
-    window.handleCancel = function () {
-
-        const confirmed =
-            confirm(
-                "Are you sure you want to cancel?"
-            );
-
-        if (!confirmed) return;
-
-        location.href =
-            "teacher.html";
-
-    };
-
-
-    /* ==========================================================
-       NEW: DELETE COURSE
-       API: DELETE /teachers/me/courses/{id}
-            -> 204 (success, no body)
-            -> 422 (validation error)
-
-       Flow:
-       1. Teacher clicks the red "Delete course" button.
-       2. A confirm pop-up opens (nothing is deleted yet).
-       3. "Yes, delete" sends the DELETE request.
-       4. On success we go back to the teacher dashboard.
-       ========================================================== */
-
-    /** Opens the confirm pop-up and writes the course name into it. */
-    function openDeleteModal() {
-
-        if (!deleteModal) return;
-
-        // Show the real name; use a friendly fallback if it is not loaded yet
-        dcCourseName.textContent =
-            loadedCourseName
-                ? `"${loadedCourseName}"`
-                : "this course";
-
-        deleteModal.classList.add("is-open");
-        deleteModal.setAttribute("aria-hidden", "false");
-
-    }
-
-    /** Closes the pop-up (does nothing while a delete request is running). */
-    function closeDeleteModal() {
-
-        if (!deleteModal) return;
-
-        // Do not let the teacher close it in the middle of the request
-        if (dcConfirmBtn && dcConfirmBtn.disabled) return;
-
-        deleteModal.classList.remove("is-open");
-        deleteModal.setAttribute("aria-hidden", "true");
-
-    }
-
-    /**
-     * Turns a failed API response into a readable message.
-     * FastAPI sends { detail: "text" } or, for 422,
-     * { detail: [ { msg: "text", ... } ] }.
-     * BUT when the server crashes (HTTP 500) it often sends plain text
-     * ("Internal Server Error"), which is NOT JSON. So we read the body as
-     * text first and only then try to parse it as JSON.
-     */
-    async function readDeleteError(response) {
-
-        // Default message. A 5xx status means the BACKEND crashed (not this page).
-        let message =
-            response.status >= 500
-                ? `Server error (${response.status}). The course could not be deleted. Check the backend terminal for the error.`
-                : "Failed to delete course.";
-
-        try {
-
-            // Read the body as plain text first. A crashed server often sends
-            // the text "Internal Server Error", which is NOT valid JSON, and
-            // calling response.json() on it would throw the error you saw.
-            const bodyText =
-                await response.text();
-
-            try {
-
-                const errorData =
-                    JSON.parse(bodyText);
-
-                if (typeof errorData.detail === "string") {
-
-                    message = errorData.detail;
-
-                } else if (
-                    Array.isArray(errorData.detail) &&
-                    errorData.detail[0] &&
-                    errorData.detail[0].msg
-                ) {
-
-                    message = errorData.detail[0].msg;
-
-                }
-
-            } catch (parseError) {
-
-                // Not JSON: keep the default message above
-                console.log(
-                    "Delete error body (not JSON):",
-                    bodyText
-                );
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Error reading delete error:",
-                error
-            );
-
-        }
-
-        return message;
-
-    }
-
-    /** Sends the DELETE request. Called by the "Yes, delete" button. */
-    async function deleteCourse() {
-
-        // Disable both buttons so nobody clicks twice
-        dcConfirmBtn.disabled = true;
-        dcCancelBtn.disabled = true;
-        dcConfirmBtn.textContent = "Deleting...";
-
-        try {
-
-            // Teacher-specific endpoint (same family as the PATCH above)
-            const response = await fetch(
-                `${API}/teachers/me/courses/${courseId}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        Accept: "application/json"
-                    }
-                }
-            );
-
-            // ---------------- AUTH ERROR ----------------
-
-            if (response.status === 401) {
-
-                localStorage.clear();
-                location.href = "login.html";
-
-                return;
-            }
-
-            // ---------------- NOT ALLOWED ----------------
-
-            if (response.status === 403) {
-
-                showToast(
-                    "You are not allowed to delete this course.",
-                    "#b91c1c"
-                );
-
-                return;
-            }
-
-            // ---------------- ALREADY GONE ----------------
-
-            if (response.status === 404) {
-
-                showToast(
-                    "Course not found. It may already be deleted.",
-                    "#b91c1c"
-                );
-
-                return;
-            }
-
-            // ---------------- OTHER ERRORS (422, 500 ...) ----------------
-
-            if (!response.ok) {
-
-                showToast(
-                    await readDeleteError(response),
-                    "#b91c1c"
-                );
-
-                return;
-            }
-
-            // ---------------- SUCCESS (204) ----------------
-
-            // Forget the "selected course" so no page tries to open a deleted course
-            if (localStorage.getItem("selected_course_id") === courseId) {
-
-                localStorage.removeItem("selected_course_id");
-
-            }
-
-            // Re-enable first, otherwise closeDeleteModal() refuses to close
-            dcConfirmBtn.disabled = false;
-            dcCancelBtn.disabled = false;
-            closeDeleteModal();
-
-            showToast(
-                "Course deleted successfully.",
-                "#0f4c5c"
-            );
-
-            // Back to the teacher dashboard
-            setTimeout(() => {
-
-                location.href =
-                    "teacher.html";
-
-            }, 1200);
-
-        } catch (error) {
-
-            console.error(
-                "Course delete error:",
-                error
-            );
-
-            showToast(
-                "Something went wrong while deleting the course.",
-                "#b91c1c"
-            );
-
-        } finally {
-
-            // Always give the buttons back (the page may stay open after an error)
-            dcConfirmBtn.disabled = false;
-            dcCancelBtn.disabled = false;
-            dcConfirmBtn.textContent = "Yes, delete";
-
-            // After an error, close the pop-up so the toast message is visible
-            closeDeleteModal();
-
-        }
-
-    }
-
-    // ---------------- DELETE: EVENTS ----------------
-
-    if (deleteCourseBtn) {
-        deleteCourseBtn.addEventListener("click", openDeleteModal);
-    }
-
-    if (dcCancelBtn) {
-        dcCancelBtn.addEventListener("click", closeDeleteModal);
-    }
-
-    if (dcConfirmBtn) {
-        dcConfirmBtn.addEventListener("click", deleteCourse);
-    }
-
-    // Clicking the dark area outside the white box closes the pop-up
-    if (deleteModal) {
-
-        deleteModal.addEventListener("click", event => {
-
-            if (event.target === deleteModal) {
-                closeDeleteModal();
-            }
-
-        });
-
-    }
-
-    // The Escape key closes the pop-up
-    document.addEventListener("keydown", event => {
-
-        if (event.key === "Escape") {
-            closeDeleteModal();
-        }
-
     });
 
+    // ---------------- CANCEL ----------------
+    $('ecCancelBtn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to cancel?')) goToCourses();
+    });
+
+    // ==========================================================
+    // DELETE COURSE   (DELETE /teachers/me/courses/{id} -> 204)
+    // 1. "Delete course" opens the pop-up (nothing is deleted yet)
+    // 2. "Yes, delete" sends the request
+    // ==========================================================
+    function openModal() {
+        modalName.textContent = loadedCourseName ? `"${loadedCourseName}"` : 'this course';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+        if (modalConfirm.disabled) return; // do not close while deleting
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function deleteCourse() {
+        modalConfirm.disabled = true;
+        modalCancel.disabled = true;
+        modalConfirm.textContent = 'Deleting...';
+
+        let deleted = false;
+
+        try {
+            const response = await fetch(`${API}/teachers/me/courses/${courseId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('access_token');
+                window.location.replace('login.html');
+                return;
+            }
+
+            if (response.ok) {
+                deleted = true;
+            } else {
+                const bodyText = await response.text();
+                let fallback = response.status >= 500
+                    ? `Server error (${response.status}). The course could not be deleted. Check the backend terminal.`
+                    : 'Failed to delete course.';
+                if (response.status === 403) fallback = 'You are not allowed to delete this course.';
+                if (response.status === 404) fallback = 'Course not found. It may already be deleted.';
+                showToast(errorTextFrom(bodyText, fallback), '#b91c1c');
+            }
+        } catch (error) {
+            console.error('Course delete error:', error);
+            showToast('Something went wrong while deleting the course.', '#b91c1c');
+        }
+
+        // Give the buttons back, then close the pop-up
+        modalConfirm.disabled = false;
+        modalCancel.disabled = false;
+        modalConfirm.textContent = 'Yes, delete';
+        closeModal();
+
+        if (deleted) {
+            if (localStorage.getItem('selected_course_id') === String(courseId)) {
+                localStorage.removeItem('selected_course_id');
+            }
+            showToast('Course deleted successfully.');
+            setTimeout(goToCourses, 1000);
+        }
+    }
+
+    deleteBtn.addEventListener('click', openModal);
+    modalCancel.addEventListener('click', closeModal);
+    modalConfirm.addEventListener('click', deleteCourse);
+
+    // Click on the dark area closes the pop-up
+    modal.addEventListener('click', event => {
+        if (event.target === modal) closeModal();
+    });
+
+    // Escape closes the pop-up (old listener from a previous visit is removed first)
+    if (window.__ecKeyHandler) document.removeEventListener('keydown', window.__ecKeyHandler);
+    window.__ecKeyHandler = event => {
+        if (event.key === 'Escape') closeModal();
+    };
+    document.addEventListener('keydown', window.__ecKeyHandler);
+
     // ---------------- START ----------------
-
     loadCourse();
-
-});
+})();
