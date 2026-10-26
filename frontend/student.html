@@ -9,7 +9,12 @@
     <!-- Main stylesheet for the whole dashboard layout -->
     <link rel="stylesheet" href="student.css">
 
-    <!-- FontAwesome: icon library used for the menu button, logo, etc. -->
+    <!-- FontAwesome: icon library used for the menu button, logo, etc.
+         1) LOCAL copy first (folder "fontawesome" next to this file).
+            It works even without internet and can not be blocked.
+         2) CDN copy second, used as a backup if the local folder is missing.
+         If a file is missing the browser simply ignores it, so having both is safe. -->
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -43,6 +48,16 @@
                 </a>
                 <a href="settings.html" class="nav-link" data-page="settings.html">
                     <span>Settings</span>
+                </a>
+
+                <!-- NEW: Transactions link.
+                     It sits between Settings and Logout, exactly as requested.
+                     Because it has a "data-page" attribute, student.js loads
+                     transactions.html into the content area with fetch(),
+                     just like Courses, Quiz and Settings.
+                     No change is needed in student.js for this to work. -->
+                <a href="transactions.html" class="nav-link" data-page="transactions.html">
+                    <span>Transactions</span>
                 </a>
 
                 <!-- Logout link:
@@ -79,7 +94,7 @@
             </header>
 
             <!-- Scrollable content area.
-                 Other pages (courses, quiz, settings) are loaded here with fetch(). -->
+                 Other pages (courses, quiz, settings, transactions) are loaded here with fetch(). -->
             <main class="content-area" id="main-content">
             </main>
         </div>

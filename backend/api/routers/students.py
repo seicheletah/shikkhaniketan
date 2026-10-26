@@ -11,11 +11,13 @@ from backend.models import (
     ReviewResponse,
     Course,
     Review,
+    Purchase,
+    TransactionResponse,
     GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
-from backend.utils import upload_to_s3, check_valid_file
+from backend.utils import upload_to_s3, check_valid_file, generate_invoice_pdf
 from backend.core.config import settings
 
 api_router = APIRouter(prefix="/students", tags=["Students"])
@@ -222,6 +224,66 @@ def delete_self_review(
     db_session.delete(existing_review)
     db_session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@api_router.get("/me/transactions", response_model=list[TransactionResponse])
+def get_self_transactions(db_session: SessionDep, current_user: StudentDep):
+    """
+    Get own transaction details.
+    """
+    student = db_session.exec(
+        select(Student).where(Student.user_id == current_user.id)
+    ).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
+        )
+    purchases = db_session.exec(
+        select(Purchase)
+        .where(Purchase.student_id == current_user.student.phone_no)
+        .where(Purchase.status == "paid")
+    ).all()
+    return purchases
+
+
+@api_router.get("/me/transactions/{id}/invoice", response_class=Response)
+def get_invoice(id: uuid.UUID, db_session: SessionDep, current_user: StudentDep):
+    """
+    Get invoice pdf.
+    """
+    student = db_session.exec(
+        select(Student).where(Student.user_id == current_user.id)
+    ).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
+        )
+    purchase = db_session.exec(
+        select(Purchase)
+        .where(Purchase.id == id)
+        .where(Purchase.student_id == current_user.student.phone_no)
+        .where(Purchase.status == "paid")
+    ).first()
+    if not purchase:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"transaction id not found"
+        )
+    output = generate_invoice_pdf(
+        transaction_id=purchase.id,
+        order_id=purchase.razorpay_order_id,
+        payment_id=purchase.razorpay_payment_id,  # type: ignore
+        order_date=purchase.created_at,
+        student_id=student.phone_no,
+        course_id=purchase.course_id,
+        course_name=purchase.course.course_name,
+        course_type=purchase.course.course_resource_type,
+        amount=purchase.amount,
+    )
+    headers = {
+        "Content-Disposition": f'attachment; filename="invoice_{purchase.razorpay_order_id}.pdf"'
+    }
+
+    return Response(content=output, media_type="application/pdf", headers=headers)
 
 
 @api_router.get("/", response_model=list[StudentResponse])

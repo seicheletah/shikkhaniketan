@@ -4,10 +4,18 @@
    video player, PDF reader, resource list, a form to write a
    review (comment + 5 clickable stars) and the list of reviews.
 
-   API fields used (exactly as in the backend docs):
-     POST /courses/{id}/review  body: { comment, rate }
-     GET  /courses/{id}/review  -> [{ comment, rate, first_name, last_name, course_id }]
-     GET  /courses/{id}/rating  -> { total_reviews, average_rating, course_id }
+   NEW in this version: the student can UPDATE and DELETE
+   his / her own review.
+
+   API used (exactly as in the backend docs):
+     POST   /courses/{id}/review               body: { comment, rate }   -> 201
+     GET    /courses/{id}/review               -> [{ comment, rate, first_name, last_name, course_id }]
+     GET    /courses/{id}/rating               -> { total_reviews, average_rating, course_id }
+     PATCH  /students/me/courses/{id}/review   body: { comment, rate }   -> 200 { comment, rate, course_id }
+     DELETE /students/me/courses/{id}/review                             -> 204 (no body)
+     GET    /students/me                       -> own first_name / last_name (used to spot own review)
+     GET    /students/me/courses/{id}/review   -> OPTIONAL. Used only if your backend has it
+                                                  (see "FIND THE STUDENT'S OWN REVIEW" below).
    ========================================================== */
 (() => {
 
@@ -23,12 +31,13 @@
         return;
     }
 
-    // Inside the dashboard the URL has no id, so read it from localStorage
+    // The URL parameter wins; inside the dashboard the URL has no id,
+    // so we fall back to the id saved in localStorage by courses.js.
     const params = new URLSearchParams(window.location.search);
     const courseId =
-        localStorage.getItem("selected_course_id") ||
         params.get("course") ||
-        params.get("id");
+        params.get("id") ||
+        localStorage.getItem("selected_course_id");
 
     /* ------------------------------------------------------
        DOM ELEMENTS
@@ -43,18 +52,58 @@
     const reviewList = document.getElementById("cvReviewList");
     const avgRatingEl = document.getElementById("cvAvgRating");
 
-    // Review form elements
+    // "Write / edit a review" form elements
+    const reviewFormCard = document.getElementById("reviewFormCard");
+    const formTitle = document.getElementById("cvFormTitle");
     const starButtons = document.querySelectorAll("#cvStarPicker .cv-star-btn");
     const starText = document.getElementById("cvStarText");
     const commentInput = document.getElementById("cvComment");
     const formMsg = document.getElementById("cvFormMsg");
     const submitBtn = document.getElementById("cvSubmitReview");
+    const cancelBtn = document.getElementById("cvCancelEdit");
+
+    // NEW: "Your review" card elements
+    const myReviewCard = document.getElementById("myReviewCard");
+    const myStarsEl = document.getElementById("cvMyStars");
+    const myCommentEl = document.getElementById("cvMyComment");
+    const myMsg = document.getElementById("cvMyMsg");
+    const editBtn = document.getElementById("cvEditReview");
+    const deleteBtn = document.getElementById("cvDeleteReview");
 
     // Headers for requests that need the token
     const authHeaders = {
         Authorization: `Bearer ${token}`,
         Accept: "application/json"
     };
+
+
+    /* ======================================================
+       STATE (what this page currently knows)
+       ====================================================== */
+
+    // The student's own review: { comment, rate } or null when there is none.
+    let myReview = null;
+
+    // The student's own name, used to recognise the own review in the list.
+    let myName = "";
+
+    // true while the student is editing the review (form shows PATCH mode)
+    let isEditing = false;
+
+
+    /* ======================================================
+       SCROLL TO TOP
+       Inside the dashboard the scrolling happens in #main-content,
+       NOT in the browser window, so window.scrollTo alone does nothing.
+       ====================================================== */
+    function scrollToTop() {
+        const scroller = document.getElementById("main-content");
+        if (scroller && scroller.scrollHeight > scroller.clientHeight) {
+            scroller.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    }
 
 
     /* ======================================================
@@ -228,6 +277,26 @@
         }
     }
 
+    /**
+     * Reads a readable error message out of a failed API response body.
+     * FastAPI sends either { detail: "text" } or, for 422 errors,
+     * { detail: [ { msg: "text", ... } ] }.
+     */
+    function getErrorMessage(data, fallback) {
+        if (data && typeof data.detail === "string") {
+            return data.detail;
+        }
+        if (data && Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
+            return data.detail[0].msg;
+        }
+        return fallback;
+    }
+
+    /** Token expired or invalid -> send the student to the login page. */
+    function goToLogin() {
+        window.location.href = "login.html";
+    }
+
 
     /* ======================================================
        LOAD COURSE (title + description)
@@ -250,10 +319,6 @@
             titleEl.textContent = course.course_name || "";
             overviewEl.textContent = course.course_details || "";
 
-            loadMedia();
-            loadReviews();
-            loadRating();
-
         } catch (err) {
             console.log("loadCourse error:", err);
             titleEl.textContent = "Course load failed";
@@ -275,7 +340,7 @@
             video.load();
             showMedia("video");
             video.play().catch(() => { /* autoplay blocked, ignore */ });
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            scrollToTop();
             return;
         }
 
@@ -283,7 +348,7 @@
             // #view=FitH makes the PDF fit the width of the viewer
             pdf.src = url + "#view=FitH";
             showMedia("pdf");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            scrollToTop();
             return;
         }
 
@@ -452,6 +517,66 @@
 
 
     /* ======================================================
+       FIND THE STUDENT'S OWN REVIEW
+       The public list (GET /courses/{id}/review) has NO user id,
+       only first_name + last_name. So we find the own review in
+       two steps:
+
+       Step 1 (best): ask GET /students/me/courses/{id}/review.
+         If your backend has this "Get Self Review" endpoint, it
+         returns exactly the student's own review. If it does not
+         exist (404 / 405) we silently go to step 2.
+
+       Step 2 (fallback): compare the names in the review list with
+         the student's own name from GET /students/me.
+         This is only used when exactly ONE review has that name.
+       ====================================================== */
+
+    /** Loads the student's own name (used by step 2 and for the "You" badge). */
+    async function loadMyName() {
+        try {
+            const res = await fetch(`${API}/students/me`, { headers: authHeaders });
+            if (!res.ok) return;
+
+            const data = await res.json();
+            myName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+        } catch (err) {
+            console.log("Could not load own name:", err);
+        }
+    }
+
+    /** Step 1: try the dedicated "own review" endpoint (may not exist). */
+    async function loadMyReviewFromApi() {
+        try {
+            const res = await fetch(`${API}/students/me/courses/${courseId}/review`, {
+                headers: authHeaders
+            });
+
+            if (!res.ok) return; // 404 / 405 -> endpoint missing or no review yet
+
+            const data = await res.json();
+
+            if (data && data.rate !== undefined) {
+                myReview = { comment: data.comment || "", rate: Number(data.rate) };
+            }
+        } catch (err) {
+            console.log("Own review endpoint not available:", err);
+        }
+    }
+
+    /** True when review `r` from the list belongs to the logged-in student. */
+    function isMyReview(r) {
+        if (!myReview) return false;
+
+        return (
+            (r.comment || "") === myReview.comment &&
+            Number(r.rate) === Number(myReview.rate) &&
+            (!myName || getFullName(r) === myName)
+        );
+    }
+
+
+    /* ======================================================
        REVIEW LIST
        GET /courses/{id}/review
        -> [{ comment, rate, first_name, last_name, course_id }]
@@ -468,6 +593,19 @@
             }
 
             const reviews = await res.json();
+
+            // Step 2 of "find own review": match by name when step 1 found nothing
+            if (!myReview && myName && Array.isArray(reviews)) {
+                const sameName = reviews.filter(r => getFullName(r) === myName);
+
+                // Only trust the match when it is unambiguous (exactly one review)
+                if (sameName.length === 1) {
+                    myReview = {
+                        comment: sameName[0].comment || "",
+                        rate: Number(sameName[0].rate)
+                    };
+                }
+            }
 
             reviewList.innerHTML = "";
 
@@ -500,6 +638,14 @@
                 const name = document.createElement("strong");
                 name.textContent = fullName;
 
+                // Small "You" badge on the student's own review
+                if (isMyReview(r)) {
+                    const badge = document.createElement("span");
+                    badge.className = "cv-you-badge";
+                    badge.textContent = "You";
+                    name.appendChild(badge);
+                }
+
                 const stars = document.createElement("span");
                 stars.className = "cv-stars";
                 renderStars(stars, r.rate);
@@ -523,7 +669,7 @@
 
 
     /* ======================================================
-       WRITE A REVIEW: STAR PICKER
+       STAR PICKER (used by both "write" and "edit")
        ====================================================== */
     let selectedRate = 0; // 0 means "nothing selected yet"
 
@@ -538,6 +684,15 @@
         });
     }
 
+    /** Selects a rating: paints the stars and updates the text next to them. */
+    function setRating(value) {
+        selectedRate = value;
+        paintStars(selectedRate);
+        starText.textContent = selectedRate
+            ? `${selectedRate} / 5 - ${RATE_LABELS[selectedRate]}`
+            : RATE_LABELS[0];
+    }
+
     starButtons.forEach(btn => {
         const value = Number(btn.getAttribute("data-value"));
 
@@ -545,11 +700,7 @@
         btn.addEventListener("mouseenter", () => paintStars(value));
 
         // Click: lock in the rating
-        btn.addEventListener("click", () => {
-            selectedRate = value;
-            paintStars(selectedRate);
-            starText.textContent = `${selectedRate} / 5 - ${RATE_LABELS[selectedRate]}`;
-        });
+        btn.addEventListener("click", () => setRating(value));
     });
 
     // When the mouse leaves the stars, go back to the chosen rating
@@ -563,18 +714,85 @@
         formMsg.className = `cv-form-msg ${type}`;
     }
 
-    /** Clears the form after a successful submit. */
+    /** Shows a success / error message inside the "Your review" card. */
+    function showMyMessage(text, type) {
+        myMsg.textContent = text;
+        myMsg.className = `cv-my-msg ${type}`;
+    }
+
+    /** Clears the form (rating + comment + message). */
     function resetForm() {
-        selectedRate = 0;
-        paintStars(0);
-        starText.textContent = RATE_LABELS[0];
+        setRating(0);
         commentInput.value = "";
+        formMsg.className = "cv-form-msg hidden";
     }
 
 
     /* ======================================================
-       WRITE A REVIEW: SUBMIT
-       POST /courses/{id}/review  body: { comment, rate }
+       SHOW THE RIGHT CARD
+       - Student has a review and is NOT editing -> show "Your review" card
+       - Otherwise -> show the form ("Write a review" or "Edit your review")
+       ====================================================== */
+    function updateReviewUI() {
+
+        if (myReview && !isEditing) {
+            // ---- Show the saved review ----
+            renderStars(myStarsEl, myReview.rate);
+            myCommentEl.textContent = myReview.comment;
+
+            myReviewCard.classList.remove("hidden");
+            reviewFormCard.classList.add("hidden");
+            return;
+        }
+
+        // ---- Show the form ----
+        myReviewCard.classList.add("hidden");
+        reviewFormCard.classList.remove("hidden");
+
+        if (isEditing) {
+            formTitle.textContent = "Edit your review";
+            submitBtn.textContent = "Update review";
+            cancelBtn.classList.remove("hidden");
+        } else {
+            formTitle.textContent = "Write a review";
+            submitBtn.textContent = "Submit review";
+            cancelBtn.classList.add("hidden");
+        }
+    }
+
+
+    /* ======================================================
+       EDIT BUTTON  -> put the saved values into the form
+       ====================================================== */
+    editBtn.addEventListener("click", () => {
+        if (!myReview) return;
+
+        isEditing = true;
+
+        // Pre-fill the form with the current rating and comment
+        setRating(myReview.rate);
+        commentInput.value = myReview.comment;
+        formMsg.className = "cv-form-msg hidden";
+        myMsg.className = "cv-my-msg hidden";
+
+        updateReviewUI();
+        reviewFormCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    /* ======================================================
+       CANCEL BUTTON  -> leave edit mode without saving
+       ====================================================== */
+    cancelBtn.addEventListener("click", () => {
+        isEditing = false;
+        resetForm();
+        updateReviewUI();
+    });
+
+
+    /* ======================================================
+       SUBMIT BUTTON
+       - not editing -> POST  /courses/{id}/review                (new review)
+       - editing     -> PATCH /students/me/courses/{id}/review    (update)
        ====================================================== */
     submitBtn.addEventListener("click", async () => {
 
@@ -591,19 +809,27 @@
             return;
         }
 
-        // Disable the button so the user cannot click twice
+        // Remember which action this is (the button text changes below)
+        const wasEditing = isEditing;
+
+        // Disable the buttons so the user cannot click twice
         submitBtn.disabled = true;
-        submitBtn.textContent = "Submitting...";
+        cancelBtn.disabled = true;
+        submitBtn.textContent = wasEditing ? "Updating..." : "Submitting...";
         formMsg.className = "cv-form-msg hidden";
 
         try {
-            const res = await fetch(`${API}/courses/${courseId}/review`, {
-                method: "POST",
+            // Same body for both: field names must match the backend exactly
+            const url = wasEditing
+                ? `${API}/students/me/courses/${courseId}/review`
+                : `${API}/courses/${courseId}/review`;
+
+            const res = await fetch(url, {
+                method: wasEditing ? "PATCH" : "POST",
                 headers: {
                     ...authHeaders,
                     "Content-Type": "application/json"
                 },
-                // Field names must match the backend exactly: comment + rate
                 body: JSON.stringify({
                     comment: comment,
                     rate: selectedRate
@@ -614,47 +840,128 @@
 
             // Token expired -> go to login
             if (res.status === 401) {
-                window.location.href = "login.html";
+                goToLogin();
                 return;
             }
 
             if (!res.ok) {
-                // Show the backend message when it sends one (e.g. "already reviewed")
-                let msg = "Could not submit your review. Please try again.";
-
-                if (typeof data.detail === "string") {
-                    msg = data.detail;
-                } else if (Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
-                    // 422 validation error format
-                    msg = data.detail[0].msg;
-                }
-
-                showFormMessage(msg, "error");
+                // Show the backend message when it sends one
+                showFormMessage(
+                    getErrorMessage(data, "Could not save your review. Please try again."),
+                    "error"
+                );
                 return;
             }
 
-            // ---- Success (201) ----
-            showFormMessage("Thank you! Your review has been submitted.", "success");
+            // ---- Success (201 for POST, 200 for PATCH) ----
+            // Remember the saved values so the "Your review" card can show them
+            myReview = { comment: comment, rate: selectedRate };
+            isEditing = false;
             resetForm();
+            updateReviewUI();
 
-            // Refresh the list and the average so the new review appears at once
+            showMyMessage(
+                wasEditing
+                    ? "Your review has been updated."
+                    : "Thank you! Your review has been submitted.",
+                "success"
+            );
+
+            // Refresh the list and the average so the change appears at once
             loadReviews();
             loadRating();
 
         } catch (err) {
-            console.log("Submit review error:", err);
+            console.log("Save review error:", err);
             showFormMessage("Network error. Please check your connection.", "error");
         } finally {
-            // Always re-enable the button
+            // Always re-enable the buttons and restore the correct texts
             submitBtn.disabled = false;
-            submitBtn.textContent = "Submit review";
+            cancelBtn.disabled = false;
+            updateReviewUI();
+        }
+    });
+
+
+    /* ======================================================
+       DELETE BUTTON
+       DELETE /students/me/courses/{id}/review  -> 204 (no body)
+       ====================================================== */
+    deleteBtn.addEventListener("click", async () => {
+
+        // Ask first, a deleted review can not be brought back
+        const sure = window.confirm("Do you really want to delete your review?");
+        if (!sure) return;
+
+        const originalHtml = deleteBtn.innerHTML;
+        deleteBtn.disabled = true;
+        editBtn.disabled = true;
+        deleteBtn.innerHTML = "Deleting...";
+        myMsg.className = "cv-my-msg hidden";
+
+        try {
+            const res = await fetch(`${API}/students/me/courses/${courseId}/review`, {
+                method: "DELETE",
+                headers: authHeaders
+            });
+
+            // Token expired -> go to login
+            if (res.status === 401) {
+                goToLogin();
+                return;
+            }
+
+            if (!res.ok) {
+                // A 204 has no body, but an error usually has one
+                const data = await res.json().catch(() => ({}));
+                showMyMessage(
+                    getErrorMessage(data, "Could not delete your review. Please try again."),
+                    "error"
+                );
+                return;
+            }
+
+            // ---- Success (204) ----
+            myReview = null;
+            isEditing = false;
+            resetForm();
+            updateReviewUI();   // the "Write a review" form comes back
+
+            showFormMessage("Your review has been deleted.", "success");
+
+            // Refresh the list and the average
+            loadReviews();
+            loadRating();
+
+        } catch (err) {
+            console.log("Delete review error:", err);
+            showMyMessage("Network error. Please check your connection.", "error");
+        } finally {
+            deleteBtn.disabled = false;
+            editBtn.disabled = false;
+            deleteBtn.innerHTML = originalHtml;
         }
     });
 
 
     /* ======================================================
        START
+       All requests start at the SAME TIME (before: the media, reviews
+       and rating requests waited until the course had loaded).
+       For the reviews we first find out which review is the student's
+       own, then draw the list and the correct card.
        ====================================================== */
+    async function loadReviewSection() {
+        // The own name and the own-review endpoint are independent: run together
+        await Promise.all([loadMyName(), loadMyReviewFromApi()]);
+
+        await loadReviews();      // may also find the own review by name
+        updateReviewUI();         // show "Your review" card or the form
+    }
+
     loadCourse();
+    loadMedia();
+    loadRating();
+    loadReviewSection();
 
 })();

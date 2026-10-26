@@ -39,7 +39,9 @@ def create_review(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
-    course = db_session.get(Course, id)
+    course = db_session.exec(
+        select(Course).where(Course.id == id).with_for_update()
+    ).first()
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
@@ -67,8 +69,19 @@ def create_review(
         course_id=id,
         **reviewdata.model_dump(),
     )
+    current_ratings_count = course.total_rating or 0
+    current_avg = course.avg_rating or 0.0
+    current_comments_count = course.total_comment or 0
+    if reviewdata.rate is not None:
+        total_stars = (current_avg * current_ratings_count) + reviewdata.rate
+        new_ratings_count = current_ratings_count + 1
+        course.total_rating = new_ratings_count
+        course.avg_rating = round(total_stars / new_ratings_count, 1)
+    if reviewdata.comment is not None:
+        course.total_comment = current_comments_count + 1
     try:
         db_session.add(review)
+        db_session.add(course)
         db_session.commit()
         db_session.refresh(review)
         return review
@@ -105,31 +118,3 @@ def get_review(
         review_dict["last_name"] = last_name
         formatted_review.append(review_dict)
     return formatted_review
-
-
-@api_router.get("/{id}/rating", response_model=RatingPublicResponse)
-def get_rating(
-    id: uuid.UUID,
-    db_session: SessionDep,
-):
-    """
-    Get total ratings on a specific course by ID.
-    """
-    course = db_session.get(Course, id)
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
-        )
-    rating = db_session.exec(
-        select(
-            func.count(col(Review.rate)).label("total_reviews"),
-            func.avg(col(Review.rate)).label("average_rating"),
-        ).where(Review.course_id == id)
-    ).first()
-    total_reviews = rating[0] if rating and rating[0] else 0
-    raw_avg = rating[1] if rating and rating[1] is not None else 0.0
-    return RatingPublicResponse(
-        course_id=id,
-        total_reviews=total_reviews,
-        average_rating=round(raw_avg, 1),
-    )

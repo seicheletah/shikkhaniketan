@@ -20,6 +20,12 @@
     --cv-video-bg: #1b1f1e;
     --cv-star: #f5a623;
 
+    /* NEW tokens used by the delete button and soft green areas */
+    --cv-danger: #d9534f;
+    --cv-danger-soft: #fde2e2;
+    --cv-danger-text: #a52a2a;
+    --cv-primary-soft: #e6f4f2;
+
     padding: 20px;
     background: var(--cv-bg);
     color: var(--cv-text);
@@ -278,7 +284,7 @@
     color: var(--cv-primary);
 }
 
-/* ---------- Write a review form ---------- */
+/* ---------- Write / edit a review form ---------- */
 .course-view-page .cv-form {
     display: flex;
     flex-direction: column;
@@ -361,6 +367,14 @@
     color: #a52a2a;
 }
 
+/* NEW: Submit / Update button + Cancel button sit side by side */
+.course-view-page .cv-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
 .course-view-page .cv-submit-btn {
     align-self: flex-start;
     padding: 12px 26px;
@@ -381,6 +395,127 @@
 .course-view-page .cv-submit-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+/* NEW: Cancel button (visible only while editing) */
+.course-view-page .cv-cancel-btn {
+    padding: 12px 22px;
+    background: #fff;
+    color: var(--cv-muted);
+    border: 1px solid var(--cv-border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.course-view-page .cv-cancel-btn:hover {
+    background: var(--cv-bg);
+    color: var(--cv-text);
+}
+
+.course-view-page .cv-cancel-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ---------- NEW: "Your review" card (saved review + Edit / Delete) ---------- */
+
+/* Soft green box that shows the stars and the comment */
+.course-view-page .cv-my-review {
+    margin-top: 16px;
+    padding: 16px 18px;
+    background: var(--cv-primary-soft);
+    border: 1px solid #cfe9e5;
+    border-radius: 14px;
+}
+
+.course-view-page .cv-my-stars {
+    margin-bottom: 8px;
+    font-size: 22px;
+}
+
+.course-view-page .cv-my-comment {
+    margin: 0;
+    color: var(--cv-text);
+    font-size: 15px;
+    line-height: 1.65;
+    white-space: pre-wrap;   /* keep the line breaks the student typed */
+    word-break: break-word;  /* very long words must not break the layout */
+}
+
+/* Row with the Edit and Delete buttons */
+.course-view-page .cv-my-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.course-view-page .cv-edit-btn,
+.course-view-page .cv-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: #fff;
+    border: 1px solid;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.course-view-page .cv-edit-btn:hover,
+.course-view-page .cv-delete-btn:hover {
+    transform: translateY(-1px);
+}
+
+.course-view-page .cv-edit-btn:disabled,
+.course-view-page .cv-delete-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+}
+
+/* Edit = green outline */
+.course-view-page .cv-edit-btn {
+    color: var(--cv-primary);
+    border-color: var(--cv-primary);
+}
+
+.course-view-page .cv-edit-btn:hover {
+    background: var(--cv-primary-soft);
+}
+
+/* Delete = red outline */
+.course-view-page .cv-delete-btn {
+    color: var(--cv-danger);
+    border-color: var(--cv-danger);
+}
+
+.course-view-page .cv-delete-btn:hover {
+    background: var(--cv-danger-soft);
+}
+
+/* Message under the buttons (green = success, red = error) */
+.course-view-page .cv-my-msg {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.course-view-page .cv-my-msg.success {
+    background: #d9f0dc;
+    color: #1d6b2c;
+}
+
+.course-view-page .cv-my-msg.error {
+    background: var(--cv-danger-soft);
+    color: var(--cv-danger-text);
 }
 
 /* ---------- Review list ---------- */
@@ -427,6 +562,19 @@
 .course-view-page .reviewer-header strong {
     font-size: 17px;
     font-weight: 600;
+}
+
+/* NEW: small "You" badge next to the student's own name in the list */
+.course-view-page .cv-you-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 10px;
+    background: var(--cv-primary-soft);
+    color: var(--cv-primary);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
 }
 
 /* Static stars shown next to each review */
@@ -484,5 +632,12 @@
 
     .course-view-page .cv-star-btn {
         font-size: 30px;
+    }
+
+    /* NEW: on a phone the buttons share the full width equally */
+    .course-view-page .cv-my-actions > button,
+    .course-view-page .cv-form-actions > button {
+        flex: 1;
+        justify-content: center;
     }
 }

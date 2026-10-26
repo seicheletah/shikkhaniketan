@@ -1,527 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <!-- Makes the page scale correctly on mobile screens -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHub - Teacher Dashboard</title>
 
-    <title>Teacher Dashboard - SkillHub</title>
-
+    <!-- Main stylesheet for the whole teacher dashboard layout (sidebar + topbar) -->
     <link rel="stylesheet" href="teacher.css">
 
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
+    <!-- FontAwesome: local copy first, CDN copy as backup (same as the student page) -->
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
+    <!-- Root wrapper: sidebar on the left, main content on the right -->
+    <div class="app-container">
 
-    <div class="dashboard-container">
+        <!-- Hamburger button: only visible on mobile (<= 768px) -->
+        <button class="mobile-toggle" id="menuToggle">
+            <i class="fa-solid fa-bars"></i>
+        </button>
 
-        <!-- ================= SIDEBAR ================= -->
-
-        <aside class="sidebar">
-
+        <!-- ===================== SIDEBAR (fixed, green) ===================== -->
+        <aside class="sidebar" id="sidebar">
             <div class="brand">
-
-                <div class="brand-logo-box">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
-
-                <h2 class="brand-name">
-                     <a href="index.html">SkillHub</a>
-                </h2>
-
+                <i class="fa-solid fa-graduation-cap brand-icon"></i>
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <h2>SkillHub</h2>
+                </a>
             </div>
 
+            <!-- Only 3 items for the teacher: Courses, Settings, Logout.
+                 Links with "data-page" are loaded into the content area by teacher.js -->
             <nav class="nav-menu">
-
-                <a href="add_course.html"
-                   class="nav-item active"
-                   data-page="courses">
-
+                <a href="teacher_courses.html" class="nav-link active" data-page="teacher_courses.html">
                     <span>Courses</span>
-
                 </a>
-
-                <a href="#"
-                   class="nav-item"
-                   data-page="settings">
-
+                <a href="settings.html" class="nav-link" data-page="settings.html">
                     <span>Settings</span>
-
                 </a>
 
-                <a href="#"
-                   class="nav-item logout"
-                   data-page="logout">
-
+                <!-- Logout: no "data-page" on purpose, teacher.js handles it by id -->
+                <a href="#logout" class="nav-link" id="logoutBtn">
                     <span>Logout</span>
-
                 </a>
-
             </nav>
-
         </aside>
 
+        <!-- Dark transparent backdrop shown behind the sidebar on mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- ================= MAIN CONTENT ================= -->
+        <!-- ===================== MAIN AREA (topbar + content) ===================== -->
+        <div class="main-wrapper">
 
-        <main class="main-content">
-
-            <!-- ================= TOP BAR ================= -->
-
-            <div class="top-bar">
-
-                <div class="search-box">
-
-                    <i class="fa-solid fa-magnifying-glass"></i>
-
-                    <input
-                        type="text"
-                        id="courseSearch"
-                        placeholder="Search your courses...">
-
+            <!-- TOPBAR: welcome text on the left, profile picture on the right -->
+            <header class="topbar">
+                <div class="welcome-text">
+                    Welcome to Teacher Dashboard,
+                    <span class="user-name" id="teacherUserName">Teacher</span>
                 </div>
 
-                <div class="top-bar-right">
-
-                    <div class="user-profile">
-
-                        <img
-                            id="teacherProfileImg"
-                            src="https://i.pravatar.cc/150?img=47"
-                            alt="Teacher Profile">
-
-                        <span
-                            class="user-name"
-                            id="teacherUserName">
-
-                            Teacher
-
-                        </span>
-
-                    </div>
-
+                <div class="user-profile">
+                    <img src="https://i.pravatar.cc/100?img=32" alt="User Profile" class="profile-img">
                 </div>
-
-            </div>
-
-
-            <!-- ================= CONTENT BODY ================= -->
-
-            <div class="content-body">
-
-
-                <!-- ================= COURSES ================= -->
-
-                <section
-                    class="page-section active"
-                    id="courses">
-
-                    <div class="analytics-header">
-
-                        <div class="header-left">
-
-                            <h2>
-                                Teacher Dasboard
-                            </h2>
-
-                        </div>
-
-                        <button
-                            type="button"
-                            class="btn-publish"
-                            id="publishCourseBtn">
-
-                            <i class="fa-solid fa-plus"></i>
-
-                            Publish New Course
-
-                        </button>
-
-                    </div>
-
-
-                    <!-- ================= STATS ================= -->
-
-                    <div class="stats-grid">
-
-                        <!-- TOTAL PURCHASED -->
-
-                        <div class="stat-card">
-
-                            <div class="stat-icon">
-                                <i class="fa-solid fa-users"></i>
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span class="stat-label">
-                                    Total Purchased
-                                </span>
-
-                                <h3
-                                    class="stat-value"
-                                    id="totalPurchased">
-
-                                    0
-
-                                </h3>
-
-                                <span class="stat-meta positive">
-                                    Course purchases
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ================= PUBLISHED COURSES ================= -->
-
-                    <div class="published-courses-wrapper">
-
-                        <div class="section-title">
-
-                            <h3>
-                                Published Courses
-                            </h3>
-
-                        </div>
-
-
-                        <div
-                            class="instructor-course-list"
-                            id="courseList">
-
-                            <!-- Course 1 -->
-
-                            <div
-                                class="instructor-course-card course-card"
-                                data-course-card>
-
-                                <div class="course-info">
-
-                                    <div class="course-icon-box">
-
-                                        <i class="fa-solid fa-book"></i>
-
-                                    </div>
-
-                                    <div>
-
-                                        <h4 data-course-name>
-                                            Course Name
-                                        </h4>
-
-                                        <p data-course-details>
-                                            Course details
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="course-metrics">
-
-                                    <div class="metric">
-
-                                        <span>
-                                            Price
-                                        </span>
-
-                                        <strong data-course-price>
-                                            Free
-                                        </strong>
-
-                                    </div>
-
-
-                                    <div class="metric">
-
-                                        <span>
-                                            Language
-                                        </span>
-
-                                        <strong data-course-language>
-                                            -
-                                        </strong>
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="course-actions">
-
-                                    <button
-                                        type="button"
-                                        class="btn-action"
-                                        data-edit-course>
-
-                                        Edit Course
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- Course 2 -->
-
-                            <div
-                                class="instructor-course-card course-card"
-                                data-course-card>
-
-                                <div class="course-info">
-
-                                    <div class="course-icon-box">
-
-                                        <i class="fa-solid fa-book"></i>
-
-                                    </div>
-
-                                    <div>
-
-                                        <h4 data-course-name>
-                                            Course Name
-                                        </h4>
-
-                                        <p data-course-details>
-                                            Course details
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="course-metrics">
-
-                                    <div class="metric">
-
-                                        <span>
-                                            Price
-                                        </span>
-
-                                        <strong data-course-price>
-                                            Free
-                                        </strong>
-
-                                    </div>
-
-
-                                    <div class="metric">
-
-                                        <span>
-                                            Language
-                                        </span>
-
-                                        <strong data-course-language>
-                                            -
-                                        </strong>
-
-                                    </div>
-
-                                </div>
-
-
-                                <div class="course-actions">
-
-                                    <button
-                                        type="button"
-                                        class="btn-action"
-                                        data-edit-course>
-
-                                        Edit Course
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-
-                        </div>
-
-                    </div>
-
-                </section>
-
-
-                <!-- ================= SETTINGS ================= -->
-
-                <section
-                    class="page-section"
-                    id="settings">
-
-                    <div class="settings-page">
-
-                        <div class="settings-header">
-
-                            <h2>
-                                Account Settings
-                            </h2>
-
-                            <p>
-                                Your account information
-                            </p>
-
-                        </div>
-
-
-                        <div class="account-details-card">
-
-                            <h3>
-                                Account Details
-                            </h3>
-
-
-                            <div class="account-details">
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        First Name
-                                    </span>
-
-                                    <strong id="teacherFirstName">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        Last Name
-                                    </span>
-
-                                    <strong id="teacherLastName">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        Email
-                                    </span>
-
-                                    <strong id="teacherEmail">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        Phone
-                                    </span>
-
-                                    <strong id="teacherPhone">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        Gender
-                                    </span>
-
-                                    <strong id="teacherGender">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        Date of Birth
-                                    </span>
-
-                                    <strong id="teacherDob">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        Address
-                                    </span>
-
-                                    <strong id="teacherAddress">
-                                        -
-                                    </strong>
-
-                                </div>
-
-
-                                <div class="detail-row">
-
-                                    <span>
-                                        About Me
-                                    </span>
-
-                                    <strong id="teacherAbout">
-                                        -
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="update-profile-wrapper">
-
-                                <button
-                                    type="button"
-                                    class="update-profile-option"
-                                    id="openUpdateProfile">
-
-                                    Update Profile
-
-                                    <i class="fa-solid fa-arrow-right"></i>
-
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </section>
-
-            </div>
-
-        </main>
-
+            </header>
+
+            <!-- Scrollable content area.
+                 teacher_courses, add_course, edit_course, settings and update_profile
+                 are all loaded here with fetch(). -->
+            <main class="content-area" id="main-content">
+            </main>
+        </div>
     </div>
 
-
+    <!-- Main dashboard logic (navigation, profile, logout) -->
     <script src="teacher.js"></script>
-
+    <!-- Profile update logic (the SAME file the student page uses, unchanged) -->
+    <script src="update_profile.js"></script>
 </body>
-
 </html>
