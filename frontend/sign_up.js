@@ -29,6 +29,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // এরপর Account Creation page-এ যাওয়া
         window.location.href = 'create_account.html';
+
+    ```css
+.button-container {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    margin-top: 35px;
+}
+
+.continue-btn {
+    flex: 1;
+    padding: 16px;
+    background-color: #137f73;
+    color: white;
+    border: 2px solid #137f73;
+    border-radius: 35px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.login-btn {
+    flex: 1;
+    padding: 16px;
+    background-color: white;
+    color: #137f73;
+    border: 2px solid #137f73;
+    border-radius: 35px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.continue-btn:hover {
+    background-color: #0e685f;
+}
+
+.login-btn:hover {
+    background-color: #137f73;
+    color: white;
+}
+```
     });
 
 });
+
+
