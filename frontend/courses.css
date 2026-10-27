@@ -82,27 +82,79 @@
   flex-wrap: wrap;
 }
 
+/* ==========================================================
+   VIDEOS / DOCUMENTS TABS  (modern segmented control)
+   - one soft rounded "track" holds both buttons
+   - the active button becomes a teal gradient pill with a glow
+   - icon + text, smooth hover / press animation
+   ========================================================== */
 .courses-page .tabs {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
+  padding: 5px;
+  background: linear-gradient(180deg, #f1f5f9, #e9eff5);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 .courses-page .tab-btn {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
   border: none;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   color: #64748b;
   cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease,
+              box-shadow 0.25s ease, transform 0.15s ease;
 }
 
-.courses-page .tab-btn.active {
+.courses-page .tab-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  transition: transform 0.25s ease;
+}
+
+.courses-page .tab-btn:hover:not(.active) {
   color: #127c71;
+  background: rgba(255, 255, 255, 0.75);
 }
 
-.courses-page .divider {
-  color: #cbd5e1;
+.courses-page .tab-btn:active {
+  transform: scale(0.96);
+}
+
+.courses-page .tab-btn:focus-visible {
+  outline: 2px solid #127c71;
+  outline-offset: 2px;
+}
+
+/* Selected tab */
+.courses-page .tab-btn.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #159b91, #0d6860);
+  box-shadow: 0 6px 14px rgba(18, 124, 113, 0.32),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.courses-page .tab-btn.active svg {
+  transform: scale(1.08);
+}
+
+@media (max-width: 480px) {
+  .courses-page .tab-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
 
 .courses-page .sort-box {
@@ -221,6 +273,11 @@
   font-weight: 700;
   color: #1f2937;
   line-height: 1.4;
+  /* long names: show max 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .courses-page .course-body p {
@@ -233,6 +290,74 @@
   overflow: hidden;
 }
 
+/* ---------- NEW: teacher row ---------- */
+.courses-page .teacher-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.courses-page .teacher-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ---------- NEW: rating row ---------- */
+.courses-page .rating-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.courses-page .rating-num {
+  font-weight: 800;
+  color: #b4690e;
+}
+
+.courses-page .stars {
+  color: #e59819;
+  letter-spacing: 1px;
+  font-size: 14px;
+}
+
+.courses-page .rating-count {
+  color: #64748b;
+}
+
+/* ---------- NEW: enrolled / comments row ---------- */
+.courses-page .stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* ---------- NEW: tags ---------- */
+.courses-page .tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.courses-page .tag-pill {
+  background: #e6f4f2;
+  color: #127c71;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+/* Footer: language (left) + price / Enrolled badge (right) */
 .courses-page .course-meta {
   margin-top: auto;
   display: flex;
@@ -245,6 +370,7 @@
 .courses-page .course-meta span {
   font-size: 13px;
   color: #64748b;
+  text-transform: capitalize;
 }
 
 .courses-page .course-meta strong {

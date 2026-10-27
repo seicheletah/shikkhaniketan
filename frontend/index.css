@@ -28,12 +28,7 @@ body {
 
     padding: 0 6%;
 
-    background: linear-gradient(
-        110deg,
-        #edf9ff,
-        #ffffff,
-        #f0fbff
-    );
+    background: linear-gradient(110deg, #edf9ff, #ffffff, #f0fbff);
 
     gap: 30px;
 }
@@ -42,20 +37,51 @@ body {
 /* ================= SKILLHUB LOGO ================= */
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
     font-size: 27px;
     font-weight: 800;
-
     letter-spacing: -0.8px;
 
-    color: #082c49;
+    color: #0f766e;
 
     white-space: nowrap;
-
     cursor: default;
+
+    outline: none;
 }
 
+.logo-icon {
+    width: 42px;
+    height: 42px;
 
-/* No hover effect on logo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+    color: #0f766e;
+
+    border-radius: 0;
+    font-size: 23px;
+
+    box-shadow: none;
+}
+
+.logo-text {
+    color: #17384d;
+}
+
+/* No hover / focus effect on logo */
+.logo:hover,
+.logo:focus,
+.logo:focus-visible {
+    color: #0f766e;
+    outline: none;
+    box-shadow: none;
+}
 
 
 /* ================= EXPLORE ================= */
@@ -80,9 +106,6 @@ body {
     transition: color 0.25s ease;
 }
 
-
-/* Explore underline */
-
 .explore-btn::after {
     content: "";
 
@@ -101,18 +124,16 @@ body {
     transition: width 0.25s ease;
 }
 
-
 .explore-btn:hover {
     color: #0f766e;
 }
-
 
 .explore-btn:hover::after {
     width: 100%;
 }
 
 
-/* ================= SEARCH ================= */
+/* ================= HEADER SEARCH ================= */
 
 .search-box {
     height: 50px;
@@ -127,26 +148,18 @@ body {
 
     background: #ffffff;
 
-    /* Same teal color as Sign Up and Footer */
     border: 1px solid #159b91;
 
     border-radius: 28px;
 
-    box-shadow:
-        0 3px 12px rgba(15, 118, 110, 0.10);
+    box-shadow: 0 3px 12px rgba(15, 118, 110, 0.10);
 }
-
-
-/* Search icon */
 
 .search-box i {
     font-size: 16px;
-
     color: #0f766e;
+    cursor: pointer;
 }
-
-
-/* Search input */
 
 .search-box input {
     width: 100%;
@@ -163,7 +176,6 @@ body {
     color: #333333;
 }
 
-
 .search-box input::placeholder {
     color: #9ba4ad;
 }
@@ -173,45 +185,28 @@ body {
 
 .auth-buttons {
     display: flex;
-
     align-items: center;
-
     gap: 25px;
 }
 
-
-/* Login */
-
 .login-btn {
     border: none;
-
     background: transparent;
-
     color: #17384d;
-
     font-size: 16px;
-
     font-weight: 600;
-
     cursor: pointer;
-
     transition: color 0.2s ease;
 }
-
 
 .login-btn:hover {
     color: #000000;
 }
 
-
-/* ================= SIGN UP ================= */
-
 .signup-btn {
     border: none;
 
-    /* Same color as footer accent */
     background: #159b91;
-
     color: #ffffff;
 
     padding: 13px 25px;
@@ -219,25 +214,25 @@ body {
     border-radius: 25px;
 
     font-size: 15px;
-
     font-weight: 600;
 
     cursor: pointer;
 
-    box-shadow:
-        0 4px 12px rgba(15, 118, 110, 0.15);
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15);
 
     transition: all 0.25s ease;
 }
 
-
 .signup-btn:hover {
     background: #0f766e;
-
     transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(15, 118, 110, 0.22);
+}
 
-    box-shadow:
-        0 7px 18px rgba(15, 118, 110, 0.22);
+.explore-btn,
+.login-btn,
+.signup-btn {
+    text-decoration: none;
 }
 
 
@@ -249,79 +244,316 @@ body {
     min-height: 650px;
 
     display: flex;
-
     align-items: center;
 
     padding: 50px 7%;
 
-    background: linear-gradient(
-        110deg,
-        #edf9ff,
-        #ffffff,
-        #f0fbff
-    );
+    background: linear-gradient(110deg, #edf9ff, #ffffff, #f0fbff);
 }
-
-
-/* ================= HERO TEXT ================= */
 
 .hero-content {
     width: 45%;
-
     padding-left: 30px;
 }
 
-
 .hero-content h1 {
     font-size: 60px;
-
     line-height: 1.15;
-
     font-weight: 750;
-
     letter-spacing: -1.5px;
-
     color: #082c49;
-
     margin-bottom: 22px;
 }
 
-
 .hero-content p {
     font-size: 18px;
-
     line-height: 1.7;
-
     color: #60727d;
-
     max-width: 480px;
 }
-
-
-/* ================= HERO IMAGE ================= */
 
 .hero-image {
     width: 55%;
 
     display: flex;
-
     justify-content: center;
-
     align-items: center;
 }
 
-
 .hero-image img {
     width: 100%;
-
     max-width: 620px;
-
     object-fit: contain;
 }
 
 
+/* =========================================================
+   POPULAR COURSES  (same card design as explore page)
+   Everything is scoped under .popular-courses so it never
+   clashes with other parts of this page.
+   ========================================================= */
+
+.popular-courses {
+    /* colours used by the cards (same as explore.css) */
+    --teal: #0d6860;
+    --teal-dark: #084c46;
+    --teal-light: #e6f4f2;
+    --bg: #f4f9f8;
+    --text: #0a3d37;
+    --muted: #5e7e7a;
+    --border: #dcebe8;
+    --star: #e59819;
+    --radius: 14px;
+
+    padding: 60px 7% 70px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+}
+
+/* ---- section header: title (left) + "Explore All" (right) ---- */
+
+.popular-courses .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.popular-courses .section-header h2 {
+    font-size: 32px;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.popular-courses .section-header a {
+    color: #0f766e;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    transition: color 0.2s ease;
+}
+
+.popular-courses .section-header a:hover {
+    color: #084c46;
+    text-decoration: underline;
+}
+
+/* ---- grid ---- */
+
+.popular-courses .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+    gap: 22px;
+}
+
+/* ---- card ---- */
+
+.popular-courses .course-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+
+.popular-courses .course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 32px rgba(13, 104, 96, .14);
+    border-color: var(--teal);
+}
+
+/* ---- thumbnail ---- */
+
+.popular-courses .card-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #dfeeeb;
+    overflow: hidden;
+}
+
+.popular-courses .card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity .35s, transform .4s;
+}
+
+.popular-courses .card-thumb img.loaded { opacity: 1; }
+
+.popular-courses .course-card:hover .card-thumb img { transform: scale(1.04); }
+
+.popular-courses .card-thumb:not(.ready):not(.failed) {
+    background: linear-gradient(90deg, #dcebe8 25%, #eef7f5 50%, #dcebe8 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+}
+
+.popular-courses .thumb-loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+}
+
+.popular-courses .thumb-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(13, 104, 96, .2);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+
+.popular-courses .card-thumb.ready .thumb-loading,
+.popular-courses .card-thumb.failed .thumb-loading {
+    display: none;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ---- card body ---- */
+
+.popular-courses .card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.popular-courses .card-title {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.popular-courses .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.popular-courses .teacher-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.popular-courses .teacher-row img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.popular-courses .rating-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.popular-courses .rating-num { font-weight: 800; color: #b4690e; }
+.popular-courses .stars { color: var(--star); letter-spacing: 1px; font-size: 14px; }
+.popular-courses .rating-count { color: var(--muted); }
+
+.popular-courses .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.popular-courses .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.popular-courses .tag-pill {
+    background: var(--teal-light);
+    color: var(--teal);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.popular-courses .card-footer {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.popular-courses .lang-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: capitalize;
+}
+
+.popular-courses .price { font-size: 18px; font-weight: 800; }
+.popular-courses .price.free { color: #15803d; }
+
+/* ---- skeleton loader ---- */
+
+.popular-courses .skeleton { pointer-events: none; }
+
+.popular-courses .skeleton .sk {
+    background: linear-gradient(90deg, #e4efec 25%, #f2f8f6 50%, #e4efec 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+    border-radius: 6px;
+}
+
+.popular-courses .sk-thumb { aspect-ratio: 16 / 9; border-radius: 0 !important; }
+.popular-courses .sk-line { height: 14px; margin-bottom: 4px; }
+.popular-courses .sk-line.short { width: 55%; }
+
+/* ---- message when no course is available ---- */
+
+.popular-courses .home-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px 20px;
+    background: #fff;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-size: 15px;
+}
+
+/* ---- highlight for a course found by the header search ---- */
+
+.popular-courses .course-card.search-highlight {
+    border: 2px solid #0f766e;
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 16px 32px rgba(15, 118, 110, .22);
+    transition: .3s;
+}
+
+
 /* ================================================= */
-/* ================= PROFESSIONAL FOOTER ========== */
+/* ================= PROFESSIONAL FOOTER =========== */
 /* ================================================= */
 
 .footer {
@@ -338,9 +570,6 @@ body {
     overflow: hidden;
 }
 
-
-/* Same teal color used in Sign Up */
-
 .footer::before {
     content: "";
 
@@ -355,137 +584,88 @@ body {
     background: #159b91;
 }
 
-
-/* ================= FOOTER CONTENT ================= */
-
 .footer-content {
     position: relative;
-
     z-index: 2;
 
     max-width: 1200px;
-
     margin: 0 auto;
 
     display: flex;
-
     justify-content: space-between;
-
     align-items: flex-start;
 
     gap: 80px;
 }
 
-
-/* ================= FOOTER BRAND ================= */
-
 .footer-brand {
     max-width: 390px;
 }
 
-
 .footer-logo {
     font-size: 27px;
-
     font-weight: 800;
-
     letter-spacing: -0.7px;
-
     margin-bottom: 12px;
-
     color: #ffffff;
 }
-
 
 .footer-brand p {
     font-size: 14px;
-
     line-height: 1.8;
-
     color: rgba(255, 255, 255, 0.62);
-
     max-width: 350px;
 }
 
-
-/* ================= FOOTER LINKS ================= */
-
 .footer-links {
     display: flex;
-
     gap: 75px;
 }
 
-
 .footer-column {
     display: flex;
-
     flex-direction: column;
-
     gap: 12px;
-
     min-width: 100px;
 }
 
-
 .footer-column h4 {
     font-size: 14px;
-
     font-weight: 700;
-
     color: #ffffff;
-
     margin-bottom: 7px;
-
     letter-spacing: 0.2px;
 }
 
-
 .footer-column a {
     position: relative;
-
     width: fit-content;
-
     color: rgba(255, 255, 255, 0.60);
-
     text-decoration: none;
-
     font-size: 13px;
-
     transition: all 0.2s ease;
 }
 
-
 .footer-column a:hover {
     color: #ffffff;
-
     transform: translateX(2px);
 }
 
-
-/* ================= FOOTER BOTTOM ================= */
-
 .copyright {
     position: relative;
-
     z-index: 2;
 
     max-width: 1200px;
-
     margin: 42px auto 0;
-
     padding-top: 18px;
 
     border-top: 1px solid rgba(255, 255, 255, 0.12);
 
     display: flex;
-
     justify-content: space-between;
-
     align-items: center;
 
     font-size: 12px;
-
     color: rgba(255, 255, 255, 0.45);
 }
 
@@ -498,35 +678,32 @@ body {
 
     .navbar {
         padding: 0 4%;
-
         gap: 20px;
     }
-
 
     .explore-btn {
         margin-left: 40px;
     }
 
-
     .search-box {
         width: 350px;
     }
-
 
     .hero {
         padding: 50px 5%;
     }
 
-
     .hero-content h1 {
         font-size: 52px;
     }
 
+    .popular-courses {
+        padding: 50px 5% 60px;
+    }
 
     .footer-content {
         gap: 50px;
     }
-
 
     .footer-links {
         gap: 50px;
@@ -544,75 +721,65 @@ body {
 
     .navbar {
         height: auto;
-
         padding: 20px;
-
         flex-wrap: wrap;
-
         gap: 18px;
     }
-
 
     .logo {
         font-size: 24px;
     }
 
-
     .explore-btn {
         margin-left: 20px;
     }
 
-
     .search-box {
         order: 3;
-
         width: 100%;
-
         margin: 0;
     }
-
 
     .auth-buttons {
         margin-left: auto;
     }
 
-
     /* ---------- Hero ---------- */
 
     .hero {
         flex-direction: column;
-
         text-align: center;
-
         padding: 60px 20px;
     }
 
-
     .hero-content {
         width: 100%;
-
         padding-left: 0;
     }
-
 
     .hero-content h1 {
         font-size: 45px;
     }
 
-
     .hero-content p {
         font-size: 18px;
-
         margin: auto;
     }
 
-
     .hero-image {
         width: 100%;
-
         margin-top: 35px;
     }
 
+    /* ---------- Courses ---------- */
+
+    .popular-courses {
+        padding: 45px 20px 55px;
+    }
+
+    .popular-courses .section-header h2 {
+        font-size: 26px;
+    }
 
     /* ---------- Footer ---------- */
 
@@ -620,50 +787,39 @@ body {
         padding: 45px 6% 20px;
     }
 
-
     .footer-content {
         flex-direction: column;
-
         align-items: center;
-
         text-align: center;
-
         gap: 40px;
     }
-
 
     .footer-brand {
         max-width: 500px;
     }
 
-
     .footer-brand p {
         margin: auto;
     }
-
 
     .footer-links {
         gap: 60px;
     }
 
-
     .footer-column {
         align-items: center;
     }
 
-
     .copyright {
         flex-direction: column;
-
         gap: 8px;
-
         text-align: center;
     }
 }
 
 
 /* ================================================= */
-/* ================= SMALL MOBILE ================= */
+/* ================= SMALL MOBILE ================== */
 /* ================================================= */
 
 @media (max-width: 500px) {
@@ -674,40 +830,31 @@ body {
         padding: 18px;
     }
 
-
     .logo {
         font-size: 22px;
     }
 
-
     .explore-btn {
         margin-left: 0;
-
         font-size: 15px;
     }
-
 
     .auth-buttons {
         gap: 10px;
     }
 
-
     .login-btn {
         font-size: 14px;
     }
 
-
     .signup-btn {
         padding: 11px 18px;
-
         font-size: 14px;
     }
-
 
     .search-box {
         height: 48px;
     }
-
 
     /* ---------- Hero ---------- */
 
@@ -715,18 +862,28 @@ body {
         padding: 50px 20px;
     }
 
-
     .hero-content h1 {
         font-size: 38px;
-
         letter-spacing: -1px;
     }
-
 
     .hero-content p {
         font-size: 16px;
     }
 
+    /* ---------- Courses ---------- */
+
+    .popular-courses .section-header h2 {
+        font-size: 22px;
+    }
+
+    .popular-courses .section-header a {
+        font-size: 14px;
+    }
+
+    .popular-courses .course-grid {
+        grid-template-columns: 1fr;
+    }
 
     /* ---------- Footer ---------- */
 
@@ -734,239 +891,35 @@ body {
         padding: 40px 20px 18px;
     }
 
-
     .footer-logo {
         font-size: 23px;
     }
-
 
     .footer-brand p {
         font-size: 13px;
     }
 
-
     .footer-links {
         width: 100%;
-
         justify-content: center;
-
         gap: 25px;
     }
 
-
     .footer-column {
         min-width: auto;
-
         align-items: center;
     }
-
 
     .footer-column h4 {
         font-size: 13px;
     }
 
-
     .footer-column a {
         font-size: 12px;
     }
 
-
     .copyright {
         margin-top: 35px;
-
         font-size: 11px;
     }
 }
-
-/* ================= SKILLHUB LOGO ================= */
-
-/* ================= SKILLHUB LOGO ================= */
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    font-size: 27px;
-    font-weight: 800;
-    letter-spacing: -0.8px;
-
-    color: #0f766e;
-
-    white-space: nowrap;
-    cursor: default;
-
-    outline: none;
-}
-
-
-/* Logo Icon */
-
-.logo-icon {
-    width: 42px;
-    height: 42px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: transparent;
-    color: #0f766e;
-
-    border-radius: 0;
-    font-size: 23px;
-
-    box-shadow: none;
-}
-
-
-/* Logo Text */
-
-.logo-text {
-    color: #17384d;
-}
-
-
-/* No hover / focus effect on logo */
-
-.logo:hover,
-.logo:focus,
-.logo:focus-visible {
-    color: #0f766e;
-    outline: none;
-    box-shadow: none;
-}
-
-.explore-btn,
-.login-btn,
-.signup-btn {
-    text-decoration: none;
-}
-
-
-
-/* ================= POPULAR COURSES ================= */
-
-.popular-courses{
-    padding:60px 40px;
-    background:#f8fbff;
-}
-
-.section-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:30px;
-}
-
-.section-header h2{
-    font-size:32px;
-    color:#0f172a;
-    font-weight:700;
-}
-
-.section-header a{
-    color:#0f766e;
-    text-decoration:none;
-    font-weight:600;
-}
-
-/* Grid */
-
-.course-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    gap:24px;
-}
-
-/* Card */
-
-.course-card{
-    background:#fff;
-    border-radius:18px;
-    overflow:hidden;
-    border:1px solid #e5e7eb;
-    box-shadow:0 8px 24px rgba(15,118,110,.08);
-    transition:.25s;
-    cursor:pointer;
-}
-
-.course-card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 16px 35px rgba(15,118,110,.18);
-}
-
-.course-thumb{
-    width:100%;
-    height:180px;
-    object-fit:cover;
-    display:block;
-}
-
-.course-body{
-    padding:18px;
-}
-
-.course-body h3{
-    font-size:18px;
-    color:#111827;
-    margin-bottom:8px;
-    font-weight:700;
-}
-
-.course-body p{
-    font-size:13px;
-    color:#64748b;
-    line-height:1.5;
-    height:40px;
-    overflow:hidden;
-}
-
-.course-meta{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:16px;
-    font-size:13px;
-}
-
-.course-meta span{
-    color:#0f766e;
-    font-weight:600;
-}
-
-.course-meta strong{
-    color:#111827;
-    font-size:15px;
-}
-
-
-
-/* Search করা course highlight */
-.search-highlight{
-    border:2px solid #0f766e;
-    box-shadow:0 0 20px rgba(15,118,110,.35);
-    transform:translateY(-6px) scale(1.03);
-    transition:.3s;
-}
-
-
-.search-highlight{
-    border:2px solid #0f766e;
-    transform:translateY(-6px) scale(1.03);
-    box-shadow:0 16px 32px rgba(15,118,110,.22);
-    background:#ffffff;
-}
-
-.search-highlight .course-thumb{
-    filter:brightness(1.08);
-}
-
-.search-highlight:hover{
-    transform:translateY(-8px) scale(1.04);
-}
-
-
-
-
-

@@ -1,11 +1,25 @@
-/* ===== TAGS (list + label helper) – now inside this file ===== */
 /* =========================================================
-   tags.js
-   Shared by add_course.html and explore.html.
-   Contains every tag value accepted by the API (course_tags /
-   search "tags" query) and a helper that turns a raw value like
-   "web_development" into a nice label like "Web Development".
-   Load this file BEFORE add_course.js / explore.js.
+   explore.js  (full file)
+
+   What this file does:
+   1. Draws skeleton cards first so the page is never blank.
+   2. Calls GET /api/v1/courses/search with the active filters.
+   3. Renders each course as a modern card (thumbnail loads lazily).
+   4. Left sidebar: tag search, Language and Price filters.
+   5. Top search box searches COURSES by name (debounced).
+   6. Shows "No courses found" when the result is empty.
+
+   FIX in this version:
+   - Price filter: "Free" now shows ONLY free courses and "Paid" shows
+     ONLY paid courses. The filter is also applied in the browser,
+     so it works even if the backend ignores paid=false.
+
+   NOTE: tag list is now inside this file (no tags.js needed).
+   ========================================================= */
+
+/* =========================================================
+   TAGS  (আগে tags.js ফাইলে ছিল, এখন এই ফাইলের ভেতরেই)
+   সব tag-এর তালিকা + tag-কে সুন্দর label-এ বদলানোর helper (tagLabel)
    ========================================================= */
 
 window.SKILLHUB_TAGS = [
@@ -32,13 +46,13 @@ window.SKILLHUB_TAGS = [
   "education","pedagogy"
 ];
 
-// Values that should be shown in UPPER CASE (degree names / acronyms)
+// এগুলো UPPER CASE-এ দেখাবে (ডিগ্রির নাম / acronym)
 const UPPER_TAGS = new Set([
   "ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed","mbbs","bds","bams","bhms",
   "bpharma","llb","ma","msc","mcom","mtech","me","mca","mba","md","llm","med","phd","sql","php"
 ]);
 
-// Special labels that cannot be produced by the simple rule
+// যে label সাধারণ নিয়মে বানানো যায় না
 const SPECIAL_TAG_LABELS = {
   c_plus_plus: "C++",
   c_sharp: "C#",
@@ -59,29 +73,13 @@ window.tagLabel = function (tag) {
 };
 
 
-/* =========================================================
-   explore.js  (full file)
-
-   What this file does:
-   1. Draws the whole page structure FIRST (skeleton cards), so the user
-      never waits on a blank page.
-   2. Calls  GET /api/v1/courses/search  with the active filters:
-        name, tags (repeated), language, paid, type, limit, offset
-   3. Renders each course as a modern Udemy-style card.
-      Thumbnails are loaded lazily and fade in when ready.
-   4. Left sidebar: a separate search box that filters ONLY the filter
-      list (tags), plus Language and Price filters.
-   5. Top search box searches COURSES by name (debounced).
-   6. Shows "No courses found" when the result is empty.
-   ========================================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------
   // CONFIG
   // ---------------------------------------------------------
   const API_BASE = "http://127.0.0.1:8000/api/v1";
-  const PAGE_SIZE = 12;                          // courses loaded per request
+  const PAGE_SIZE = 12;                                  // courses loaded per request
   const token = localStorage.getItem("access_token");   // optional: sent if present
 
   const $ = id => document.getElementById(id);
@@ -104,10 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
     name: "",
     tags: new Set(),      // selected tag values
     language: "",
-    paid: "",             // "" | "true" | "false"
+    paid: "",             // "" (all) | "true" (paid) | "false" (free)
     type: "video",        // video | document  (the tabs)
-    offset: 0,
-    loaded: 0
+    offset: 0,            // how many courses the SERVER has already sent us
+    loaded: 0             // how many cards are really shown
   };
 
   let requestId = 0;      // used to ignore outdated responses
@@ -129,22 +127,33 @@ document.addEventListener("DOMContentLoaded", () => {
   // Format numbers: 1250 -> "1,250"
   const fmt = n => Number(n || 0).toLocaleString("en-IN");
 
+  // Is this course paid? (handles true / 1 / "1" / "true")
+  function isPaid(c) {
+    return c.course_paid === true || c.course_paid === 1 ||
+           c.course_paid === "1" || c.course_paid === "true";
+  }
+
+  // Price filter applied in the browser (the fix)
+  function matchesPaidFilter(c) {
+    if (state.paid === "") return true;          // All
+    if (state.paid === "true") return isPaid(c); // Paid only
+    return !isPaid(c);                           // Free only
+  }
+
   // Price text: "Free" or "₹1,500"
   function priceText(c) {
-    if (!c.course_paid) return `<span class="price free">Free</span>`;
+    if (!isPaid(c)) return `<span class="price free">Free</span>`;
     const symbol = (c.course_price_currency || "INR") === "INR" ? "₹" : (c.course_price_currency + " ");
     return `<span class="price">${symbol}${fmt(c.course_price)}</span>`;
   }
 
   // 4.3 -> "★★★★☆"
   function starsText(rating) {
-    const full = Math.round(Number(rating) || 0);
+    const full = Math.min(5, Math.max(0, Math.round(Number(rating) || 0)));
     return "★".repeat(full) + "☆".repeat(5 - full);
   }
 
-  // Find the thumbnail url inside course.media.
-  // NOTE: the Swagger example only shows { id, category }.
-  // We try the most common url field names – edit here if yours is different.
+  // Find the thumbnail url inside course.media (fallback only).
   function getThumbnail(course) {
     const media = (course.media || []).find(m => m.category === "thumbnail");
     if (!media) return "";
@@ -178,8 +187,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const tags = (c.course_tags || []).slice(0, 3);
     const extraTags = (c.course_tags || []).length - tags.length;
 
-    // The first 4 images load with high priority, the rest lazily
-    const loading = index < 4 ? `loading="eager" fetchpriority="high"` : `loading="lazy"`;
+    // Images are never high priority: the card structure must show first
+    const loading = `loading="lazy"`;
 
     return `
       <article class="course-card" data-id="${esc(c.id)}">
@@ -230,39 +239,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, true);
 
-  // If a thumbnail fails, just remove it (the placeholder stays visible)
+  // If a thumbnail fails, remove it (the placeholder stays visible)
   grid.addEventListener("error", e => {
     if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
-      e.target.closest(".card-thumb").classList.add("failed");   // plain soft box, no icon
+      e.target.closest(".card-thumb").classList.add("failed");
       e.target.remove();
     }
   }, true);
 
-  // Click on a card -> open the course page
-  // Opens course_details.html?id=<course id>
+  // Click on a card -> go to the login page
   grid.addEventListener("click", e => {
     const card = e.target.closest(".course-card[data-id]");
     if (card) {
-      // course_details.js reads this value first, so it must be the clicked course
+      // remember which course was clicked (useful after login)
       localStorage.setItem("selected_course_id", card.dataset.id);
-
-      // Inside a dashboard (student / teacher): open the details page in the content area,
-      // exactly like your student dashboard already does.
-      if (typeof window.loadDashboardPage === "function") {
-        window.loadDashboardPage("course_details.html");
-      } else {
-        // Opened as a normal page (no dashboard around it)
-        window.location.href = `course_details.html?id=${card.dataset.id}`;
-      }
+      window.location.href = "login.html";
     }
   });
 
   // =========================================================
   // THUMBNAILS
-  // The course list does NOT contain the image url. The url comes from:
-  //   GET /courses/{course_id}/media/thumbnail/access  ->  { course_id, stream_url }
-  // We call it for every visible card IN PARALLEL, and cache the result
-  // so the same course is never requested twice.
+  // GET /courses/{course_id}/media/thumbnail/access -> { course_id, stream_url }
+  // Called for every visible card in parallel, cached per course.
   // =========================================================
   const thumbCache = new Map();     // courseId -> Promise<stream_url>
 
@@ -285,6 +283,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const url = await getThumbUrl(img.dataset.thumbId);
       if (url && img.isConnected) img.src = url;     // fades in via the "load" listener
       else img.closest(".card-thumb")?.classList.add("failed");
+    });
+  }
+
+  // =========================================================
+  // THUMBNAIL SCHEDULER
+  // আগে কার্ডের structure (নাম, details, price...) screen-এ আসে।
+  // Browser সেটা আঁকার পরেই thumbnail download শুরু হয়,
+  // তাই পেজ load হতে দেরি হয় না।
+  // =========================================================
+  function scheduleThumbnails() {
+    requestAnimationFrame(() => {
+      setTimeout(loadThumbnails, 150);
     });
   }
 
@@ -327,7 +337,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (myRequest !== requestId) return;
 
       if (!res.ok) throw new Error(`Server error (${res.status})`);
-      const courses = await res.json();
+      const rawCourses = await res.json();
+
+      // ---- THE FIX: apply Free / Paid filter in the browser too ----
+      const courses = rawCourses.filter(matchesPaidFilter);
 
       if (!append) grid.innerHTML = "";
 
@@ -337,10 +350,15 @@ document.addEventListener("DOMContentLoaded", () => {
         courses.map((c, i) => courseCard(c, state.loaded + i)).join("")
       );
 
-      loadThumbnails();                       // fetch thumbnail urls right away
+      scheduleThumbnails();   // thumbnails come AFTER the cards are visible
 
       state.loaded += courses.length;
-      state.offset += courses.length;
+      state.offset += rawCourses.length;   // paging uses what the SERVER sent
+
+      // If this whole page was filtered out but the server has more, keep going
+      if (state.loaded === 0 && rawCourses.length === PAGE_SIZE) {
+        return fetchCourses({ append: true });
+      }
 
       // Empty result
       if (state.loaded === 0) {
@@ -348,11 +366,11 @@ document.addEventListener("DOMContentLoaded", () => {
         resultCount.textContent = "0 courses";
       } else {
         emptyState.hidden = true;
-        resultCount.textContent = `${state.loaded}${courses.length === PAGE_SIZE ? "+" : ""} courses`;
+        resultCount.textContent = `${state.loaded}${rawCourses.length === PAGE_SIZE ? "+" : ""} courses`;
       }
 
-      // Show "Load more" only if the last page was full
-      loadMoreBtn.hidden = courses.length < PAGE_SIZE;
+      // Show "Load more" only if the server's last page was full
+      loadMoreBtn.hidden = rawCourses.length < PAGE_SIZE;
       loadMoreBtn.disabled = false;
       loadMoreBtn.textContent = "Load more courses";
 

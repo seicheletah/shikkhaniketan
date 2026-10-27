@@ -6,15 +6,76 @@
 // Base URL of the FastAPI backend
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
-// Picture shown when the student has not uploaded a profile photo
-const DEFAULT_PIC = 'https://i.pravatar.cc/100?img=32';
-
 // Page the user is sent to after logging out.
 // NOTE: change this to your real login page file name if it is different.
 const LOGIN_PAGE = 'login.html';
 
 // The localStorage key where the login token is saved
 const TOKEN_KEY = 'access_token';
+
+
+/* ==========================================================
+   DEFAULT PROFILE PICTURES (by gender)
+   When a user has NOT uploaded a photo, we draw a default avatar
+   that matches the gender chosen at sign up:
+     m -> male avatar   (blue)
+     f -> female avatar (pink, long hair)
+     o / unknown -> neutral avatar (green)
+   The avatars are small inline SVG images, so no image file has to
+   be downloaded and nothing can fail to load.
+   ========================================================== */
+
+// Colors of each avatar: background, body (head + shoulders) and hair
+const AVATAR_THEMES = {
+    m: { bg: '#dbeafe', body: '#2563eb', hair: '#1e3a8a' },
+    f: { bg: '#fce7f3', body: '#db2777', hair: '#831843' },
+    o: { bg: '#e3f3ee', body: '#096858', hair: null }
+};
+
+// The gender of the logged-in user (m / f / o).
+// It is filled in when the profile is loaded, so buildPicUrl() knows
+// which default avatar to use even when it is called with one argument.
+window.currentUserGender = '';
+
+/**
+ * Returns a "data:" image URL containing the default avatar
+ * for the given gender code (m / f / o, or male / female).
+ */
+function defaultAvatar(gender) {
+    const g = String(gender || '').toLowerCase();
+
+    // Decide which avatar to draw
+    let key = 'o';
+    if (g === 'm' || g === 'male') key = 'm';
+    if (g === 'f' || g === 'female') key = 'f';
+
+    const t = AVATAR_THEMES[key];
+    let hairBack = '';   // hair drawn BEHIND the head (long hair)
+    let hairFront = '';  // hair drawn ON TOP of the head (fringe / short hair)
+
+    if (key === 'm') {
+        // Short hair cap
+        hairFront = `<path d="M69 76C67 50 84 40 100 40S133 50 131 76C124 64 114 58 100 58S76 64 69 76Z" fill="${t.hair}"/>`;
+    }
+
+    if (key === 'f') {
+        // Long hair falling behind the shoulders + a fringe on the forehead
+        hairBack = `<path d="M64 84C62 48 80 38 100 38S138 48 136 84L142 140C130 134 124 126 122 112L78 112C76 126 70 134 58 140Z" fill="${t.hair}"/>`;
+        hairFront = `<path d="M71 74C74 56 86 50 100 50S126 56 129 74C118 66 110 62 100 62S82 66 71 74Z" fill="${t.hair}"/>`;
+    }
+
+    // Order matters: background, back hair, shoulders, head, front hair
+    const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">` +
+        `<rect width="200" height="200" fill="${t.bg}"/>` +
+        hairBack +
+        `<path d="M40 200C40 140 70 124 100 124S160 140 160 200Z" fill="${t.body}"/>` +
+        `<circle cx="100" cy="80" r="30" fill="${t.body}"/>` +
+        hairFront +
+        `</svg>`;
+
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
 
 
 /* ==========================================================
@@ -41,14 +102,19 @@ function formatGender(g) {
 
 /**
  * Builds a full image URL from the path stored in the database.
- * - No path            -> default picture
+ * - No path            -> default avatar for the user's gender
  * - Already a full URL -> use as is
  * - Relative path      -> prefix with the API address and add a
  *                         timestamp (?t=...) so the browser does not
  *                         show an old cached picture after an update.
+ *
+ * The second argument (gender) is optional. When it is left out, the
+ * gender of the logged-in user (window.currentUserGender) is used.
  */
-function buildPicUrl(path) {
-    if (!path) return DEFAULT_PIC;
+function buildPicUrl(path, gender) {
+    if (!path) {
+        return defaultAvatar(gender !== undefined ? gender : window.currentUserGender);
+    }
     if (path.startsWith('http')) return path;
     return `${API_BASE_URL}/${path.replace(/^\/+/, '')}?t=${Date.now()}`;
 }
@@ -100,6 +166,10 @@ async function loadStudentProfile() {
 
         const data = await response.json();
 
+        // Remember the gender FIRST, so every picture below (and in other
+        // scripts such as update_profile.js) gets the right default avatar.
+        window.currentUserGender = data.gender || '';
+
         // ---- Fill the settings page fields (they only exist when that page is loaded) ----
         setText('disp-id', data.user ? data.user.id : '');
         setText('disp-first-name', data.first_name);
@@ -113,11 +183,11 @@ async function loadStudentProfile() {
 
         // Big profile picture on the settings page
         const pic = document.getElementById('disp-profile-pic');
-        if (pic) pic.src = buildPicUrl(data.profile_pic);
+        if (pic) pic.src = buildPicUrl(data.profile_pic, data.gender);
 
         // Small profile picture on the right side of the topbar
         const topPic = document.querySelector('.topbar .profile-img');
-        if (topPic) topPic.src = buildPicUrl(data.profile_pic);
+        if (topPic) topPic.src = buildPicUrl(data.profile_pic, data.gender);
 
         // Student's first name in the topbar welcome text
         const nameEl = document.getElementById('studentUserName');

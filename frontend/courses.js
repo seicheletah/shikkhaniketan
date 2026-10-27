@@ -3,20 +3,22 @@
    Shows the "Recommended" and "Enrolled" course lists inside
    the student dashboard.
 
-   SPEED IMPROVEMENTS in this version (compared to the old one):
-   1. The course list and the student profile are requested at the
-      SAME TIME (before: one after the other).
-   2. The card structure (name, details, price, language) is drawn
-      first. Thumbnails are loaded afterwards, slowly, in the background.
-   3. Thumbnails are loaded ONLY for cards that are visible on screen
-      (lazy loading with IntersectionObserver), and only a few at a time.
-   4. Every thumbnail link is remembered (cache), so typing in the
-      search box or changing the sort never downloads them again.
-   5. The artificial wait when switching tabs is much shorter.
+   WHAT IS NEW IN THIS VERSION
+   - Every course card now shows the SAME full details as the
+     Explore page: name, description, teacher (photo + name),
+     rating (number + stars + count), enrolled count, comments
+     count, tags, language and price.
+   - Enrolled courses are completed with the full course data
+     (teacher, rating, tags...) if /students/me did not send them.
+   - The tag list + tagLabel helper now live inside this file.
 
-   Everything is wrapped in an IIFE (Immediately Invoked Function
-   Expression) so our variables never leak into the global scope
-   and never clash with other page scripts.
+   EVERYTHING ELSE IS UNCHANGED:
+   - course list and student profile are requested at the same time
+   - card structure first, thumbnails later (lazy + queue + cache)
+   - tabs, search, sort, spinner, enrolled section, click behaviour
+
+   Everything is wrapped in an IIFE so our variables never leak into
+   the global scope and never clash with other page scripts.
    ========================================================== */
 (() => {
 
@@ -28,17 +30,50 @@
     // The enrolled courses come from the logged-in student's own profile
     const STUDENT_ME_ENDPOINT = `${API_BASE}/students/me`;
 
-    // How long (ms) the spinner stays visible when the user switches
-    // between the Videos / Documents tabs. It was 500 before; now it is
-    // short, just enough to show a smooth "loading" feel.
+    // How long (ms) the spinner stays visible when switching tabs
     const TAB_SWITCH_DELAY = 200;
 
     // Picture shown until the real thumbnail arrives (or if it fails)
     const DEFAULT_THUMB = "image/myyy.png";
 
-    // How many thumbnail requests may run at the same moment.
-    // A small number keeps the browser free for more important requests.
+    // How many thumbnail requests may run at the same moment
     const THUMB_CONCURRENCY = 3;
+
+    /* ------------------------------------------------------
+       TAGS  (list is not needed here, only the label helper)
+       Turns "web_development" into "Web Development",
+       "mba" into "MBA", "c_plus_plus" into "C++" ...
+       ------------------------------------------------------ */
+
+    // Shown in UPPER CASE (degree names / acronyms)
+    const UPPER_TAGS = new Set([
+        "ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed","mbbs","bds","bams","bhms",
+        "bpharma","llb","ma","msc","mcom","mtech","me","mca","mba","md","llm","med","phd","sql","php"
+    ]);
+
+    // Labels that the simple rule can not produce
+    const SPECIAL_TAG_LABELS = {
+        c_plus_plus: "C++",
+        c_sharp: "C#",
+        go_lang: "Go",
+        ba_llb: "BA LLB",
+        bba_llb: "BBA LLB",
+        bsc_nursing: "BSc Nursing",
+        ms_medical: "MS (Medical)",
+        seo_sem: "SEO / SEM",
+        polytechnic_diploma: "Polytechnic Diploma"
+    };
+
+    function tagLabel(tag) {
+        tag = String(tag);
+        if (SPECIAL_TAG_LABELS[tag]) return SPECIAL_TAG_LABELS[tag];
+        if (UPPER_TAGS.has(tag)) return tag.toUpperCase();
+        // "class_10" -> "Class 10", "web_development" -> "Web Development"
+        return tag
+            .split("_")
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+    }
 
     /* ------------------------------------------------------
        DOM ELEMENTS
@@ -74,7 +109,6 @@
 
     /* ==========================================
        LOADING SPINNER
-       Replaces the grid content with a spinning circle.
        ========================================== */
     function showLoader(grid) {
         grid.innerHTML = `
@@ -95,10 +129,7 @@
        HELPERS
        ========================================== */
 
-    /**
-     * Makes text safe before it is placed inside innerHTML,
-     * so a course name containing "<" or quotes can not break the page.
-     */
+    /** Makes text safe before it is placed inside innerHTML. */
     function escapeHtml(value) {
         return String(value === undefined || value === null ? "" : value)
             .replace(/&/g, "&amp;")
@@ -106,6 +137,17 @@
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#39;");
+    }
+
+    /** Format numbers: 1250 -> "1,250" */
+    function formatNumber(n) {
+        return Number(n || 0).toLocaleString("en-IN");
+    }
+
+    /** 4.3 -> "★★★★☆" */
+    function starsText(rating) {
+        const full = Math.min(5, Math.max(0, Math.round(Number(rating) || 0)));
+        return "★".repeat(full) + "☆".repeat(5 - full);
     }
 
     /** The backend may send the paid flag as true / 1 / "1" / "true". */
@@ -118,16 +160,23 @@
         );
     }
 
+    /** Price text: "Free" or "₹1,500" (other currencies show their code). */
+    function priceText(course) {
+        if (!isPaid(course)) return "Free";
+
+        const currency = course.course_price_currency || "INR";
+        const symbol = currency === "INR" ? "₹" : currency + " ";
+
+        return symbol + formatNumber(course.course_price);
+    }
+
     /** Course id can be named "id" or "course_id" depending on the API. */
     function getCourseId(course) {
         return course.id !== undefined ? course.id : course.course_id;
     }
 
     /**
-     * Normalises the resource type of a course to either
-     * "video" or "document".
-     * The backend might send "document", "pdf", "doc", "documents"...
-     * so anything that looks like a document becomes "document".
+     * Normalises the resource type of a course to "video" or "document".
      */
     function getCourseType(course) {
         const raw = String(course.course_resource_type || "video").toLowerCase();
@@ -153,13 +202,10 @@
        COURSE THUMBNAILS  (cache + queue + lazy loading)
        ========================================== */
 
-    // courseId -> thumbnail url that we already know.
-    // Filtering / searching re-draws the cards many times; thanks to this
-    // cache the same thumbnail is never requested twice.
+    // courseId -> thumbnail url that we already know
     const thumbCache = new Map();
 
-    // courseId -> a request that is running right now.
-    // If two cards ask for the same thumbnail at the same time, they share it.
+    // courseId -> a request that is running right now
     const thumbInflight = new Map();
 
     /** Asks the backend for the thumbnail link of ONE course (cached). */
@@ -243,9 +289,7 @@
 
     /**
      * Watches the cards: the moment a card comes close to the visible
-     * screen area, its thumbnail starts loading. Cards far below are
-     * not loaded until the student scrolls near them.
-     * "rootMargin: 200px" = start a little BEFORE the card is visible.
+     * screen area, its thumbnail starts loading.
      */
     const thumbObserver = ("IntersectionObserver" in window)
         ? new IntersectionObserver((entries) => {
@@ -308,11 +352,7 @@
        ENROLLED COURSES
        ========================================== */
 
-    /**
-     * Downloads the student's profile (/students/me).
-     * Returns the data, or null when the request fails.
-     * This is started at the SAME TIME as loadCourses() to save time.
-     */
+    /** Downloads the student's profile (/students/me). null on failure. */
     async function fetchStudentProfile() {
         try {
             const res = await fetch(STUDENT_ME_ENDPOINT, {
@@ -400,9 +440,19 @@
     }
 
     /**
-     * Fills `enrolledCourses` from the already-downloaded profile data.
-     * (`profileData` is null when the profile request failed.)
+     * NEW: completes an enrolled course with the full data from the
+     * course list (teacher, rating, enrolled, comments, tags...).
+     * The profile data may only contain a few fields, so we merge:
+     * the full course from /courses/ is laid over the short one.
      */
+    function enrichCourse(course) {
+        const full = allCourses.find(
+            c => String(getCourseId(c)) === String(getCourseId(course))
+        );
+        return full ? { ...course, ...full } : course;
+    }
+
+    /** Fills `enrolledCourses` from the already-downloaded profile data. */
     async function loadEnrolledCourses(profileData) {
 
         // Visitors / non-students never see the Enrolled section
@@ -422,7 +472,7 @@
         const list = findEnrolledList(profileData);
         const resolved = await Promise.all(list.map(resolveCourse));
 
-        enrolledCourses = resolved.filter(Boolean);
+        enrolledCourses = resolved.filter(Boolean).map(enrichCourse);
     }
 
 
@@ -525,10 +575,8 @@
 
     /* ==========================================
        RENDER COURSE CARDS
-       The card (name, details, language, price) is drawn FIRST with the
-       default picture. The real thumbnail is attached afterwards by
-       attachThumbnail(), lazily and gently.
-       This function is no longer "async": it does not wait for thumbnails.
+       The card (all details) is drawn FIRST with the default picture.
+       The real thumbnail is attached afterwards, lazily and gently.
        ========================================== */
     function renderCourses(courses, grid, isEnrolled, emptyMessage) {
 
@@ -539,8 +587,7 @@
             return;
         }
 
-        // A DocumentFragment lets us build all cards "off-screen" and add
-        // them to the page in ONE step, which is faster than adding one by one.
+        // Build all cards off-screen and add them in ONE step
         const fragment = document.createDocumentFragment();
 
         courses.forEach(course => {
@@ -548,10 +595,20 @@
             const card = document.createElement("div");
             card.className = "card";
 
-            // Right side of the card: "Enrolled" badge or the price
+            // ---- teacher ----
+            const teacher = course.teacher || {};
+            const teacherName =
+                `${teacher.first_name || ""} ${teacher.last_name || ""}`.trim() || "Instructor";
+
+            // ---- tags (max 3 + "+N") ----
+            const allTags = course.course_tags || [];
+            const shownTags = allTags.slice(0, 3);
+            const extraTags = allTags.length - shownTags.length;
+
+            // Right side of the footer: "Enrolled" badge or the price
             const rightSide = isEnrolled
                 ? `<span class="enrolled-badge">Enrolled</span>`
-                : `<strong>${isPaid(course) ? "₹" + escapeHtml(course.course_price || 0) : "Free"}</strong>`;
+                : `<strong>${escapeHtml(priceText(course))}</strong>`;
 
             card.innerHTML = `
                 <img
@@ -561,13 +618,38 @@
                 >
 
                 <div class="course-body">
+
                     <h3>${escapeHtml(course.course_name || "")}</h3>
                     <p>${escapeHtml(course.course_details || "")}</p>
 
+                    <div class="teacher-row">
+                        ${teacher.profile_pic
+                            ? `<img class="teacher-avatar" src="${escapeHtml(teacher.profile_pic)}" alt="" loading="lazy" onerror="this.remove()">`
+                            : ""}
+                        <span>${escapeHtml(teacherName)}</span>
+                    </div>
+
+                    <div class="rating-row">
+                        <span class="rating-num">${Number(course.avg_rating || 0).toFixed(1)}</span>
+                        <span class="stars">${starsText(course.avg_rating)}</span>
+                        <span class="rating-count">(${formatNumber(course.total_rating)} ratings)</span>
+                    </div>
+
+                    <div class="stats-row">
+                        <span>👥 ${formatNumber(course.total_enrollment)} enrolled</span>
+                        <span>💬 ${formatNumber(course.total_comment)} comments</span>
+                    </div>
+
+                    <div class="tag-row">
+                        ${shownTags.map(tag => `<span class="tag-pill">${escapeHtml(tagLabel(tag))}</span>`).join("")}
+                        ${extraTags > 0 ? `<span class="tag-pill">+${extraTags}</span>` : ""}
+                    </div>
+
                     <div class="course-meta">
-                        <span>${escapeHtml(course.course_language || "")}</span>
+                        <span>🌐 ${escapeHtml(course.course_language || "")}</span>
                         ${rightSide}
                     </div>
+
                 </div>
             `;
 
@@ -585,7 +667,6 @@
 
     /* ==========================================
        TAB SWITCHING (Videos <-> Documents)
-       Shows the spinner first, then the filtered cards.
        ========================================== */
     async function switchTab(type) {
         currentType = type;
@@ -632,7 +713,7 @@
             showLoader(enrolledGrid);
         }
 
-        // Start BOTH requests at the same time (before: one after the other)
+        // Start BOTH requests at the same time
         const coursesPromise = loadCourses();
         const profilePromise = hasStudentAccount
             ? fetchStudentProfile()
