@@ -9,6 +9,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from datetime import datetime
+from mailjet_rest import Client
 
 # razorpay client initialization
 razorpay_client = razorpay.Client(
@@ -126,3 +127,24 @@ def generate_invoice_pdf(
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+
+
+def send_otp(receiver_email: str, code: str):
+    with Client(
+        auth=(settings.MAILJET_API_KEY, settings.MAILJET_SECRET_KEY), version="v3.1"
+    ) as mailjet:
+        data = {
+            "Messages": [
+                {
+                    "From": {
+                        "Email": settings.MAILJET_SENDER_EMAIL,
+                        "Name": "Shikkhaniketan",
+                    },
+                    "To": [{"Email": receiver_email}],
+                    "Subject": "OTP verification",
+                    "TextPart": f"Welcome! Your verification code is: {code}",
+                    "HTMLPart": f"<h3>Welcome!</h3><p>Your verification code is: <strong>{code}</strong></p><p>This code will expire in {settings.OTP_EXPIRE_MINUTES} minutes.</p>",
+                }
+            ]
+        }
+        mailjet.send.create(data=data)
