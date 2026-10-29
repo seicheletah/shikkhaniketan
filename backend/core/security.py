@@ -76,13 +76,18 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     token_data = verify_access_token(token, credentials_exception)
-    user = db_session.get(User, token_data.id)
+    user = db_session.exec(
+        select(User).where(User.id == token_data.id).where(User.is_verified == True)
+    ).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"user id not found"
         )
     else:
         return user
+
+
+LoginDep = Annotated[User, Depends(get_current_user)]
 
 
 # for authorizing admin accounts with JWT tokens
@@ -92,6 +97,9 @@ def get_current_admin(current_user: LoginDep) -> User:
             status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
         )
     return current_user
+
+
+AdminDep = Annotated[User, Depends(get_current_admin)]
 
 
 # for authorizing teacher accounts with JWT tokens
@@ -105,6 +113,9 @@ def get_current_teacher(current_user: LoginDep) -> User:
     return current_user
 
 
+TeacherDep = Annotated[User, Depends(get_current_teacher)]
+
+
 # for authorizing student accounts with JWT tokens
 # needs refactoring to prevent code repetation
 # add checking student id exits or not
@@ -114,6 +125,9 @@ def get_current_student(current_user: LoginDep) -> User:
             status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
         )
     return current_user
+
+
+StudentDep = Annotated[User, Depends(get_current_student)]
 
 
 # for authenticating user accounts with password
@@ -138,13 +152,3 @@ def authenticate_user(
         data={"sub": logindata.username, "role": data.role, "id": str(data.id)}
     )
     return Token(access_token=access_token, token_type="bearer", role=data.role)
-
-
-# for reducing code repetition
-LoginDep = Annotated[User, Depends(get_current_user)]
-
-AdminDep = Annotated[User, Depends(get_current_admin)]
-
-TeacherDep = Annotated[User, Depends(get_current_teacher)]
-
-StudentDep = Annotated[User, Depends(get_current_student)]
