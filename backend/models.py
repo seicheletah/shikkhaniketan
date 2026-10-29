@@ -61,6 +61,7 @@ class User(UserBase, table=True):
         ),
     )
     hashed_password: str
+    is_verified: bool = Field(default=False)
     student: Student = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"cascade": "all, delete", "passive_deletes": True},
@@ -68,6 +69,22 @@ class User(UserBase, table=True):
     teacher: Teacher = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"cascade": "all, delete", "passive_deletes": True},
+    )
+
+
+# otp verification table
+class OtpVerify(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
+    code: str
+    expires_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    user_id: uuid.UUID | None = Field(
+        sa_column=Column(
+            Uuid,
+            ForeignKey("user.id", ondelete="CASCADE"),
+            nullable=False,
+        )
     )
 
 
@@ -85,6 +102,12 @@ class UserCreate(SQLModel):
         return self
 
 
+# user otp verification model
+class UserVerify(SQLModel):
+    user_id: uuid.UUID
+    code: str
+
+
 # update user model with pydantic vlidation
 class UserUpdate(SQLModel):
     email_id: EmailStr | None = None
@@ -100,6 +123,7 @@ class UserUpdate(SQLModel):
 # user response model for response body
 class UserResponse(UserBase):
     id: uuid.UUID
+    is_verified: bool
 
 
 # user public response model for response body
