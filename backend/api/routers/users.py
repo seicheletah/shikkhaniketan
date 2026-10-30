@@ -27,7 +27,7 @@ async def create_user(
     userdata: UserCreate, db_session: SessionDep, background_tasks: BackgroundTasks
 ):
     """
-    Create user.
+    Create an user. It also sends email OTP.
     """
     existing_user_email_id = db_session.exec(
         select(User).where(User.email_id == userdata.email_id)
@@ -66,6 +66,9 @@ async def create_user(
 
 @api_router.post("/verify", response_model=GenericMessage)
 def verify_user(userdata: UserVerify, db_session: SessionDep):
+    """
+    verify an user with OTP.
+    """
     otp = db_session.exec(
         select(OtpVerify)
         .where(OtpVerify.user_id == userdata.user_id)
