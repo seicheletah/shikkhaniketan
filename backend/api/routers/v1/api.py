@@ -8,6 +8,7 @@ from backend.api.routers import (
     reviews,
     purchase,
     media,
+    admin,
 )
 
 # main API route
@@ -22,3 +23,4 @@ api_router.include_router(courses.api_router)
 api_router.include_router(reviews.api_router)
 api_router.include_router(purchase.api_router)
 api_router.include_router(media.api_router)
+api_router.include_router(admin.api_router)
