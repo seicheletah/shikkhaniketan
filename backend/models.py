@@ -46,13 +46,12 @@ class UserRole(str, Enum):
 
 # user base model
 class UserBase(SQLModel):
-    email_id: EmailStr
+    email_id: EmailStr = Field(unique=True)
     role: str
 
 
 # user table model
 class User(UserBase, table=True):
-    email_id: EmailStr = Field(unique=True)
     id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
@@ -72,8 +71,10 @@ class User(UserBase, table=True):
     )
 
 
-# otp verification table
-class OtpVerify(SQLModel, table=True):
+# user otp verification table
+class UserOtp(SQLModel, table=True):
+    __tablename__ = "user_otp"  # type: ignore
+
     id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
     code: str
     expires_at: datetime = Field(
@@ -102,8 +103,8 @@ class UserCreate(SQLModel):
         return self
 
 
-# user otp verification model
-class UserVerify(SQLModel):
+# user email otp verification model
+class UserVerifyEmail(SQLModel):
     user_id: uuid.UUID
     code: str
 
@@ -131,9 +132,92 @@ class UserPublicResponse(SQLModel):
     id: uuid.UUID
 
 
-# for checking request data validation with pydantic
-class UserLogin(UserCreate):
+# admin user table model
+class AdminUser(UserBase, table=True):
+    __tablename__ = "admin_user"  # type: ignore
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    hashed_password: str
+    is_verified: bool = Field(default=False)
+    admin_access: bool = Field(default=False)
+
+
+# admin user otp verification table
+class AdminUserOtp(SQLModel, table=True):
+    __tablename__ = "admin_user_otp"  # type: ignore
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
+    code: str
+    expires_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    admin_user_id: uuid.UUID | None = Field(
+        sa_column=Column(
+            Uuid,
+            ForeignKey("admin_user.id", ondelete="CASCADE"),
+            nullable=False,
+        )
+    )
+
+
+# admin token verification table
+class AdminAccessToken(SQLModel, table=True):
+    __tablename__ = "admin_access_token"  # type: ignore
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
+    token: str
+    expires_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    creator_user_id: uuid.UUID
+    client_user_id: uuid.UUID | None = None
+    is_active: bool = Field(default=True)
+
+
+# for admin user role selection
+class AdminUserRole(str, Enum):
+    admin = "admin"
+
+
+# create admin model
+class AdminUserCreate(SQLModel):
+    email_id: EmailStr
+    role: AdminUserRole
+    hashed_password: str
+
+
+# admin user email otp verification model
+class AdminUserVerifyEmail(UserVerifyEmail):
     pass
+
+
+# admin user token verification model
+class AdminUserVerifyToken(SQLModel):
+    user_id: uuid.UUID
+    token: str
+
+
+# admin access token response model
+class AdminAcessTokenResponse(SQLModel):
+    token: str
+    expires_at: datetime
+    is_active: bool
+
+
+# update admin user model
+class AdminUserUpdate(UserUpdate):
+    pass
+
+
+# admin user response model for response body
+class AdminUserResponse(UserResponse):
+    admin_access: bool
 
 
 # course enrollment validation model
