@@ -108,7 +108,7 @@ def get_current_admin(
     ).first()
     if not admin_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"admin user id not found"
+            status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
         )
     else:
         return admin_user
