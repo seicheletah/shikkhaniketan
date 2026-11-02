@@ -253,6 +253,8 @@ class AdminActionHistory(SQLModel, table=True):
             DateTime(timezone=True), nullable=False, server_default=func.now()
         ),
     )
+    first_name: str
+    last_name: str
     action: str
     resource: str
     admin_user_id: uuid.UUID
