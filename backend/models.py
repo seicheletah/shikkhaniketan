@@ -136,6 +136,8 @@ class UserPublicResponse(SQLModel):
 class AdminUser(UserBase, table=True):
     __tablename__ = "admin_user"  # type: ignore
 
+    first_name: str
+    last_name: str
     id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
     created_at: datetime | None = Field(
         default=None,
@@ -187,6 +189,8 @@ class AdminUserRole(str, Enum):
 
 # create admin model
 class AdminUserCreate(SQLModel):
+    first_name: str
+    last_name: str
     email_id: EmailStr
     role: AdminUserRole
     hashed_password: str
@@ -212,12 +216,49 @@ class AdminAcessTokenResponse(SQLModel):
 
 # update admin user model
 class AdminUserUpdate(UserUpdate):
-    pass
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 # admin user response model for response body
 class AdminUserResponse(UserResponse):
+    first_name: str
+    last_name: str
     admin_access: bool
+
+
+# admin action model
+class AdminAction(str, Enum):
+    update = "update"
+    delete = "delete"
+
+
+# admin action resource model
+class AdminActionResource(str, Enum):
+    user = "user"
+    student = "student"
+    teacher = "teacher"
+    course = "course"
+    review = "review"
+
+
+# admin action history table
+class AdminActionHistory(SQLModel, table=True):
+    __tablename__ = "admin_action_history"  # type: ignore
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+    )
+    action: str
+    resource: str
+    admin_user_id: uuid.UUID
+    # from next project use username and uuid everywhere
+    resource_id: str
+    resource_data: str
 
 
 # course enrollment validation model
