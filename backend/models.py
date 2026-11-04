@@ -209,8 +209,11 @@ class AdminUserVerifyToken(SQLModel):
 
 # admin access token response model
 class AdminAcessTokenResponse(SQLModel):
+    id: uuid.UUID
     token: str
     expires_at: datetime
+    creator_user_id: uuid.UUID
+    client_user_id: uuid.UUID | None
     is_active: bool
 
 
