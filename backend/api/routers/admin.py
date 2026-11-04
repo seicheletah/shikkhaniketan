@@ -208,6 +208,25 @@ def generate_admin_access_token(db_session: SessionDep, current_user: AdminDep):
         )
 
 
+@api_router.get("/past-access-token", response_model=list[AdminAcessTokenResponse])
+def get_past_access_tokens(
+    current_user: AdminDep,
+    db_session: SessionDep,
+    offset: int | None = None,
+    limit: int = 50,
+):
+    """
+    Get all past generated access token details.
+    """
+    statement = select(AdminAccessToken).order_by(col(AdminAccessToken.id).desc())
+    if offset:
+        statement = statement.offset(offset)
+    if limit:
+        statement = statement.limit(limit)
+    actions = db_session.exec(statement).all()
+    return actions
+
+
 @api_router.get("/me", response_model=AdminUserResponse)
 def get_self(db_session: SessionDep, current_user: AdminDep):
     """
@@ -703,7 +722,7 @@ def get_course_reviews(
     "/reviews/students/{student_id}/courses/{course_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_self_review(
+def delete_review(
     student_id: str,
     course_id: uuid.UUID,
     db_session: SessionDep,
