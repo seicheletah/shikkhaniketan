@@ -8,7 +8,6 @@ from backend.models import (
     CourseCreate,
     CourseResponse,
     CoursePublicResponse,
-    CourseUpdate,
     CourseTags,
     CourseLanguage,
     CourseResourceType,
@@ -118,47 +117,3 @@ def get_courses(
     Get all existing courses details.
     """
     return db_session.exec(select(Course).offset(offset).limit(limit)).all()
-
-
-@api_router.patch("/{id}", response_model=CourseResponse)
-def update_course(
-    id: uuid.UUID,
-    coursedata: CourseUpdate,
-    db_session: SessionDep,
-    current_user: AdminDep,
-):
-    """
-    Update a course details with ID.  (admin access)
-    """
-    course = db_session.get(Course, id)
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
-        )
-    course.sqlmodel_update(coursedata.model_dump(exclude_unset=True))
-    try:
-        db_session.add(course)
-        db_session.commit()
-        db_session.refresh(course)
-        return course
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error has occurred",
-        )
-
-
-@api_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_course(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
-    """
-    Delete a course by ID (admin access).
-    """
-    course = db_session.get(Course, id)
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
-        )
-    db_session.delete(course)
-    db_session.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

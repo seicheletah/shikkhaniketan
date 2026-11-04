@@ -11,6 +11,7 @@ from backend.models import (
     CourseResponse,
     CoursePublicResponse,
     CourseUpdate,
+    Enrollment,
     GenericMessage,
 )
 from sqlmodel import select
@@ -251,66 +252,21 @@ def delete_self_course(id: uuid.UUID, db_session: SessionDep, current_user: Teac
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"course not found"
         )
-    db_session.delete(course)
-    db_session.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@api_router.get("/", response_model=list[TeacherResponse])
-def get_teachers(current_user: AdminDep, db_session: SessionDep):
-    """
-    Get all teachers details (admin access).
-    """
-    return db_session.exec(select(Teacher)).all()
-
-
-@api_router.get("/{id}", response_model=TeacherResponse)
-def get_teacher(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
-    """
-    Get single teacher details by ID (admin access).
-    """
-    teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
-    if not teacher:
+    enrollment = db_session.exec(
+        select(Enrollment).where(Enrollment.course_id == id)
+    ).first()
+    if enrollment:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user id not found",
+            status_code=status.HTTP_409_CONFLICT,
+            detail="course has enrollment",
         )
-    return teacher
-
-
-@api_router.patch("/{id}", response_model=TeacherResponse)
-def update_teacher(
-    id: uuid.UUID,
-    teacherdata: TeacherUpdate,
-    db_session: SessionDep,
-    current_user: AdminDep,
-):
-    """
-    Update a specific teacher details by ID (admin access).
-    """
-    teacher = db_session.exec(select(Teacher).where(Teacher.user_id == id)).first()
-    if not teacher:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"teacher id not found"
-        )
-    if teacherdata.phone_no:
-        phone_no = db_session.exec(
-            select(Teacher).where(Teacher.phone_no == teacherdata.phone_no)
-        ).first()
-        if phone_no:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="phone number already exists",
-            )
-    teacher.sqlmodel_update(teacherdata.model_dump(exclude_unset=True))
     try:
-        db_session.add(teacher)
+        db_session.delete(course)
         db_session.commit()
-        db_session.refresh(teacher)
-        return teacher
     except SQLAlchemyError:
         db_session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
