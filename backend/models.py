@@ -989,3 +989,54 @@ class TransactionResponse(SQLModel):
     course_id: uuid.UUID
     amount: int
     created_at: datetime
+
+
+# admin action history response model
+class AdminActionHistoryResponse(SQLModel):
+    id: uuid.UUID
+    created_at: datetime
+    first_name: str
+    last_name: str
+    action: str
+    resource: str
+    admin_user_id: uuid.UUID
+    resource_id: str
+    resource_data: str
+
+
+# user admin response model for response body
+class UserAdminResponse(UserResponse):
+    created_at: datetime
+
+
+# student admin response model for response body
+class StudentAdminResponse(StudentBase):
+    profile_pic: str | None = None
+    created_at: datetime
+    user_id: uuid.UUID
+
+
+# teacher admin response model for response body
+class TeacherAdminResponse(TeacherBase):
+    profile_pic: str | None = None
+    created_at: datetime
+    user_id: uuid.UUID
+
+
+# course admin response model for response body
+class CourseAdminResponse(CourseBase):
+    id: uuid.UUID
+    created_at: datetime
+
+
+# review admin response model for response body
+class ReviewAdminResponse(ReviewPublicResponse):
+    user_id: uuid.UUID
+    created_at: datetime
+
+
+# purchase admin response model for response body
+class PurchaseAdminResponse(PurchaseBase):
+    id: uuid.UUID
+    student_id: str
+    course_id: uuid.UUID
