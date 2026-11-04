@@ -31,9 +31,12 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.add_column("user", sa.Column("is_verified", sa.Boolean(), nullable=True))
-    op.execute('UPDATE "user" SET is_verified = false WHERE is_verified IS NULL')
-    op.alter_column("user", "is_verified", existing_type=sa.Boolean(), nullable=False)
+    op.add_column("user", sa.Column("is_verified", sa.Boolean(), nullable=False))
+
+    # uncomment the next 2 lines for production migration
+
+    # op.execute('UPDATE "user" SET is_verified = false WHERE is_verified IS NULL')
+    # op.alter_column("user", "is_verified", existing_type=sa.Boolean(), nullable=False)
     # ### end Alembic commands ###
 
 

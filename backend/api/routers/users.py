@@ -1,9 +1,8 @@
-import uuid
 import secrets
 import string
 from fastapi import Response, status, HTTPException, APIRouter, BackgroundTasks
 from backend.core.database import SessionDep
-from backend.core.security import get_password_hash, LoginDep, AdminDep
+from backend.core.security import get_password_hash, LoginDep
 from backend.core.config import settings
 from backend.utils import send_otp
 from backend.models import (
@@ -11,8 +10,9 @@ from backend.models import (
     UserCreate,
     UserResponse,
     UserUpdate,
-    OtpVerify,
-    UserVerify,
+    UserOtp,
+    UserVerifyEmail,
+    AdminUser,
     GenericMessage,
 )
 from sqlmodel import select
@@ -27,8 +27,15 @@ async def create_user(
     userdata: UserCreate, db_session: SessionDep, background_tasks: BackgroundTasks
 ):
     """
-    Create user.
+    Create an user. It also sends email OTP.
     """
+    existing_admin_user_email_id = db_session.exec(
+        select(AdminUser).where(AdminUser.email_id == userdata.email_id)
+    ).first()
+    if existing_admin_user_email_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"access denied"
+        )
     existing_user_email_id = db_session.exec(
         select(User).where(User.email_id == userdata.email_id)
     ).first()
@@ -50,7 +57,7 @@ async def create_user(
         expiration = datetime.now(timezone.utc) + timedelta(
             minutes=settings.OTP_EXPIRE_MINUTES
         )
-        otp = OtpVerify(user_id=user.id, code=code, expires_at=expiration)
+        otp = UserOtp(user_id=user.id, code=code, expires_at=expiration)
         db_session.add(otp)
         db_session.commit()
         db_session.refresh(user)
@@ -64,12 +71,15 @@ async def create_user(
         )
 
 
-@api_router.post("/verify", response_model=GenericMessage)
-def verify_user(userdata: UserVerify, db_session: SessionDep):
+@api_router.post("/verify-email", response_model=GenericMessage)
+def verify_user_email(userdata: UserVerifyEmail, db_session: SessionDep):
+    """
+    verify an user email with OTP.
+    """
     otp = db_session.exec(
-        select(OtpVerify)
-        .where(OtpVerify.user_id == userdata.user_id)
-        .where(OtpVerify.code == userdata.code)
+        select(UserOtp)
+        .where(UserOtp.user_id == userdata.user_id)
+        .where(UserOtp.code == userdata.code)
     ).first()
     if not otp:
         raise HTTPException(
@@ -127,77 +137,6 @@ def update_self(userdata: UserUpdate, db_session: SessionDep, current_user: Logi
     Update own user details.
     """
     user = db_session.get(User, current_user.id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"user id not found"
-        )
-    if userdata.hashed_password:
-        userdata.hashed_password = get_password_hash(userdata.hashed_password)
-    user.sqlmodel_update(userdata.model_dump(exclude_unset=True))
-    try:
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-        return user
-    except IntegrityError:
-        db_session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="email id already exists",
-        )
-    except SQLAlchemyError:
-        db_session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error has occurred",
-        )
-
-
-@api_router.get("/", response_model=list[UserResponse])
-def get_users(current_user: AdminDep, db_session: SessionDep):
-    """
-    Get all user details (admin access).
-    """
-    return db_session.exec(select(User)).all()
-
-
-@api_router.get("/{id}", response_model=UserResponse)
-def get_user(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
-    """
-    Get a specific user details by ID (admin access).
-    """
-    user = db_session.get(User, id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user id not found",
-        )
-    return user
-
-
-@api_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
-    """
-    Delete a user by ID (admin access).
-    """
-    user = db_session.get(User, id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"user id not found"
-        )
-    db_session.delete(user)
-    db_session.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@api_router.patch("/{id}", response_model=UserResponse)
-def update_user(
-    id: uuid.UUID, userdata: UserUpdate, db_session: SessionDep, current_user: AdminDep
-):
-    """
-    Update a user by ID (admin access).
-    """
-    user = db_session.get(User, id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"user id not found"

@@ -3,7 +3,7 @@ import uuid
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
-from backend.models import User, Token, TokenData
+from backend.models import User, Token, TokenData, AdminUser
 from fastapi import HTTPException, status, Depends
 from datetime import timedelta, datetime, timezone
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -91,15 +91,30 @@ LoginDep = Annotated[User, Depends(get_current_user)]
 
 
 # for authorizing admin accounts with JWT tokens
-def get_current_admin(current_user: LoginDep) -> User:
-    if current_user.role != "admin":
+def get_current_admin(
+    token: Annotated[str, Depends(oauth2_scheme)], db_session: SessionDep
+) -> AdminUser:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_access_token(token, credentials_exception)
+    admin_user = db_session.exec(
+        select(AdminUser)
+        .where(AdminUser.id == token_data.id)
+        .where(AdminUser.is_verified == True)
+        .where(AdminUser.admin_access == True)
+    ).first()
+    if not admin_user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="access denied"
         )
-    return current_user
+    else:
+        return admin_user
 
 
-AdminDep = Annotated[User, Depends(get_current_admin)]
+AdminDep = Annotated[AdminUser, Depends(get_current_admin)]
 
 
 # for authorizing teacher accounts with JWT tokens
@@ -132,10 +147,12 @@ StudentDep = Annotated[User, Depends(get_current_student)]
 
 # for authenticating user accounts with password
 def authenticate_user(
-    logindata: OAuth2PasswordRequestForm, db_session: Session
+    logindata: OAuth2PasswordRequestForm,
+    db_session: Session,
+    table: type[User] | type[AdminUser],
 ) -> Token:
     data = db_session.exec(
-        select(User).where(User.email_id == logindata.username)
+        select(table).where(table.email_id == logindata.username)
     ).first()
     if not data:
         verify_password(logindata.password, DUMMY_HASH)
@@ -143,6 +160,17 @@ def authenticate_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"invalid credentials",
         )
+    if not data.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"account not verified",
+        )
+    if isinstance(data, AdminUser):
+        if not data.admin_access:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="access denied",
+            )
     if not verify_password(logindata.password, data.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
