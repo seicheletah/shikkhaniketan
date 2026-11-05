@@ -6,8 +6,20 @@ import uuid
 from backend.core.config import settings
 from fastapi import UploadFile, HTTPException, status
 from botocore.exceptions import BotoCoreError, ClientError
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import utils
+from reportlab.lib.units import inch
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image,
+)
+from typing import Literal
 from datetime import datetime
 from mailjet_rest import Client
 
@@ -87,6 +99,20 @@ def check_valid_file(file: UploadFile, type: str):
     return
 
 
+# helper function for reportlib image
+def _get_scaled_image(
+    logo_path: str,
+    target_width: float,
+    h_align: Literal["LEFT", "CENTER", "CENTRE", "RIGHT"] = "LEFT",
+) -> Image:
+    img_reader = utils.ImageReader(logo_path)
+    w, h = img_reader.getSize()
+    height = target_width * (h / float(w))
+    img = Image(logo_path, width=target_width, height=height)
+    img.hAlign = h_align
+    return img
+
+
 # generate invoice pdf
 def generate_invoice_pdf(
     transaction_id: uuid.UUID,
@@ -98,37 +124,156 @@ def generate_invoice_pdf(
     course_name: str,
     course_type: str,
     amount: int,
+    website_logo_path: str,
+    razorpay_logo_path: str,
     currency: str = "INR",
 ):
     buffer = io.BytesIO()
 
-    pdf = canvas.Canvas(buffer, pagesize=letter)
-    pdf.setTitle(f"Invoice_{order_id}")
-    pdf.setFont("Helvetica-Bold", 24)
-    pdf.drawString(50, 670, "INVOICE")
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(50, 630, f"Transaction ID: {transaction_id}")
-    pdf.drawString(50, 610, f"Order ID: {order_id}")
-    pdf.drawString(50, 590, f"Payment ID: {payment_id}")
-    pdf.drawString(50, 570, f"Date(UTC): {order_date.strftime('%Y-%m-%d %H:%M')}")
-    pdf.drawString(50, 550, f"Student ID: {student_id}")
-    pdf.line(50, 530, 605, 530)
-    pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(50, 500, "Description")
-    pdf.drawString(520, 500, "Amount")
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(50, 470, f"Course Enrollment (ID: {course_id})")
-    pdf.drawString(50, 450, f"Course Name: {course_name}")
-    pdf.drawString(50, 430, f"Course Type: {course_type}")
-    pdf.drawString(520, 470, f"{currency} {amount / 100:.2f}")
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=0.75 * inch,
+        rightMargin=0.75 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch,
+    )
+    story = []
 
-    pdf.showPage()
-    pdf.save()
+    invoice_title = ParagraphStyle(
+        "InvoiceTitle",
+        fontName="Helvetica-Bold",
+        fontSize=20,
+        leading=28,
+        textColor=colors.black,
+        alignment=1,
+    )
+    td_label = ParagraphStyle(
+        "TDLabel",
+        fontName="Helvetica-Bold",
+        fontSize=10,
+        leading=14,
+        textColor=colors.black,
+    )
+    td_value = ParagraphStyle(
+        "TDValue",
+        fontName="Helvetica",
+        fontSize=10,
+        leading=14,
+        textColor=colors.black,
+    )
+    total_label = ParagraphStyle(
+        "TotalLabel",
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        leading=14,
+        textColor=colors.black,
+    )
+    total_value = ParagraphStyle(
+        "TotalValue",
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        leading=14,
+        textColor=colors.black,
+    )
+    website_name_style = ParagraphStyle(
+        "LeftWebsiteName",
+        fontName="Helvetica-Bold",
+        fontSize=15,
+        leading=18,
+        textColor=colors.HexColor("#016630"),
+    )
+
+    website_logo = _get_scaled_image(
+        website_logo_path, target_width=0.5 * inch, h_align="LEFT"
+    )
+    website_name = Paragraph("Skillhub", website_name_style)
+
+    left_header_table = Table(
+        [[website_logo, website_name]], colWidths=[0.5 * inch, 2.25 * inch]
+    )
+    left_header_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("PADDING", (0, 0), (-1, -1), 0),
+                ("LEFTPADDING", (1, 0), (1, 0), 10),
+            ]
+        )
+    )
+
+    razorpay_logo = _get_scaled_image(
+        razorpay_logo_path, target_width=1.0 * inch, h_align="RIGHT"
+    )
+
+    logo_table = Table(
+        [[left_header_table, razorpay_logo]], colWidths=[3.5 * inch, 3.5 * inch]
+    )
+    logo_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+                ("PADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+    story.append(logo_table)
+    story.append(Spacer(1, 70))
+    story.append(Paragraph("INVOICE", invoice_title))
+    story.append(Spacer(1, 15))
+
+    table_data = [
+        [
+            Paragraph("Transaction ID", td_label),
+            Paragraph(str(transaction_id), td_value),
+        ],
+        [Paragraph("Order ID", td_label), Paragraph(order_id, td_value)],
+        [Paragraph("Payment ID", td_label), Paragraph(payment_id, td_value)],
+        [
+            Paragraph("Date (UTC)", td_label),
+            Paragraph(order_date.strftime("%Y-%m-%d %H:%M"), td_value),
+        ],
+        [Paragraph("Phone No", td_label), Paragraph(student_id, td_value)],
+        [Paragraph("Course ID", td_label), Paragraph(str(course_id), td_value)],
+        [Paragraph("Course Name", td_label), Paragraph(course_name, td_value)],
+        [Paragraph("Course Type", td_label), Paragraph(course_type, td_value)],
+        [
+            Paragraph("Total Amount", total_label),
+            Paragraph(f"{currency} {amount / 100:.2f}", total_value),
+        ],
+    ]
+
+    invoice_table = Table(table_data, colWidths=[2.2 * inch, 4.8 * inch])
+    invoice_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("PADDING", (0, 0), (-1, -1), 8),
+                ("INNERGRID", (0, 0), (-1, -2), 0.5, colors.black),
+                ("BOX", (0, 0), (-1, -2), 0.5, colors.black),
+                ("LINEBELOW", (0, -1), (-1, -1), 1.5, colors.black),
+            ]
+        )
+    )
+    story.append(invoice_table)
+
+    def draw_footer(canvas, doc):
+        canvas.saveState()
+        canvas.setFont("Helvetica", 9)
+        canvas.setFillColor(colors.gray)
+        footer_text = "This is a computer generated invoice. For any wrong info please contact support."
+        page_width = letter[0]
+        canvas.drawCentredString(page_width / 2.0, 36, footer_text)
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
 
 
+# send email otp
 def send_otp(receiver_email: str, code: str):
     with Client(
         auth=(settings.MAILJET_API_KEY, settings.MAILJET_SECRET_KEY), version="v3.1"

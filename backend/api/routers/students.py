@@ -278,6 +278,8 @@ def get_invoice(id: uuid.UUID, db_session: SessionDep, current_user: StudentDep)
         course_name=purchase.course.course_name,
         course_type=purchase.course.course_resource_type,
         amount=purchase.amount,
+        website_logo_path="backend/assets/skillhub_logo.png",
+        razorpay_logo_path="backend/assets/razorpay_logo.png",
     )
     headers = {
         "Content-Disposition": f'attachment; filename="invoice_{purchase.razorpay_order_id}.pdf"'
