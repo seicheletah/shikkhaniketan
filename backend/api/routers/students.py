@@ -11,11 +11,13 @@ from backend.models import (
     ReviewResponse,
     Course,
     Review,
+    Purchase,
+    TransactionResponse,
     GenericMessage,
 )
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
-from backend.utils import upload_to_s3, check_valid_file
+from backend.utils import upload_to_s3, check_valid_file, generate_invoice_pdf
 from backend.core.config import settings
 
 api_router = APIRouter(prefix="/students", tags=["Students"])
@@ -224,61 +226,63 @@ def delete_self_review(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@api_router.get("/", response_model=list[StudentResponse])
-def get_students(current_user: AdminDep, db_session: SessionDep):
+@api_router.get("/me/transactions", response_model=list[TransactionResponse])
+def get_self_transactions(db_session: SessionDep, current_user: StudentDep):
     """
-    Get all student details (admin access).
+    Get own transaction details.
     """
-    return db_session.exec(select(Student)).all()
-
-
-@api_router.get("/{id}", response_model=StudentResponse)
-def get_student(id: uuid.UUID, db_session: SessionDep, current_user: AdminDep):
-    """
-    Get a specific student details by ID (admin access).
-    """
-    student = db_session.exec(select(Student).where(Student.user_id == id)).first()
-    if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user id not found",
-        )
-    return student
-
-
-@api_router.patch("/{id}", response_model=StudentResponse)
-def update_student(
-    id: uuid.UUID,
-    studentdata: StudentUpdate,
-    db_session: SessionDep,
-    current_user: AdminDep,
-):
-    """
-    Update student details by ID (admin access).
-    """
-    student = db_session.exec(select(Student).where(Student.user_id == id)).first()
+    student = db_session.exec(
+        select(Student).where(Student.user_id == current_user.id)
+    ).first()
     if not student:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
-    if studentdata.phone_no:
-        phone_no = db_session.exec(
-            select(Student).where(Student.phone_no == studentdata.phone_no)
-        ).first()
-        if phone_no:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="phone number already exists",
-            )
-    student.sqlmodel_update(studentdata.model_dump(exclude_unset=True))
-    try:
-        db_session.add(student)
-        db_session.commit()
-        db_session.refresh(student)
-        return student
-    except SQLAlchemyError:
-        db_session.rollback()
+    purchases = db_session.exec(
+        select(Purchase)
+        .where(Purchase.student_id == current_user.student.phone_no)
+        .where(Purchase.status == "paid")
+    ).all()
+    return purchases
+
+
+@api_router.get("/me/transactions/{id}/invoice", response_class=Response)
+def get_invoice(id: uuid.UUID, db_session: SessionDep, current_user: StudentDep):
+    """
+    Get invoice pdf.
+    """
+    student = db_session.exec(
+        select(Student).where(Student.user_id == current_user.id)
+    ).first()
+    if not student:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error has occurred",
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"student id not found"
         )
+    purchase = db_session.exec(
+        select(Purchase)
+        .where(Purchase.id == id)
+        .where(Purchase.student_id == current_user.student.phone_no)
+        .where(Purchase.status == "paid")
+    ).first()
+    if not purchase:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"transaction id not found"
+        )
+    output = generate_invoice_pdf(
+        transaction_id=purchase.id,
+        order_id=purchase.razorpay_order_id,
+        payment_id=purchase.razorpay_payment_id,  # type: ignore
+        order_date=purchase.created_at,
+        student_id=student.phone_no,
+        course_id=purchase.course_id,
+        course_name=purchase.course.course_name,
+        course_type=purchase.course.course_resource_type,
+        amount=purchase.amount,
+        website_logo_path="backend/assets/skillhub_logo.png",
+        razorpay_logo_path="backend/assets/razorpay_logo.png",
+    )
+    headers = {
+        "Content-Disposition": f'attachment; filename="invoice_{purchase.razorpay_order_id}.pdf"'
+    }
+
+    return Response(content=output, media_type="application/pdf", headers=headers)

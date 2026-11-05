@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     AWS_REGION: str
     AWS_STORAGE_BUCKET_NAME: str
     CLOUDFRONT_DOMAIN_NAME: str
+    MAILJET_SENDER_EMAIL: str
+    MAILJET_API_KEY: str
+    MAILJET_SECRET_KEY: str
+    OTP_EXPIRE_MINUTES: int
     API_V1_STR: str
 
 

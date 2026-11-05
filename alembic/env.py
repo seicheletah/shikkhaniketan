@@ -16,6 +16,10 @@ from backend.models import (
     Media,
     Purchase,
     Review,
+    UserOtp,
+    AdminUser,
+    AdminUserOtp,
+    AdminAccessToken,
 )
 
 # this is the Alembic Config object, which provides

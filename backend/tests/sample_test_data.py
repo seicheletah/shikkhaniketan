@@ -47,7 +47,7 @@ class TeacherSampleData:
     request_body_teacher_profile_creation_male = {
         "first_name": "John",
         "last_name": "Doe",
-        "phone_no": "+15555550199",
+        "phone_no": "1555555019",
         "gender": "M",
         "date_of_birth": "1995-06-15",
         "address": "456 Oak Avenue, Metropolis, NY",
@@ -57,7 +57,7 @@ class TeacherSampleData:
     request_body_teacher_profile_creation_female = {
         "first_name": "Jane",
         "last_name": "Doe",
-        "phone_no": "+15555550144",
+        "phone_no": "2556655019",
         "gender": "F",
         "date_of_birth": "1997-08-22",
         "address": "789 Pine Road, Star City, CA",
@@ -65,13 +65,13 @@ class TeacherSampleData:
     }
 
     request_body_teacher_profile_update_male = {
-        "phone_no": "+15555550200",
+        "phone_no": "1555555020",
         "address": "Washed street",
         "about": "Farmer",
     }
 
     request_body_teacher_profile_update_same_phno_male = {
-        "phone_no": "+15555550144",
+        "phone_no": "1555555019",
     }
 
     request_body_user_teacher_creation_female = {
@@ -121,7 +121,7 @@ class StudentSampleData:
     request_body_student_profile_creation_male = {
         "first_name": "John",
         "last_name": "Doe",
-        "phone_no": "+15555550199",
+        "phone_no": "1555555019",
         "gender": "M",
         "date_of_birth": "1995-06-15",
         "address": "456 Oak Avenue, Metropolis, NY",
@@ -129,19 +129,19 @@ class StudentSampleData:
     }
 
     request_body_student_profile_update_male = {
-        "phone_no": "+15555550200",
+        "phone_no": "1555555020",
         "address": "Washed street",
         "about": "Farmer",
     }
 
     request_body_student_profile_update_same_phno_male = {
-        "phone_no": "+15555550144",
+        "phone_no": "1555555019",
     }
 
     request_body_student_profile_creation_female = {
         "first_name": "Jane",
         "last_name": "Doe",
-        "phone_no": "+15555550144",
+        "phone_no": "2556655019",
         "gender": "F",
         "date_of_birth": "1997-08-22",
         "address": "789 Pine Road, Star City, CA",
@@ -164,16 +164,18 @@ class CourseSampleData:
     request_body_course_create_male = {
         "course_name": "Mastering Docker & Kubernetes",
         "course_details": "A comprehensive guide to containerization and orchestration.",
-        "course_language": "English",
+        "course_language": "english",
         "course_resource_type": "video",
         "course_paid": True,
         "course_price": 899,
+        "course_tags": ["mba"],
     }
 
     request_body_course_update_male = {
-        "course_language": "Dutch",
+        "course_language": "bengali",
         "course_paid": True,
         "course_price": 499,
+        "course_tags": ["bsc"],
     }
 
     request_body_course_thumbnail_upload_male = {
