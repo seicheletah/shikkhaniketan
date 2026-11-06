@@ -1,91 +1,298 @@
-.profile-card {
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+/* ==========================================================================
+   settings.css  -  Student Profile (read-only view)
+   ==========================================================================
+
+   UNIFIED DESIGN
+   This file and update_profile.css use the SAME tokens, sizes and shapes:
+     card 800px wide / banner 120px / avatar 140px / tile radius 14px /
+     icon badge 44px / same green gradient buttons.
+   If you change a value here, change the matching value in
+   update_profile.css so both pages stay identical.
+
+   ORGANISATION
+     1. Design tokens
+     2. Page title
+     3. Card + banner
+     4. Avatar + User ID pill
+     5. Detail tiles
+     6. Update Profile button
+     7. Phones
+     8. Reduced motion
+
+   Every rule is scoped under #settings-wrapper so nothing leaks into the
+   rest of the dashboard.
+   ========================================================================== */
+
+
+/* 1. DESIGN TOKENS ------------------------------------------------------- */
+#settings-wrapper {
+    --pf-green-700: #064d41;   /* darkest green: hover                  */
+    --pf-green-600: #096858;   /* main brand green                      */
+    --pf-green-500: #0f8a74;   /* lighter green: gradients, focus       */
+    --pf-green-100: #e3f3ee;   /* soft tint: icon badges                */
+    --pf-green-50:  #f3faf8;   /* very light tint: tile background      */
+    --pf-muted:     #6d9c91;   /* muted green-grey: small labels        */
+    --pf-ink:       #1e3a34;   /* dark text                             */
+    --pf-line:      #dcebe6;   /* thin borders                          */
+    --pf-radius-lg: 22px;      /* card corners                          */
+    --pf-radius-md: 14px;      /* tile corners                          */
+
+    font-family: 'Poppins', sans-serif;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+#settings-wrapper *,
+#settings-wrapper *::before,
+#settings-wrapper *::after {
+    box-sizing: border-box;
+}
+
+
+/* 2. PAGE TITLE ---------------------------------------------------------- */
+#settings-wrapper .pf-page-head {
+    max-width: 800px;
+    margin: 0 auto 18px;
+}
+
+#settings-wrapper .pf-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--pf-green-600);
+}
+
+#settings-wrapper .pf-subtitle {
+    margin: 4px 0 0;
+    font-size: 0.92rem;
+    color: var(--pf-muted);
+}
+
+
+/* 3. CARD + BANNER ------------------------------------------------------- */
+#settings-wrapper .profile-card {
+    position: relative;
+    overflow: hidden;          /* clips the banner to the rounded corners */
     max-width: 800px;
     margin: 0 auto;
+    padding: 0 32px 32px;      /* no top padding: banner touches the top */
+    background: #ffffff;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--pf-radius-lg);
+    box-shadow: 0 10px 30px rgba(9, 104, 88, 0.10);
 }
 
-.profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #eef7f4;
-    padding-bottom: 15px;
-    margin-bottom: 25px;
+#settings-wrapper .pf-banner {
+    height: 120px;
+    margin: 0 -32px;           /* full card width (cancels the card padding) */
+    background:
+        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.22), transparent 45%),
+        linear-gradient(135deg, var(--pf-green-600), var(--pf-green-500));
 }
 
-.profile-header h2 {
-    color: #096858;
-    font-size: 24px;
-}
 
-.badge {
-    background-color: #e2f0eb;
-    color: #096858;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.profile-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-
-.profile-item {
+/* 4. AVATAR + USER ID PILL ----------------------------------------------- */
+#settings-wrapper .profile-header {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    align-items: center;
+    gap: 14px;
+    margin-top: -70px;         /* half the avatar overlaps the banner */
+    margin-bottom: 28px;
+    text-align: center;
 }
 
-.profile-item.full-width {
-    grid-column: span 2;
+#settings-wrapper .pf-avatar-ring {
+    padding: 5px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 8px 22px rgba(9, 104, 88, 0.25);
 }
 
-.profile-item label {
-    font-size: 13px;
+#settings-wrapper .pf-avatar {
+    display: block;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;         /* crops instead of squishing */
+    background: var(--pf-green-100);
+}
+
+#settings-wrapper .pf-pill {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 8px 16px;
+    background: var(--pf-green-50);
+    border: 1px solid var(--pf-line);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--pf-green-600);
+}
+
+#settings-wrapper .pf-pill-label {
     font-weight: 600;
-    color: #6d9c91;
-    text-transform: uppercase;
 }
 
-.profile-item span {
-    font-size: 16px;
+/* Long IDs wrap instead of overflowing the card */
+#settings-wrapper .pf-pill-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--pf-ink);
+    word-break: break-all;
+}
+
+
+/* 5. DETAIL TILES -------------------------------------------------------- */
+#settings-wrapper .profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+#settings-wrapper .profile-item.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Tile = icon badge (left) + label/value (right). Same look as the form tiles on the update page. */
+#settings-wrapper .profile-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--pf-green-50);
+    border: 1.5px solid var(--pf-line);
+    border-radius: var(--pf-radius-md);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#settings-wrapper .profile-item:hover {
+    border-color: var(--pf-green-500);
+    box-shadow: 0 6px 16px rgba(9, 104, 88, 0.10);
+}
+
+#settings-wrapper .pf-icon {
+    flex: 0 0 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--pf-green-100);
+    color: var(--pf-green-600);
+    border-radius: 12px;
+    font-size: 1.05rem;
+}
+
+/* min-width:0 lets long emails / addresses wrap */
+#settings-wrapper .pf-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+#settings-wrapper .profile-item label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pf-muted);
+}
+
+/* The value filled in by JS */
+#settings-wrapper .profile-item .pf-text > span {
+    font-size: 1rem;
     font-weight: 600;
-    color: #1e3a34;
+    color: var(--pf-ink);
+    overflow-wrap: anywhere;
 }
 
-.profile-actions {
-    margin-top: 30px;
-    text-align: right;
-    border-top: 1px solid #eef7f4;
-    padding-top: 20px;
+
+/* 6. UPDATE PROFILE BUTTON ----------------------------------------------- */
+#settings-wrapper .profile-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--pf-line);
 }
 
-.btn-update-link {
-    display: inline-block;
-    background-color: #096858;
+#settings-wrapper .btn-update-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 26px;
+    background: linear-gradient(135deg, var(--pf-green-600), var(--pf-green-500));
     color: #ffffff;
-    padding: 12px 24px;
-    border-radius: 10px;
-    text-decoration: none;
+    border-radius: 12px;
     font-weight: 600;
-    transition: background 0.3s ease;
+    font-size: 0.95rem;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(9, 104, 88, 0.28);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-update-link:hover {
-    background-color: #064d41;
+#settings-wrapper .btn-update-link:hover {
+    background: var(--pf-green-700);
 }
 
+#settings-wrapper .btn-update-link:focus-visible {
+    outline: 3px solid rgba(15, 138, 116, 0.45);
+    outline-offset: 3px;
+}
+
+
+/* 7. PHONES (600px or less) ---------------------------------------------- */
 @media (max-width: 600px) {
-    .profile-grid {
+    #settings-wrapper {
+        padding: 12px;
+    }
+
+    #settings-wrapper .pf-title {
+        font-size: 1.45rem;
+    }
+
+    #settings-wrapper .profile-card {
+        padding: 0 16px 20px;
+    }
+
+    #settings-wrapper .pf-banner {
+        margin: 0 -16px;       /* must match the card's new side padding */
+        height: 96px;
+    }
+
+    #settings-wrapper .profile-header {
+        margin-top: -62px;
+    }
+
+    #settings-wrapper .pf-avatar {
+        width: 120px;
+        height: 120px;
+    }
+
+    #settings-wrapper .profile-grid {
         grid-template-columns: 1fr;
     }
-    .profile-item.full-width {
-        grid-column: span 1;
+
+    #settings-wrapper .profile-item.full-width {
+        grid-column: auto;
+    }
+
+    #settings-wrapper .profile-actions {
+        justify-content: stretch;
+    }
+
+    #settings-wrapper .btn-update-link {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+
+/* 8. REDUCED MOTION ------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    #settings-wrapper .profile-item,
+    #settings-wrapper .btn-update-link {
+        transition: none;
     }
 }

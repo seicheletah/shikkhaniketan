@@ -1,0 +1,277 @@
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    background-color: #f4f6f9;
+    color: #334155;
+}
+
+/* Sidebar Styling (Dark Slate Color Scheme) */
+.sidebar {
+    width: 250px;
+    background-color: #1e293b;
+    color: #94a3b8;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    
+}
+
+.sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-left: 8px;
+    border-left: 4px solid #ffffff;
+}
+
+.sidebar .logo {
+    background: #0ea5e9;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+
+.sidebar .brand h2 {
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.sidebar .brand h2 span {
+    font-size: 0.75rem;
+    color: #ffffff;
+}
+
+.nav-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+    margin: 12px 0 8px 8px;
+    letter-spacing: 0.5px;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.sidebar a:hover {
+    background-color: #334155;
+    color: #ffffff;
+}
+
+.sidebar a.active {
+    background-color: #0f766e; /* Teal Green */
+    color: #ffffff;
+}
+
+/* Main Wrapper */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* Top Navbar */
+.navbar {
+    height: 64px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Home Button */
+.home-btn {
+    text-decoration: none;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border-radius: 6px;
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+}
+
+.home-btn:hover {
+    background-color: #e2e8f0;
+    color: #0f766e;
+}
+
+/* Search Bar */
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: #f1f5f9;
+    padding: 8px 14px;
+    border-radius: 6px;
+    gap: 8px;
+    width: 280px;
+}
+
+.search-box i {
+    color: #94a3b8;
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.85rem;
+    width: 100%;
+}
+
+/* Navbar Right */
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+}
+
+.icon-btn:hover {
+    color: #0f766e;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #0f766e;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Main Dashboard Content */
+.dashboard-content {
+    padding: 24px;
+}
+
+.page-title {
+    margin-bottom: 20px;
+}
+
+.page-title span {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.page-title h1 {
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+
+/* Metrics Cards Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.student-icon { background-color: #ccfbf1; color: #0d9488; }
+.teacher-icon { background-color: #e0f2fe; color: #0284c7; }
+.course-icon { background-color: #fef3c7; color: #d97706; }
+
+.card .count {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.badge.positive { color: #16a34a; }
+.badge.neutral { color: #64748b; }

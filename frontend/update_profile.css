@@ -1,6 +1,46 @@
-/* All rules are scoped to #update-wrapper so they don't affect the dashboard */
+/* ==========================================================================
+   update_profile.css  -  Update Profile page
+   ==========================================================================
 
+   UNIFIED DESIGN
+   This file uses the SAME tokens, sizes and shapes as settings.css:
+     card 800px wide / banner 120px / avatar 140px / tile radius 14px /
+     icon badge 44px / same green gradient buttons.
+   If you change a value here, change the matching value in settings.css
+   so both pages stay identical.
+
+   ORGANISATION
+     1. Design tokens
+     2. Page title
+     3. Card + banner
+     4. Avatar + "Change photo" pill
+     5. Form tiles (icon badge + label + input)
+     6. Account Settings section
+     7. Status message
+     8. Action buttons
+     9. Phones
+    10. Reduced motion
+
+   Every rule is scoped under #update-wrapper so nothing leaks into the
+   rest of the dashboard.
+   ========================================================================== */
+
+
+/* 1. DESIGN TOKENS (identical to settings.css) --------------------------- */
 #update-wrapper {
+    --pf-green-700: #064d41;   /* darkest green: hover                  */
+    --pf-green-600: #096858;   /* main brand green                      */
+    --pf-green-500: #0f8a74;   /* lighter green: gradients, focus       */
+    --pf-green-100: #e3f3ee;   /* soft tint: icon badges                */
+    --pf-green-50:  #f3faf8;   /* very light tint: tile background      */
+    --pf-muted:     #6d9c91;   /* muted green-grey: small labels        */
+    --pf-ink:       #1e3a34;   /* dark text                             */
+    --pf-line:      #dcebe6;   /* thin borders                          */
+    --pf-radius-lg: 22px;      /* card corners                          */
+    --pf-radius-md: 14px;      /* tile corners                          */
+    --pf-danger:    #c62828;   /* delete button / error text            */
+    --pf-success:   #1b7f4b;   /* success text                          */
+
     font-family: 'Poppins', sans-serif;
     padding: 24px;
     box-sizing: border-box;
@@ -12,136 +52,305 @@
     box-sizing: border-box;
 }
 
-#update-wrapper .up-card {
-    max-width: 820px;
-    margin: 0 auto;
-    background: #ffffff;
-    border: 1px solid #e3e6ee;
-    border-radius: 14px;
-    padding: 28px;
+
+/* 2. PAGE TITLE ---------------------------------------------------------- */
+#update-wrapper .pf-page-head {
+    max-width: 800px;
+    margin: 0 auto 18px;
 }
 
-#update-wrapper .up-header {
-    margin-bottom: 22px;
-}
-
-#update-wrapper .up-header h2 {
-    margin: 0 0 4px;
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #1d2433;
-}
-
-#update-wrapper .up-header p {
+#update-wrapper .pf-title {
     margin: 0;
-    font-size: 0.9rem;
-    color: #6b7385;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--pf-green-600);
 }
 
-#update-wrapper .up-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 20px;
+#update-wrapper .pf-subtitle {
+    margin: 4px 0 0;
+    font-size: 0.92rem;
+    color: var(--pf-muted);
 }
 
-#update-wrapper .up-group {
+
+/* 3. CARD + BANNER ------------------------------------------------------- */
+#update-wrapper .up-card {
+    position: relative;
+    overflow: hidden;          /* clips the banner to the rounded corners */
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 32px 32px;      /* no top padding: banner touches the top */
+    background: #ffffff;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--pf-radius-lg);
+    box-shadow: 0 10px 30px rgba(9, 104, 88, 0.10);
+}
+
+#update-wrapper .pf-banner {
+    height: 120px;
+    margin: 0 -32px;           /* full card width (cancels the card padding) */
+    background:
+        radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.22), transparent 45%),
+        linear-gradient(135deg, var(--pf-green-600), var(--pf-green-500));
+}
+
+
+/* 4. AVATAR + "CHANGE PHOTO" PILL ---------------------------------------- */
+#update-wrapper .up-avatar {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    gap: 14px;
+    margin-top: -70px;         /* half the avatar overlaps the banner */
+    margin-bottom: 28px;
+    text-align: center;
 }
 
+#update-wrapper .pf-avatar-ring {
+    padding: 5px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 8px 22px rgba(9, 104, 88, 0.25);
+}
+
+#update-wrapper .pf-avatar {
+    display: block;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;         /* crops instead of squishing */
+    background: var(--pf-green-100);
+}
+
+/* The real <input type="file"> is hidden visually but stays in the page,
+   so your JS and keyboard users can still use it. */
+#update-wrapper .up-file-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Same pill shape as the User ID pill on the Settings page */
+#update-wrapper .pf-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: var(--pf-green-50);
+    border: 1px solid var(--pf-line);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--pf-green-600);
+}
+
+/* The clickable version (a <label> that opens the file chooser) */
+#update-wrapper .pf-pill-action {
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+#update-wrapper .pf-pill-action:hover {
+    background: var(--pf-green-600);
+    border-color: var(--pf-green-600);
+    color: #ffffff;
+}
+
+/* Focus ring on the pill when the hidden input is focused via keyboard */
+#update-wrapper .up-file-hidden:focus-visible + .pf-pill-action {
+    outline: 3px solid rgba(15, 138, 116, 0.45);
+    outline-offset: 2px;
+}
+
+
+/* 5. FORM TILES ----------------------------------------------------------
+   Each field is a tile that looks exactly like a tile on the Settings page:
+   [icon badge] + [label above the input].                                  */
+#update-wrapper .up-grid,
+#update-wrapper .up-account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+/* Tiles that span both columns */
 #update-wrapper .up-full {
     grid-column: 1 / -1;
 }
 
-#update-wrapper label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #3a4257;
+#update-wrapper .up-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--pf-green-50);
+    border: 1.5px solid var(--pf-line);
+    border-radius: var(--pf-radius-md);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-#update-wrapper input,
+/* While the user types in a tile: green border + soft glow, white background */
+#update-wrapper .up-group:focus-within {
+    border-color: var(--pf-green-500);
+    box-shadow: 0 0 0 4px rgba(15, 138, 116, 0.15);
+    background: #ffffff;
+}
+
+/* Tall tile (About): icon stays at the top-left instead of the middle */
+#update-wrapper .up-group:has(textarea) {
+    align-items: flex-start;
+}
+
+#update-wrapper .pf-icon {
+    flex: 0 0 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--pf-green-100);
+    color: var(--pf-green-600);
+    border-radius: 12px;
+    font-size: 1.05rem;
+}
+
+/* min-width:0 lets the input shrink inside the flex row on small screens */
+#update-wrapper .pf-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+#update-wrapper .up-group label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pf-muted);
+}
+
+/* The inputs have no border/background of their own: the tile is the visual box */
+#update-wrapper input[type="text"],
+#update-wrapper input[type="tel"],
+#update-wrapper input[type="date"],
+#update-wrapper input[type="email"],
+#update-wrapper input[type="password"],
 #update-wrapper select,
 #update-wrapper textarea {
     width: 100%;
-    padding: 11px 12px;
+    padding: 2px 0;
     font-family: inherit;
-    font-size: 0.95rem;
-    color: #1d2433;
-    background: #f8f9fc;
-    border: 1px solid #d5d9e4;
-    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;          /* same weight as the values on the Settings page */
+    color: var(--pf-ink);
+    background: transparent;
+    border: none;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 #update-wrapper textarea {
     resize: vertical;
-    min-height: 84px;
+    min-height: 72px;
 }
 
-#update-wrapper input:focus,
-#update-wrapper select:focus,
-#update-wrapper textarea:focus {
-    border-color: #3563e9;
-    box-shadow: 0 0 0 3px rgba(53, 99, 233, 0.18);
+#update-wrapper ::placeholder {
+    font-weight: 400;
+    color: #9bbab2;
+}
+
+
+/* 6. ACCOUNT SETTINGS SECTION -------------------------------------------- */
+#update-wrapper .up-account-box {
+    margin-top: 28px;
+    padding: 20px;
     background: #ffffff;
+    border: 1.5px dashed #b7d9cf;   /* dashed: clearly a separate box */
+    border-radius: 18px;
 }
 
+#update-wrapper .up-account-box h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--pf-green-600);
+}
+
+
+/* 7. STATUS MESSAGE (JS adds "error" or "success") ------------------------ */
 #update-wrapper .up-message {
-    min-height: 1.3em;
-    margin: 16px 0 0;
+    min-height: 1.3em;         /* reserves space so the layout does not jump */
+    margin: 18px 0 0;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 #update-wrapper .up-message.error {
-    color: #c62828;
+    color: var(--pf-danger);
 }
 
 #update-wrapper .up-message.success {
-    color: #2e7d32;
+    color: var(--pf-success);
 }
 
+
+/* 8. ACTION BUTTONS ------------------------------------------------------- */
 #update-wrapper .up-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e3e6ee;
+    padding-top: 22px;
+    border-top: 1px solid var(--pf-line);
 }
 
 #update-wrapper .up-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     width: auto;
-    padding: 11px 22px;
+    padding: 13px 26px;        /* same size as the Update Profile button on Settings */
     font-family: inherit;
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 600;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background 0.15s, opacity 0.15s;
+    transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
+/* While saving, your JS disables the button */
 #update-wrapper .up-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
+/* Save: same green gradient as the Settings button */
 #update-wrapper .up-btn-primary {
-    background: #3563e9;
+    background: linear-gradient(135deg, var(--pf-green-600), var(--pf-green-500));
     color: #ffffff;
+    box-shadow: 0 8px 18px rgba(9, 104, 88, 0.28);
 }
 
 #update-wrapper .up-btn-primary:hover:not(:disabled) {
-    background: #2a52c7;
+    background: var(--pf-green-700);
 }
 
+/* Delete: red outline, pushed to the far right so it is not tapped by accident */
 #update-wrapper .up-btn-danger {
     margin-left: auto;
     background: #ffffff;
-    color: #c62828;
-    border: 1px solid #e2a3a3;
+    color: var(--pf-danger);
+    border: 1.5px solid #e2a3a3;
 }
 
 #update-wrapper .up-btn-danger:hover:not(:disabled) {
@@ -149,29 +358,69 @@
 }
 
 #update-wrapper .up-btn:focus-visible {
-    outline: 3px solid rgba(53, 99, 233, 0.4);
-    outline-offset: 2px;
+    outline: 3px solid rgba(15, 138, 116, 0.45);
+    outline-offset: 3px;
 }
 
-/* Mobile */
+
+/* 9. PHONES (640px or less) ----------------------------------------------- */
 @media (max-width: 640px) {
     #update-wrapper {
         padding: 12px;
     }
 
-    #update-wrapper .up-card {
-        padding: 18px;
+    #update-wrapper .pf-title {
+        font-size: 1.45rem;
     }
 
-    #update-wrapper .up-grid {
+    #update-wrapper .up-card {
+        padding: 0 16px 20px;
+    }
+
+    #update-wrapper .pf-banner {
+        margin: 0 -16px;       /* must match the card's new side padding */
+        height: 96px;
+    }
+
+    #update-wrapper .up-avatar {
+        margin-top: -62px;
+    }
+
+    #update-wrapper .pf-avatar {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* Single column */
+    #update-wrapper .up-grid,
+    #update-wrapper .up-account-grid {
         grid-template-columns: 1fr;
     }
 
+    #update-wrapper .up-full {
+        grid-column: auto;
+    }
+
+    #update-wrapper .up-account-box {
+        padding: 14px;
+    }
+
+    /* Full-width buttons are easier to tap */
     #update-wrapper .up-btn {
         width: 100%;
     }
 
     #update-wrapper .up-btn-danger {
         margin-left: 0;
+    }
+}
+
+
+/* 10. REDUCED MOTION ------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+    #update-wrapper .up-group,
+    #update-wrapper .up-btn,
+    #update-wrapper .pf-pill-action {
+        transition: none;
     }
 }

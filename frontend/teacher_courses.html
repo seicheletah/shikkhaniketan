@@ -1,0 +1,56 @@
+<!--
+==========================================================================
+ teacher_courses.html  -  Teacher Dashboard page (HTML fragment)
+ Loaded INTO the middle of teacher.html with fetch().
+ No <html>/<head>/<body> here, exactly like settings.html.
+ The <script> at the bottom is re-created by teacher.js so it runs.
+==========================================================================
+-->
+
+<link rel="stylesheet" href="teacher_pages.css">
+
+<div class="tp-page" id="tc-wrapper">
+
+    <!-- Title + Publish button -->
+    <header class="tp-head">
+        <div>
+            <h1 class="tp-title">Teacher Dashboard</h1>
+            <p class="tp-subtitle">Manage and publish your courses.</p>
+        </div>
+
+        <button type="button" class="tp-btn" id="tcPublishBtn">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Publish New Course
+        </button>
+    </header>
+
+    <!-- Stats -->
+    <div class="tp-stats">
+        <div class="tp-stat">
+            <span class="tp-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+            <div>
+                <div class="tp-stat-label">Total Purchased</div>
+                <div class="tp-stat-value" id="tcTotalPurchased">0</div>
+                <div class="tp-stat-meta">Course purchases</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Published courses -->
+    <section class="tp-card">
+        <div class="tp-panel-head">
+            <h3>Published Courses</h3>
+
+            <div class="tp-search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="text" id="tcSearch" placeholder="Search your courses...">
+            </div>
+        </div>
+
+        <div class="tp-list" id="tcCourseList">
+            <p class="tp-empty">Loading courses...</p>
+        </div>
+    </section>
+</div>
+
+<script src="teacher_courses.js"></script>

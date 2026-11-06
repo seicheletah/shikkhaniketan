@@ -1,60 +1,75 @@
+<!--
+==========================================================================
+ course_details.html  -  Course details page (Udemy-style layout)
+==========================================================================
+ LAYOUT
+   Desktop (wide screen):
+     +--------------------------------------+-----------------------+
+     | HEAD: title, description, rating     |  PURCHASE CARD        |
+     +--------------------------------------+  (sticky: stays on    |
+     | BODY: rating box + student reviews   |   screen while the    |
+     |                                      |   page scrolls)       |
+     +--------------------------------------+-----------------------+
+   Phone / narrow screen (single column, top to bottom):
+     HEAD -> PURCHASE CARD -> BODY
+
+   The purchase card contains:
+     thumbnail (loaded from the backend) -> price -> GST -> total ->
+     Purchase button -> "This course includes" list
+
+ RULES
+   1. This is an HTML fragment (no <html>/<head>/<body>); the dashboard
+      injects it with fetch(), same as before.
+   2. All ids below (cd...) are used by course_details.js. If you rename
+      one here, rename it in the JS too.
+   3. Font Awesome ("fa-solid" icons) must be loaded by the dashboard.
+==========================================================================
+-->
+
+<!-- Styles for this page only (every rule is scoped to .course-details-page) -->
 <link rel="stylesheet" href="course_details.css">
 
 <div class="course-details-page">
 
+    <!-- Back button: returns to the courses list inside the dashboard -->
     <button class="cd-back-btn" id="cdBackBtn">
         <i class="fa-solid fa-arrow-left"></i> Back to Courses
     </button>
 
-    <div class="course-detail-layout">
+    <!-- Main grid. The three children below are placed by CSS "grid areas". -->
+    <div class="cd-layout">
 
-        <!-- LEFT -->
-        <div class="left-column">
+        <!-- ================= HEAD: title + description + rating line ================= -->
+        <header class="cd-head">
 
-            <!-- Media -->
-            <div class="media-viewer disabled">
-                <div class="disabled-overlay">
-                    <i class="fa-solid fa-lock"></i>
-                    <p>Purchase this course to unlock videos &amp; documents</p>
+            <h1 class="cd-title" id="cdTitle">Loading Course...</h1>
+
+            <!-- Course description (filled by JS from course_details) -->
+            <p class="cd-description" id="cdDetails">Course description will load here...</p>
+
+            <!-- Small rating line: stars + "4.5 average · 12 reviews" -->
+            <div class="cd-rating-line">
+                <span class="cd-stars" id="cdTopStars"></span>
+                <span id="cdTopRatingText">No ratings yet</span>
+            </div>
+
+        </header>
+
+        <!-- ================= PURCHASE CARD (sticky on desktop) ================= -->
+        <aside class="cd-card">
+
+            <!-- Thumbnail (16:9). JS loads the image from the backend.
+                 While loading, a soft shimmer is shown; if it fails, a placeholder icon is shown. -->
+            <div class="cd-thumb loading" id="cdThumb">
+                <img id="cdThumbImg" alt="Course thumbnail" hidden>
+                <div class="cd-thumb-placeholder" id="cdThumbPlaceholder">
+                    <i class="fa-regular fa-image"></i>
                 </div>
             </div>
 
-            <!-- Overview / Reviews -->
-            <div class="overview-review-card">
+            <div class="cd-card-body">
 
-                <div class="tabs-header">
-                    <button class="cd-tab-btn active" data-tab="overview">Overview</button>
-                    <button class="cd-tab-btn" data-tab="reviews">Reviews</button>
-                </div>
-
-                <!-- Overview -->
-                <div class="cd-tab-content" id="overviewTab">
-                    <h3>Course Overview</h3>
-                    <p id="cdDetails">Course description will load here...</p>
-
-                    <ul class="course-highlights">
-                        <li><i class="fa-solid fa-check"></i> HD Learning Content</li>
-                        <li><i class="fa-solid fa-check"></i> Lifetime Access</li>
-                        <li><i class="fa-solid fa-check"></i> Certificate Included</li>
-                    </ul>
-                </div>
-
-                <!-- Reviews -->
-                <div class="cd-tab-content hidden" id="reviewsTab">
-                    <h3>Student Reviews</h3>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- RIGHT -->
-        <div class="right-column">
-
-            <div class="purchase-card">
-
-                <h3 class="course-title" id="cdTitle">Loading Course...</h3>
-
+                <!-- Price breakdown (same data as before) -->
                 <div class="price-breakdown">
 
                     <div class="price-row">
@@ -76,11 +91,64 @@
 
                 </div>
 
+                <!-- Purchase button (starts the Razorpay flow in JS) -->
                 <button class="btn-purchase" id="cdPurchaseBtn">Purchase</button>
+
+                <!-- "This course includes" list -->
+                <div class="cd-includes">
+                    <h4>This course includes</h4>
+                    <ul class="course-highlights">
+                        <li><i class="fa-solid fa-circle-play"></i> HD Learning Content</li>
+                        <li><i class="fa-solid fa-infinity"></i> Lifetime Access</li>
+                        <li><i class="fa-solid fa-certificate"></i> Certificate Included</li>
+                    </ul>
+                </div>
 
             </div>
 
-        </div>
+        </aside>
+
+        <!-- ================= BODY: rating box + reviews ================= -->
+        <main class="cd-body">
+
+            <!-- ---------- RATING BOX ---------- -->
+            <section class="cd-section">
+                <h2 class="cd-section-title">Student ratings</h2>
+
+                <div class="cd-rating-box">
+
+                    <!-- Left: big average number + stars + total -->
+                    <div class="cd-rating-main">
+                        <div class="cd-avg-number" id="cdAvgNumber">0.0</div>
+                        <div class="cd-stars cd-stars-lg" id="cdAvgStars"></div>
+                        <span class="cd-total-reviews" id="cdTotalReviews">0 reviews</span>
+                    </div>
+
+                    <!-- Right: bars showing how many students gave 5, 4, 3, 2, 1 stars.
+                         JS builds the five rows inside this container. -->
+                    <div class="cd-bars" id="cdBars"></div>
+
+                </div>
+            </section>
+
+            <!-- ---------- REVIEWS ---------- -->
+            <section class="cd-section">
+                <h2 class="cd-section-title">Student reviews</h2>
+
+                <!-- Reviews can only be written after buying the course -->
+                <p class="cd-review-note">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Only students who purchased this course can write a review.
+                    After purchase, open the course and use the review form.
+                </p>
+
+                <!-- Review cards are inserted here by JS -->
+                <div id="cdReviewList">
+                    <p class="cd-empty">Loading reviews...</p>
+                </div>
+            </section>
+
+        </main>
 
     </div>
 

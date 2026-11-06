@@ -1,1823 +1,480 @@
-document.addEventListener("DOMContentLoaded", () => {
+/* ==========================================================
+   add_course.js  (full file - replace your old one)
 
-    // =====================================================
-    // API
-    // =====================================================
+   Runs every time add_course.html is loaded INTO the teacher
+   dashboard. What it does:
+   1. Builds the searchable "Course Tags" multi-select
+   2. Validates the form
+   3. Calls the API in this order:
+        POST /courses/                                 -> create course
+        POST /courses/{id}/media/thumbnail/upload      -> upload url, upload to S3
+        POST /courses/{id}/media/{mediaId}/status      -> thumbnail ready
+        POST /courses/{id}/media/resource/upload       -> upload url, upload to S3
+        POST /courses/{id}/media/{mediaId}/status      -> resource ready
+   4. Goes back to the teacher courses page (inside the dashboard)
 
-    const API_BASE = "http://127.0.0.1:8000/api/v1";
+   NOTE: sidebar, top bar, Settings and logout are now handled by
+   teacher.js, so all of that code was removed from here.
+   ========================================================== */
+(function () {
 
-    const token = localStorage.getItem("access_token");
+    const root = document.getElementById('ac-wrapper');
+    if (!root) return; // page was replaced already
+
+    const API_BASE = 'http://127.0.0.1:8000/api/v1';
+    const token = localStorage.getItem('access_token');
 
     if (!token) {
-        window.location.href = "login.html";
+        window.location.replace('login.html');
         return;
     }
 
-    // =====================================================
-    // HEADERS
-    // =====================================================
-
     const jsonHeaders = {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json"
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
     };
 
-    // =====================================================
-    // TOP BAR
-    // =====================================================
+    const $ = id => document.getElementById(id);
 
-    const topBar = document.querySelector(".top-bar");
+    // ---------------------------------------------------------
+    // TAGS (values accepted by the API) + label helper
+    // ---------------------------------------------------------
+    const SKILLHUB_TAGS = [
+        "diploma","polytechnic_diploma","ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed",
+        "mbbs","bds","bams","bhms","bpharma","bsc_nursing","llb","ba_llb","bba_llb","ma","msc","mcom",
+        "mtech","me","mca","mba","md","ms_medical","llm","med","phd",
+        "class_1","class_2","class_3","class_4","class_5","class_6","class_7","class_8","class_9",
+        "class_10","class_11","class_12",
+        "mathematics","algebra","geometry","calculus","trigonometry","statistics","discrete_math","logic",
+        "computer_science","software_engineering","data_science","artificial_intelligence","cybersecurity",
+        "web_development","mobile_development","data_structures","python","javascript","typescript","java",
+        "c_sharp","c_plus_plus","go_lang","rust","swift","kotlin","php","ruby","sql",
+        "physics","mechanics","thermodynamics","quantum_physics","astrophysics","chemistry","organic_chemistry",
+        "inorganic_chemistry","biochemistry","biology","genetics","microbiology","ecology","astronomy",
+        "earth_science","environmental_science",
+        "psychology","cognitive_psychology","clinical_psychology","economics","microeconomics","macroeconomics",
+        "sociology","political_science","anthropology","history","ancient_history","modern_history",
+        "philosophy","ethics","literature","linguistics","creative_writing",
+        "finance","corporate_finance","investment_banking","accounting","taxation","management",
+        "project_management","human_resources","marketing","digital_marketing","seo_sem","entrepreneurship",
+        "photography","music","music_theory","music_production","visual_arts","graphic_design","fine_arts",
+        "electrical_engineering","mechanical_engineering","civil_engineering","architecture",
+        "medicine","anatomy","pharmacology","nursing","law","constitutional_law","corporate_law",
+        "education","pedagogy"
+    ];
 
-    const teacherProfileImg =
-        document.getElementById("teacherProfileImg");
+    const UPPER_TAGS = new Set([
+        "ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed","mbbs","bds","bams","bhms",
+        "bpharma","llb","ma","msc","mcom","mtech","me","mca","mba","md","llm","med","phd","sql","php"
+    ]);
 
-    const teacherUserName =
-        document.getElementById("teacherUserName");
+    const SPECIAL_TAG_LABELS = {
+        c_plus_plus: "C++",
+        c_sharp: "C#",
+        go_lang: "Go",
+        ba_llb: "BA LLB",
+        bba_llb: "BBA LLB",
+        bsc_nursing: "BSc Nursing",
+        ms_medical: "MS (Medical)",
+        seo_sem: "SEO / SEM",
+        polytechnic_diploma: "Polytechnic Diploma"
+    };
 
-    // =====================================================
-    // NAV
-    // =====================================================
+    function tagLabel(tag) {
+        if (SPECIAL_TAG_LABELS[tag]) return SPECIAL_TAG_LABELS[tag];
+        if (UPPER_TAGS.has(tag)) return tag.toUpperCase();
+        return tag.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
 
-    const coursesLink =
-        document.querySelector('[data-page="courses"]');
+    // ---------------------------------------------------------
+    // ELEMENTS
+    // ---------------------------------------------------------
+    const addCourseForm = $("addCourseForm");
+    const courseNameInput = $("courseName");
+    const courseDetailsInput = $("courseDetails");
+    const languageInput = $("language");
+    const courseTypeInput = $("courseType");
+    const priceInput = $("price");
+    const resourceTypeInput = $("resourceType");
+    const thumbnailInput = $("thumbnailInput");
+    const fileInput = $("fileInput");
+    const thumbnailText = $("thumbnailText");
+    const fileText = $("fileText");
+    const submitBtn = $("acSubmitBtn");
 
-    const settingsLink =
-        document.querySelector('[data-page="settings"]');
-
-    const logoutLink =
-        document.querySelector('[data-page="logout"]');
-
-    const coursesSection =
-        document.getElementById("courses");
-
-    const settingsSection =
-        document.getElementById("settings");
-
-    // =====================================================
-    // SETTINGS / PROFILE
-    // =====================================================
-
-    const teacherFirstName =
-        document.getElementById("teacherFirstName");
-
-    const teacherLastName =
-        document.getElementById("teacherLastName");
-
-    const teacherEmail =
-        document.getElementById("teacherEmail");
-
-    const teacherPhone =
-        document.getElementById("teacherPhone");
-
-    const teacherGender =
-        document.getElementById("teacherGender");
-
-    const teacherDob =
-        document.getElementById("teacherDob");
-
-    const teacherAddress =
-        document.getElementById("teacherAddress");
-
-    const teacherAbout =
-        document.getElementById("teacherAbout");
-
-    // =====================================================
-    // COURSE FORM
-    // =====================================================
-
-    const addCourseForm =
-        document.getElementById("addCourseForm");
-
-    const courseNameInput =
-        document.getElementById("courseName");
-
-    const courseDetailsInput =
-        document.getElementById("courseDetails");
-
-    const languageInput =
-        document.getElementById("language");
-
-    const courseTypeInput =
-        document.getElementById("courseType");
-
-    const priceInput =
-        document.getElementById("price");
-
-    const resourceTypeInput =
-        document.getElementById("resourceType");
-
-    const thumbnailInput =
-        document.getElementById("thumbnailInput");
-
-    const fileInput =
-        document.getElementById("fileInput");
-
-    const thumbnailText =
-        document.getElementById("thumbnailText");
-
-    const fileText =
-        document.getElementById("fileText");
-
-    // =====================================================
-    // SHOW SECTION
-    // =====================================================
-
-    function showSection(section) {
-
-        if (coursesSection) {
-            coursesSection.style.display =
-                section === "courses" ? "block" : "none";
-        }
-
-        if (settingsSection) {
-            settingsSection.style.display =
-                section === "settings" ? "block" : "none";
-        }
-
-        if (section === "settings") {
-
-            topBar?.classList.add("hide-search");
-
-            loadTeacherProfile();
-
+    // Back to the teacher courses page (inside the dashboard)
+    function goToCourses() {
+        if (typeof window.loadDashboardPage === "function") {
+            window.loadDashboardPage("teacher_courses.html");
         } else {
-
-            topBar?.classList.remove("hide-search");
-
+            window.location.href = "teacher.html";
         }
     }
 
-    // =====================================================
-    // NAVIGATION
-    // =====================================================
+    $("acCancelBtn").addEventListener("click", goToCourses);
 
-    coursesLink?.addEventListener("click", e => {
-
-        e.preventDefault();
-
-        showSection("courses");
-
-    });
-
-    settingsLink?.addEventListener("click", e => {
-
-        e.preventDefault();
-
-        showSection("settings");
-
-    });
-
-    // =====================================================
-    // UPDATE PROFILE
-    // =====================================================
-
-    function openUpdateProfile(e) {
-
-        if (e) {
-            e.preventDefault();
-        }
-
-        window.location.href = "update_profile.html";
+    // ---------------------------------------------------------
+    // PRICE FIELD: disabled when the course is Free
+    // ---------------------------------------------------------
+    function togglePriceField() {
+        const paid = courseTypeInput.value === "paid";
+        priceInput.disabled = !paid;
+        if (!paid) priceInput.value = "";
     }
+    courseTypeInput.addEventListener("change", togglePriceField);
 
-    /*
-     * যদি HTML-এ button থাকে:
-     * id="openUpdateProfile"
-     */
-    document.addEventListener("click", e => {
-
-        const button =
-            e.target.closest("#openUpdateProfile");
-
-        if (button) {
-            openUpdateProfile(e);
-        }
-
+    // ---------------------------------------------------------
+    // FILE NAME LABELS inside the upload boxes
+    // ---------------------------------------------------------
+    thumbnailInput.addEventListener("change", () => {
+        thumbnailText.textContent = thumbnailInput.files.length
+            ? thumbnailInput.files[0].name : "Click to Upload Thumbnail";
     });
 
-    /*
-     * যদি navigation-এ data-page="update-profile" থাকে
-     */
-    document.addEventListener("click", e => {
-
-        const link =
-            e.target.closest('[data-page="update-profile"]');
-
-        if (link) {
-            openUpdateProfile(e);
-        }
-
+    fileInput.addEventListener("change", () => {
+        fileText.textContent = fileInput.files.length
+            ? fileInput.files[0].name : "Click to Upload Video / PDF";
     });
 
-    // =====================================================
-    // LOAD TEACHER PROFILE
-    // =====================================================
+    // ---------------------------------------------------------
+    // COURSE TAGS DROPDOWN (searchable multi-select)
+    // ---------------------------------------------------------
+    const selectedTags = new Set();
 
-    async function loadTeacherProfile() {
+    const tagDropdown = $("tagDropdown");
+    const tagToggle = $("tagDropdownToggle");
+    const tagLabelEl = $("tagDropdownLabel");
+    const tagSearch = $("tagSearchInput");
+    const tagOptions = $("tagOptions");
+    const selectedTagsBox = $("selectedTags");
 
-        try {
+    function renderTagOptions() {
+        const q = tagSearch.value.trim().toLowerCase();
+        const list = SKILLHUB_TAGS.filter(tag =>
+            tagLabel(tag).toLowerCase().includes(q) || tag.includes(q)
+        );
 
-            const response = await fetch(
-                `${API_BASE}/teachers/me`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        Accept: "application/json"
-                    }
-                }
-            );
-
-            if (response.status === 401) {
-
-                localStorage.clear();
-
-                window.location.href = "login.html";
-
-                return;
-            }
-
-            if (!response.ok) {
-
-                console.error(
-                    "Teacher profile loading failed"
-                );
-
-                return;
-            }
-
-            const data =
-                await response.json();
-
-            // -------------------------------
-            // NAME
-            // -------------------------------
-
-            const fullName =
-                `${data.first_name || ""} ${data.last_name || ""}`
-                    .trim();
-
-            if (teacherUserName) {
-
-                teacherUserName.textContent =
-                    fullName || "Teacher";
-            }
-
-            // -------------------------------
-            // PROFILE IMAGE
-            // -------------------------------
-
-            if (teacherProfileImg) {
-
-                teacherProfileImg.src =
-                    data.profile_pic ||
-                    "https://i.pravatar.cc/150?img=47";
-
-                teacherProfileImg.onerror =
-                    function () {
-
-                        this.src =
-                            "https://i.pravatar.cc/150?img=47";
-                    };
-            }
-
-            // -------------------------------
-            // PROFILE DETAILS
-            // -------------------------------
-
-            if (teacherFirstName) {
-                teacherFirstName.textContent =
-                    data.first_name || "-";
-            }
-
-            if (teacherLastName) {
-                teacherLastName.textContent =
-                    data.last_name || "-";
-            }
-
-            if (teacherEmail) {
-                teacherEmail.textContent =
-                    data.user?.email_id || "-";
-            }
-
-            if (teacherPhone) {
-                teacherPhone.textContent =
-                    data.phone_no || "-";
-            }
-
-            if (teacherGender) {
-                teacherGender.textContent =
-                    data.gender || "-";
-            }
-
-            if (teacherDob) {
-                teacherDob.textContent =
-                    data.date_of_birth || "-";
-            }
-
-            if (teacherAddress) {
-                teacherAddress.textContent =
-                    data.address || "-";
-            }
-
-            if (teacherAbout) {
-                teacherAbout.textContent =
-                    data.about || "-";
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Teacher Profile Error:",
-                error
-            );
-        }
-    }
-
-    // =====================================================
-    // LOGOUT
-    // =====================================================
-
-    logoutLink?.addEventListener("click", e => {
-
-        e.preventDefault();
-
-        localStorage.clear();
-
-        window.location.href = "login.html";
-
-    });
-
-    // =====================================================
-    // PRICE
-    // =====================================================
-
-    window.togglePriceField = value => {
-
-        if (!priceInput) {
+        if (!list.length) {
+            tagOptions.innerHTML = '<div class="tp-tag-empty">No tag found</div>';
             return;
         }
 
-        if (value === "paid") {
+        tagOptions.innerHTML = list.map(tag => `
+            <label class="tp-tag-option">
+                <input type="checkbox" value="${tag}" ${selectedTags.has(tag) ? "checked" : ""}>
+                <span>${tagLabel(tag)}</span>
+            </label>
+        `).join("");
+    }
 
-            priceInput.disabled = false;
-            priceInput.required = true;
+    function renderSelectedTags() {
+        tagLabelEl.textContent = selectedTags.size ? `${selectedTags.size} tag(s) selected` : "Select tags";
 
-        } else {
+        selectedTagsBox.innerHTML = [...selectedTags].map(tag => `
+            <span class="tp-chip">
+                ${tagLabel(tag)}
+                <button type="button" data-remove="${tag}" aria-label="Remove">&times;</button>
+            </span>
+        `).join("");
+    }
 
-            priceInput.disabled = true;
-            priceInput.required = false;
-            priceInput.value = "";
+    tagToggle.addEventListener("click", () => {
+        tagDropdown.classList.toggle("open");
+        if (tagDropdown.classList.contains("open")) tagSearch.focus();
+    });
 
-        }
+    // Click outside -> close the panel.
+    // The old listener (from a previous visit of this page) is removed first.
+    if (window.__acOutsideClick) document.removeEventListener("click", window.__acOutsideClick);
+    window.__acOutsideClick = e => {
+        if (!tagDropdown.contains(e.target)) tagDropdown.classList.remove("open");
     };
+    document.addEventListener("click", window.__acOutsideClick);
 
-    // =====================================================
-    // FILE NAME
-    // =====================================================
+    tagSearch.addEventListener("input", renderTagOptions);
 
-    window.updateFileName = input => {
-
-        if (!input || !input.files.length) {
-            return;
-        }
-
-        const fileName =
-            input.files[0].name;
-
-        if (
-            input.id === "thumbnailInput" &&
-            thumbnailText
-        ) {
-
-            thumbnailText.textContent =
-                fileName;
-        }
-
-        if (
-            input.id === "fileInput" &&
-            fileText
-        ) {
-
-            fileText.textContent =
-                fileName;
-        }
-    };
-
-    // =====================================================
-    // THUMBNAIL CHANGE
-    // =====================================================
-
-    thumbnailInput?.addEventListener("change", () => {
-
-        if (!thumbnailInput.files.length) {
-
-            if (thumbnailText) {
-
-                thumbnailText.textContent =
-                    "Click to Upload Thumbnail";
-            }
-
-            return;
-        }
-
-        const file =
-            thumbnailInput.files[0];
-
-        if (thumbnailText) {
-
-            thumbnailText.textContent =
-                file.name;
-        }
+    tagOptions.addEventListener("change", e => {
+        if (e.target.type !== "checkbox") return;
+        if (e.target.checked) selectedTags.add(e.target.value);
+        else selectedTags.delete(e.target.value);
+        renderSelectedTags();
     });
 
-    // =====================================================
-    // RESOURCE FILE CHANGE
-    // =====================================================
-
-    fileInput?.addEventListener("change", () => {
-
-        if (!fileInput.files.length) {
-
-            if (fileText) {
-
-                fileText.textContent =
-                    "Click to Upload Video / PDF";
-            }
-
-            return;
-        }
-
-        const file =
-            fileInput.files[0];
-
-        if (fileText) {
-
-            fileText.textContent =
-                file.name;
-        }
+    selectedTagsBox.addEventListener("click", e => {
+        const tag = e.target.dataset.remove;
+        if (!tag) return;
+        selectedTags.delete(tag);
+        renderSelectedTags();
+        renderTagOptions();
     });
 
-    // =====================================================
+    // ---------------------------------------------------------
     // FILE HELPERS
-    // =====================================================
-
-    function ext(file) {
-
-        return file.name
-            .split(".")
-            .pop()
-            .toLowerCase();
-    }
-
-    function nameOnly(file) {
-
-        return file.name.replace(
-            /\.[^/.]+$/,
-            ""
-        );
-    }
-
-    // =====================================================
-    // PROGRESS BAR UI
-    // =====================================================
-
-    let progressContainer = null;
-
-    function createProgressUI() {
-
-        if (progressContainer) {
-            return;
-        }
-
-        progressContainer =
-            document.createElement("div");
-
-        progressContainer.id =
-            "courseUploadProgress";
-
-        progressContainer.innerHTML = `
-
-            <div class="course-progress-overlay">
-
-                <div class="course-progress-box">
-
-                    <div class="course-progress-spinner">
-                        <div class="spinner"></div>
-                    </div>
-
-                    <h3 id="courseProgressTitle">
-                        Creating Course...
-                    </h3>
-
-                    <p id="courseProgressStep">
-                        Please wait...
-                    </p>
-
-                    <div class="course-progress-track">
-
-                        <div
-                            id="courseProgressFill"
-                            class="course-progress-fill">
-                        </div>
-
-                    </div>
-
-                    <div
-                        id="courseProgressPercent"
-                        class="course-progress-percent">
-                        0%
-                    </div>
-
-                </div>
-
-            </div>
-
-        `;
-
-        document.body.appendChild(
-            progressContainer
-        );
-
-        const style =
-            document.createElement("style");
-
-        style.id =
-            "course-progress-style";
-
-        style.textContent = `
-
-            .course-progress-overlay {
-
-                position: fixed;
-
-                inset: 0;
-
-                background: rgba(0, 0, 0, 0.45);
-
-                display: flex;
-
-                align-items: center;
-
-                justify-content: center;
-
-                z-index: 99999;
-
-                backdrop-filter: blur(3px);
-            }
-
-            .course-progress-box {
-
-                width: min(430px, 90%);
-
-                background: #ffffff;
-
-                border-radius: 18px;
-
-                padding: 32px;
-
-                text-align: center;
-
-                box-shadow:
-                    0 20px 60px rgba(0, 0, 0, 0.18);
-            }
-
-            .course-progress-spinner {
-
-                display: flex;
-
-                justify-content: center;
-
-                margin-bottom: 18px;
-            }
-
-            .spinner {
-
-                width: 42px;
-
-                height: 42px;
-
-                border: 4px solid #dcefeb;
-
-                border-top-color: #0f766e;
-
-                border-radius: 50%;
-
-                animation:
-                    courseSpinner 0.8s linear infinite;
-            }
-
-            @keyframes courseSpinner {
-
-                to {
-                    transform: rotate(360deg);
-                }
-
-            }
-
-            #courseProgressTitle {
-
-                margin: 0 0 8px;
-
-                color: #0b2942;
-
-                font-size: 20px;
-
-                font-weight: 700;
-            }
-
-            #courseProgressStep {
-
-                margin: 0 0 20px;
-
-                color: #64748b;
-
-                font-size: 14px;
-            }
-
-            .course-progress-track {
-
-                width: 100%;
-
-                height: 12px;
-
-                background: #e6f3f1;
-
-                border-radius: 20px;
-
-                overflow: hidden;
-            }
-
-            .course-progress-fill {
-
-                width: 0%;
-
-                height: 100%;
-
-                background:
-                    linear-gradient(
-                        90deg,
-                        #0f766e,
-                        #159b91
-                    );
-
-                border-radius: 20px;
-
-                transition:
-                    width 0.25s ease;
-            }
-
-            .course-progress-percent {
-
-                margin-top: 12px;
-
-                color: #0f766e;
-
-                font-size: 17px;
-
-                font-weight: 800;
-            }
-
-        `;
-
-        document.head.appendChild(style);
-    }
-
-    function showProgress() {
-
-        createProgressUI();
-
-        progressContainer.style.display =
-            "block";
-
-        updateProgress(
-            0,
-            "Creating Course...",
-            "Please wait..."
-        );
-    }
-
-    function updateProgress(
-        percent,
-        title,
-        step
-    ) {
-
-        createProgressUI();
-
-        const safePercent =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    Math.round(percent)
-                )
-            );
-
-        const fill =
-            document.getElementById(
-                "courseProgressFill"
-            );
-
-        const percentText =
-            document.getElementById(
-                "courseProgressPercent"
-            );
-
-        const titleText =
-            document.getElementById(
-                "courseProgressTitle"
-            );
-
-        const stepText =
-            document.getElementById(
-                "courseProgressStep"
-            );
-
-        if (fill) {
-
-            fill.style.width =
-                `${safePercent}%`;
-        }
-
-        if (percentText) {
-
-            percentText.textContent =
-                `${safePercent}%`;
-        }
-
-        if (titleText) {
-
-            titleText.textContent =
-                title;
-        }
-
-        if (stepText) {
-
-            stepText.textContent =
-                step;
-        }
+    // ---------------------------------------------------------
+    const ext = file => file.name.split(".").pop().toLowerCase();
+    const nameOnly = file => file.name.replace(/\.[^/.]+$/, "");
+
+    // ---------------------------------------------------------
+    // PROGRESS POPUP (styles are in teacher_pages.css)
+    // ---------------------------------------------------------
+    const progressEl = document.createElement("div");
+    progressEl.className = "tp-progress-overlay";
+    progressEl.innerHTML = `
+        <div class="tp-progress-box">
+            <div class="tp-spinner"></div>
+            <h3 id="acProgressTitle">Creating Course...</h3>
+            <p id="acProgressStep">Please wait...</p>
+            <div class="tp-progress-track"><div id="acProgressFill" class="tp-progress-fill"></div></div>
+            <div id="acProgressPercent" class="tp-progress-percent">0%</div>
+        </div>`;
+    root.appendChild(progressEl);
+
+    function updateProgress(percent, title, step) {
+        progressEl.style.display = "flex";
+        const p = Math.max(0, Math.min(100, Math.round(percent)));
+        $("acProgressFill").style.width = `${p}%`;
+        $("acProgressPercent").textContent = `${p}%`;
+        $("acProgressTitle").textContent = title;
+        $("acProgressStep").textContent = step;
     }
 
     function hideProgress() {
-
-        if (progressContainer) {
-
-            progressContainer.style.display =
-                "none";
-        }
+        progressEl.style.display = "none";
     }
 
-    // =====================================================
-    // S3 UPLOAD WITH REAL PROGRESS
-    // =====================================================
-
-    async function uploadToS3(
-        url,
-        file,
-        onProgress
-    ) {
-
-        if (!url) {
-
-            throw new Error(
-                `Upload URL was not returned for ${file.name}`
-            );
+    // ---------------------------------------------------------
+    // API ERROR -> readable text (handles FastAPI 422 format)
+    // ---------------------------------------------------------
+    function getApiErrorMessage(data, fallback) {
+        if (!data) return fallback;
+        if (typeof data.detail === "string") return data.detail;
+        if (Array.isArray(data.detail)) {
+            return data.detail.map(i => {
+                if (typeof i === "string") return i;
+                const field = Array.isArray(i.loc) ? i.loc.filter(x => x !== "body").join(".") : "";
+                return (field ? field + ": " : "") + (i.msg || i.message || JSON.stringify(i));
+            }).join(", ");
         }
-
-        await new Promise(
-            (resolve, reject) => {
-
-                const xhr =
-                    new XMLHttpRequest();
-
-                xhr.open(
-                    "PUT",
-                    url,
-                    true
-                );
-
-                xhr.setRequestHeader(
-                    "Content-Type",
-                    file.type ||
-                    "application/octet-stream"
-                );
-
-                xhr.upload.addEventListener(
-                    "progress",
-                    event => {
-
-                        if (
-                            event.lengthComputable &&
-                            typeof onProgress === "function"
-                        ) {
-
-                            const percent =
-                                (
-                                    event.loaded /
-                                    event.total
-                                ) * 100;
-
-                            onProgress(
-                                percent
-                            );
-                        }
-                    }
-                );
-
-                xhr.onload = () => {
-
-                    if (
-                        xhr.status >= 200 &&
-                        xhr.status < 300
-                    ) {
-
-                        if (
-                            typeof onProgress ===
-                            "function"
-                        ) {
-
-                            onProgress(100);
-                        }
-
-                        resolve();
-
-                    } else {
-
-                        reject(
-                            new Error(
-                                `Failed to upload ${file.name}`
-                            )
-                        );
-                    }
-                };
-
-                xhr.onerror = () => {
-
-                    reject(
-                        new Error(
-                            `Failed to upload ${file.name}`
-                        )
-                    );
-                };
-
-                xhr.onabort = () => {
-
-                    reject(
-                        new Error(
-                            `Upload cancelled for ${file.name}`
-                        )
-                    );
-                };
-
-                xhr.send(file);
-            }
-        );
+        if (data.detail && typeof data.detail === "object") return JSON.stringify(data.detail);
+        if (typeof data.message === "string") return data.message;
+        return fallback;
     }
 
-    // =====================================================
-    // MARK MEDIA READY
-    // =====================================================
+    async function readJson(res) {
+        try { return await res.json(); } catch { return {}; }
+    }
 
-    async function markReady(
-        courseId,
-        mediaId
-    ) {
+    // ---------------------------------------------------------
+    // UPLOAD A FILE TO S3 (PUT to the presigned url) with progress
+    // ---------------------------------------------------------
+    function uploadToS3(url, file, onProgress) {
+        return new Promise((resolve, reject) => {
+            if (!url) return reject(new Error(`Upload URL was not returned for ${file.name}`));
 
-        if (!mediaId) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", url, true);
+            xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
 
-            throw new Error(
-                "Media ID was not returned by server."
-            );
-        }
+            xhr.upload.addEventListener("progress", ev => {
+                if (ev.lengthComputable && onProgress) onProgress((ev.loaded / ev.total) * 100);
+            });
 
-        const response =
-            await fetch(
-                `${API_BASE}/courses/${courseId}/media/${mediaId}/status`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-
-                        Accept:
-                            "application/json"
-                    }
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    if (onProgress) onProgress(100);
+                    resolve();
+                } else {
+                    reject(new Error(`Failed to upload ${file.name}`));
                 }
-            );
+            };
+            xhr.onerror = () => reject(new Error(`Failed to upload ${file.name}`));
+            xhr.onabort = () => reject(new Error(`Upload cancelled for ${file.name}`));
 
-        if (!response.ok) {
+            xhr.send(file);
+        });
+    }
 
-            let data = {};
+    // ---------------------------------------------------------
+    // MARK MEDIA AS READY
+    // ---------------------------------------------------------
+    async function markReady(courseId, mediaId) {
+        if (!mediaId) throw new Error("Media ID was not returned by server.");
 
-            try {
+        const res = await fetch(`${API_BASE}/courses/${courseId}/media/${mediaId}/status`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+        });
 
-                data =
-                    await response.json();
-
-            } catch {
-
-                data = {};
-            }
-
-            console.error(
-                "Media Status Error:",
-                data
-            );
-
-            throw new Error(
-                getApiErrorMessage(
-                    data,
-                    "Media status update failed."
-                )
-            );
+        if (!res.ok) {
+            const data = await readJson(res);
+            throw new Error(getApiErrorMessage(data, "Media status update failed."));
         }
     }
 
-    // =====================================================
-    // API ERROR MESSAGE
-    // =====================================================
-
-    function getApiErrorMessage(
-        data,
-        defaultMessage
-    ) {
-
-        if (!data) {
-            return defaultMessage;
-        }
-
-        if (
-            typeof data.detail ===
-            "string"
-        ) {
-
-            return data.detail;
-        }
-
-        if (
-            Array.isArray(data.detail)
-        ) {
-
-            return data.detail
-                .map(item => {
-
-                    if (
-                        typeof item ===
-                        "string"
-                    ) {
-
-                        return item;
-                    }
-
-                    return (
-                        item.msg ||
-                        item.message ||
-                        JSON.stringify(item)
-                    );
-                })
-                .join(", ");
-        }
-
-        if (
-            data.detail &&
-            typeof data.detail ===
-            "object"
-        ) {
-
-            return JSON.stringify(
-                data.detail
-            );
-        }
-
-        if (
-            typeof data.message ===
-            "string"
-        ) {
-
-            return data.message;
-        }
-
-        return defaultMessage;
-    }
-
-    // =====================================================
-    // CREATE COURSE
-    // =====================================================
-
+    // ---------------------------------------------------------
+    // STEP 1 - CREATE COURSE
+    // ---------------------------------------------------------
     async function createCourse() {
-
-        const selectedResourceType =
-            resourceTypeInput?.value;
-
-        if (!selectedResourceType) {
-
-            throw new Error(
-                "Please select a Resource Type."
-            );
-        }
+        const isPaid = courseTypeInput.value === "paid";
 
         const courseData = {
-
-            course_name:
-                courseNameInput.value.trim(),
-
-            course_details:
-                courseDetailsInput.value.trim(),
-
-            course_language:
-                languageInput.value,
-
-            course_paid:
-                courseTypeInput.value === "paid",
-
-            course_price:
-                courseTypeInput.value === "paid"
-                    ? Number(priceInput.value)
-                    : 0,
-
-            course_price_currency:
-                "INR",
-
-            course_resource_type:
-                selectedResourceType
+            course_name: courseNameInput.value.trim(),
+            course_details: courseDetailsInput.value.trim(),
+            course_language: languageInput.value,
+            course_resource_type: resourceTypeInput.value,
+            course_paid: isPaid,
+            course_price: isPaid ? Number(priceInput.value) : 0,
+            course_price_currency: "INR",
+            course_tags: [...selectedTags]
+            // total_enrollment, total_comment, total_rating, avg_rating are NOT sent:
+            // the server manages those counters itself.
         };
 
-        console.log(
-            "Creating Course:",
-            courseData
-        );
+        const res = await fetch(`${API_BASE}/courses/`, {
+            method: "POST",
+            headers: jsonHeaders,
+            body: JSON.stringify(courseData)
+        });
 
-        const response =
-            await fetch(
-                `${API_BASE}/courses/`,
-                {
-                    method: "POST",
-
-                    headers:
-                        jsonHeaders,
-
-                    body:
-                        JSON.stringify(
-                            courseData
-                        )
-                }
-            );
-
-        let data = {};
-
-        try {
-
-            data =
-                await response.json();
-
-        } catch {
-
-            data = {};
-        }
-
-        if (!response.ok) {
-
-            console.error(
-                "Course Create Error:",
-                data
-            );
-
-            throw new Error(
-                getApiErrorMessage(
-                    data,
-                    "Course creation failed."
-                )
-            );
-        }
-
+        const data = await readJson(res);
+        if (!res.ok) throw new Error(getApiErrorMessage(data, "Course creation failed."));
         return data;
     }
 
-    // =====================================================
-    // UPLOAD THUMBNAIL
-    // =====================================================
+    // ---------------------------------------------------------
+    // STEP 2 - UPLOAD THUMBNAIL (progress 20% -> 50%)
+    // ---------------------------------------------------------
+    async function uploadThumbnail(courseId, file) {
+        const res = await fetch(`${API_BASE}/courses/${courseId}/media/thumbnail/upload`, {
+            method: "POST",
+            headers: jsonHeaders,
+            body: JSON.stringify({
+                category: "thumbnail",
+                media_type: file.type,
+                file_name: nameOnly(file),
+                file_extension: ext(file)
+            })
+        });
 
-    async function uploadThumbnail(
-        courseId,
-        file
-    ) {
+        const data = await readJson(res);
+        if (!res.ok) throw new Error(getApiErrorMessage(data, "Thumbnail upload failed."));
+        if (!data.upload_url) throw new Error("Thumbnail upload URL was not returned by server.");
 
-        if (!courseId || !file) {
-
-            throw new Error(
-                "Thumbnail file is missing."
-            );
-        }
-
-        const allowedTypes = [
-            "image/jpeg",
-            "image/png"
-        ];
-
-        if (
-            !allowedTypes.includes(
-                file.type
-            )
-        ) {
-
-            throw new Error(
-                "Thumbnail must be JPG, JPEG or PNG."
-            );
-        }
-
-        const requestBody = {
-
-            category:
-                "thumbnail",
-
-            media_type:
-                file.type,
-
-            file_name:
-                nameOnly(file),
-
-            file_extension:
-                ext(file)
-        };
-
-        console.log(
-            "Thumbnail Upload Request:",
-            requestBody
+        await uploadToS3(data.upload_url, file, pct =>
+            updateProgress(20 + pct * 0.3, "Uploading Thumbnail...", `${Math.round(pct)}% uploaded`)
         );
 
-        const response =
-            await fetch(
-                `${API_BASE}/courses/${courseId}/media/thumbnail/upload`,
-                {
-                    method: "POST",
-
-                    headers:
-                        jsonHeaders,
-
-                    body:
-                        JSON.stringify(
-                            requestBody
-                        )
-                }
-            );
-
-        let data = {};
-
-        try {
-
-            data =
-                await response.json();
-
-        } catch {
-
-            data = {};
-        }
-
-        if (!response.ok) {
-
-            console.error(
-                "Thumbnail Upload Error:",
-                data
-            );
-
-            throw new Error(
-                getApiErrorMessage(
-                    data,
-                    "Thumbnail upload failed."
-                )
-            );
-        }
-
-        if (!data.upload_url) {
-
-            throw new Error(
-                "Thumbnail upload URL was not returned by server."
-            );
-        }
-
-        // -------------------------------
-        // REAL UPLOAD PROGRESS
-        // 20% → 50%
-        // -------------------------------
-
-        await uploadToS3(
-            data.upload_url,
-            file,
-            percent => {
-
-                updateProgress(
-                    20 + (
-                        percent * 0.30
-                    ),
-
-                    "Uploading Thumbnail...",
-
-                    `${Math.round(percent)}% uploaded`
-                );
-            }
-        );
-
-        updateProgress(
-            50,
-            "Thumbnail Uploaded",
-            "Thumbnail upload complete"
-        );
-
-        await markReady(
-            courseId,
-            data.media_id
-        );
-
-        return data;
+        updateProgress(50, "Thumbnail Uploaded", "Thumbnail upload complete");
+        await markReady(courseId, data.media_id);
     }
 
-    // =====================================================
-    // UPLOAD RESOURCE
-    // =====================================================
+    // ---------------------------------------------------------
+    // STEP 3 - UPLOAD VIDEO / PDF (progress 55% -> 90%)
+    // ---------------------------------------------------------
+    async function uploadResource(courseId, file) {
+        const mediaType = resourceTypeInput.value === "video" ? "video/mp4" : "application/pdf";
 
-    async function uploadResource(
-        courseId,
-        file
-    ) {
+        const res = await fetch(`${API_BASE}/courses/${courseId}/media/resource/upload`, {
+            method: "POST",
+            headers: jsonHeaders,
+            body: JSON.stringify({
+                category: "resource",
+                media_type: mediaType,
+                file_name: nameOnly(file),
+                file_extension: ext(file)
+            })
+        });
 
-        if (!courseId || !file) {
+        const data = await readJson(res);
+        if (!res.ok) throw new Error(getApiErrorMessage(data, "Resource upload failed."));
+        if (!data.upload_url) throw new Error("Resource upload URL was not returned by server.");
 
-            throw new Error(
-                "Resource file is missing."
-            );
-        }
-
-        const selectedType =
-            resourceTypeInput?.value;
-
-        if (!selectedType) {
-
-            throw new Error(
-                "Please select Resource Type."
-            );
-        }
-
-        let mediaType = "";
-
-        // -------------------------------
-        // VIDEO
-        // -------------------------------
-
-        if (
-            selectedType === "video"
-        ) {
-
-            if (
-                file.type !==
-                "video/mp4"
-            ) {
-
-                throw new Error(
-                    "Please upload an MP4 video for Video resource type."
-                );
-            }
-
-            mediaType =
-                "video/mp4";
-        }
-
-        // -------------------------------
-        // DOCUMENT
-        // -------------------------------
-
-        else if (
-            selectedType ===
-            "document"
-        ) {
-
-            if (
-                file.type !==
-                "application/pdf"
-            ) {
-
-                throw new Error(
-                    "Please upload a PDF file for Document resource type."
-                );
-            }
-
-            mediaType =
-                "application/pdf";
-        }
-
-        else {
-
-            throw new Error(
-                "Invalid Resource Type."
-            );
-        }
-
-        const requestBody = {
-
-            category:
-                "resource",
-
-            media_type:
-                mediaType,
-
-            file_name:
-                nameOnly(file),
-
-            file_extension:
-                ext(file)
-        };
-
-        console.log(
-            "Resource Upload Request:",
-            requestBody
+        await uploadToS3(data.upload_url, file, pct =>
+            updateProgress(55 + pct * 0.35, "Uploading Course Resource...", `${Math.round(pct)}% uploaded`)
         );
 
-        const response =
-            await fetch(
-                `${API_BASE}/courses/${courseId}/media/resource/upload`,
-                {
-                    method: "POST",
-
-                    headers:
-                        jsonHeaders,
-
-                    body:
-                        JSON.stringify(
-                            requestBody
-                        )
-                }
-            );
-
-        let data = {};
-
-        try {
-
-            data =
-                await response.json();
-
-        } catch {
-
-            data = {};
-        }
-
-        if (!response.ok) {
-
-            console.error(
-                "Resource Upload Error:",
-                data
-            );
-
-            throw new Error(
-                getApiErrorMessage(
-                    data,
-                    "Resource upload failed."
-                )
-            );
-        }
-
-        if (!data.upload_url) {
-
-            throw new Error(
-                "Resource upload URL was not returned by server."
-            );
-        }
-
-        // -------------------------------
-        // REAL UPLOAD PROGRESS
-        // 55% → 90%
-        // -------------------------------
-
-        await uploadToS3(
-            data.upload_url,
-            file,
-            percent => {
-
-                updateProgress(
-                    55 + (
-                        percent * 0.35
-                    ),
-
-                    "Uploading Course Resource...",
-
-                    `${Math.round(percent)}% uploaded`
-                );
-            }
-        );
-
-        updateProgress(
-            90,
-            "Resource Uploaded",
-            "Course resource upload complete"
-        );
-
-        await markReady(
-            courseId,
-            data.media_id
-        );
-
-        return data;
+        updateProgress(90, "Resource Uploaded", "Course resource upload complete");
+        await markReady(courseId, data.media_id);
     }
 
-    // =====================================================
-    // SUBMIT COURSE
-    // =====================================================
-
-    addCourseForm?.addEventListener(
-        "submit",
-        async e => {
-
-            e.preventDefault();
-
-            const submitButton =
-                addCourseForm.querySelector(
-                    'button[type="submit"]'
-                );
-
-            // -------------------------------
-            // PREVENT DOUBLE SUBMIT
-            // -------------------------------
-
-            if (submitButton) {
-
-                submitButton.disabled =
-                    true;
-
-                submitButton.textContent =
-                    "Creating Course...";
-            }
-
-            try {
-
-                // -------------------------------
-                // START PROGRESS
-                // -------------------------------
-
-                showProgress();
-
-                updateProgress(
-                    5,
-                    "Checking Course Information...",
-                    "Validating your course details"
-                );
-
-                // -------------------------------
-                // COURSE NAME
-                // -------------------------------
-
-                if (
-                    !courseNameInput.value.trim()
-                ) {
-
-                    throw new Error(
-                        "Please enter Course Name."
-                    );
-                }
-
-                // -------------------------------
-                // COURSE DETAILS
-                // -------------------------------
-
-                if (
-                    !courseDetailsInput.value.trim()
-                ) {
-
-                    throw new Error(
-                        "Please enter Course Details."
-                    );
-                }
-
-                // -------------------------------
-                // LANGUAGE
-                // -------------------------------
-
-                if (
-                    !languageInput.value
-                ) {
-
-                    throw new Error(
-                        "Please select Language."
-                    );
-                }
-
-                // -------------------------------
-                // COURSE TYPE
-                // -------------------------------
-
-                if (
-                    !courseTypeInput.value
-                ) {
-
-                    throw new Error(
-                        "Please select Course Type."
-                    );
-                }
-
-                // -------------------------------
-                // PRICE
-                // -------------------------------
-
-                if (
-                    courseTypeInput.value ===
-                    "paid" &&
-                    (
-                        !priceInput.value ||
-                        Number(priceInput.value) <= 0
-                    )
-                ) {
-
-                    throw new Error(
-                        "Please enter a valid course price."
-                    );
-                }
-
-                // -------------------------------
-                // RESOURCE TYPE
-                // -------------------------------
-
-                if (
-                    !resourceTypeInput ||
-                    !resourceTypeInput.value
-                ) {
-
-                    throw new Error(
-                        "Please select Resource Type."
-                    );
-                }
-
-                // -------------------------------
-                // THUMBNAIL
-                // -------------------------------
-
-                if (
-                    !thumbnailInput ||
-                    !thumbnailInput.files.length
-                ) {
-
-                    throw new Error(
-                        "Please upload a course thumbnail."
-                    );
-                }
-
-                const thumbnailFile =
-                    thumbnailInput.files[0];
-
-                if (
-                    thumbnailFile.type !==
-                    "image/jpeg" &&
-                    thumbnailFile.type !==
-                    "image/png"
-                ) {
-
-                    throw new Error(
-                        "Thumbnail must be JPG, JPEG or PNG."
-                    );
-                }
-
-                // -------------------------------
-                // RESOURCE
-                // -------------------------------
-
-                if (
-                    !fileInput ||
-                    !fileInput.files.length
-                ) {
-
-                    throw new Error(
-                        "Please upload a course video or PDF."
-                    );
-                }
-
-                const resourceFile =
-                    fileInput.files[0];
-
-                const selectedType =
-                    resourceTypeInput.value;
-
-                // -------------------------------
-                // RESOURCE VALIDATION
-                // -------------------------------
-
-                if (
-                    selectedType === "video" &&
-                    resourceFile.type !==
-                    "video/mp4"
-                ) {
-
-                    throw new Error(
-                        "Resource Type is Video, so please upload an MP4 video."
-                    );
-                }
-
-                if (
-                    selectedType === "document" &&
-                    resourceFile.type !==
-                    "application/pdf"
-                ) {
-
-                    throw new Error(
-                        "Resource Type is Document, so please upload a PDF file."
-                    );
-                }
-
-                // -------------------------------
-                // VALIDATION COMPLETE
-                // -------------------------------
-
-                updateProgress(
-                    10,
-                    "Creating Course...",
-                    "Sending course information to server"
-                );
-
-                // =================================================
-                // 1. CREATE COURSE
-                // =================================================
-
-                const course =
-                    await createCourse();
-
-                if (
-                    !course ||
-                    !course.id
-                ) {
-
-                    throw new Error(
-                        "Course created but course ID was not returned."
-                    );
-                }
-
-                console.log(
-                    "Course Created:",
-                    course.id
-                );
-
-                updateProgress(
-                    20,
-                    "Course Created",
-                    "Preparing thumbnail upload..."
-                );
-
-                // =================================================
-                // 2. UPLOAD THUMBNAIL
-                // =================================================
-
-                await uploadThumbnail(
-                    course.id,
-                    thumbnailFile
-                );
-
-                console.log(
-                    "Thumbnail uploaded successfully."
-                );
-
-                // =================================================
-                // 3. UPLOAD VIDEO / PDF
-                // =================================================
-
-                updateProgress(
-                    55,
-                    "Uploading Course Resource...",
-                    "Preparing video/PDF upload..."
-                );
-
-                await uploadResource(
-                    course.id,
-                    resourceFile
-                );
-
-                console.log(
-                    "Resource uploaded successfully."
-                );
-
-                // =================================================
-                // FINALIZING
-                // =================================================
-
-                updateProgress(
-                    95,
-                    "Finalizing Course...",
-                    "Almost finished..."
-                );
-
-                await new Promise(
-                    resolve =>
-                        setTimeout(
-                            resolve,
-                            500
-                        )
-                );
-
-                updateProgress(
-                    100,
-                    "Course Created Successfully!",
-                    "Your course is ready."
-                );
-
-                // -------------------------------
-                // WAIT
-                // -------------------------------
-
-                await new Promise(
-                    resolve =>
-                        setTimeout(
-                            resolve,
-                            900
-                        )
-                );
-
-                // -------------------------------
-                // RESET FORM
-                // -------------------------------
-
-                addCourseForm.reset();
-
-                if (priceInput) {
-
-                    priceInput.disabled =
-                        true;
-
-                    priceInput.required =
-                        false;
-                }
-
-                if (thumbnailText) {
-
-                    thumbnailText.textContent =
-                        "Click to Upload Thumbnail";
-                }
-
-                if (fileText) {
-
-                    fileText.textContent =
-                        "Click to Upload Video / PDF";
-                }
-
-                hideProgress();
-
-                // -------------------------------
-                // SUCCESS MESSAGE
-                // -------------------------------
-
-                alert(
-                    "Course created successfully!"
-                );
-
-                // -------------------------------
-                // GO TEACHER DASHBOARD
-                // -------------------------------
-
-                window.location.href =
-                    "teacher.html";
-
-            } catch (err) {
-
-                console.error(
-                    "Create Course Error:",
-                    err
-                );
-
-                hideProgress();
-
-                alert(
-                    err.message ||
-                    "Something went wrong."
-                );
-
-                // -------------------------------
-                // ENABLE BUTTON AGAIN
-                // -------------------------------
-
-                if (submitButton) {
-
-                    submitButton.disabled =
-                        false;
-
-                    submitButton.textContent =
-                        "Submit";
-                }
-            }
+    // ---------------------------------------------------------
+    // FORM VALIDATION (throws an Error with a friendly message)
+    // ---------------------------------------------------------
+    function validateForm() {
+        if (!courseNameInput.value.trim()) throw new Error("Please enter Course Name.");
+        if (!courseDetailsInput.value.trim()) throw new Error("Please enter Course Details.");
+        if (!languageInput.value) throw new Error("Please select Language.");
+
+        if (courseTypeInput.value === "paid" &&
+            (!priceInput.value || Number(priceInput.value) <= 0)) {
+            throw new Error("Please enter a valid course price.");
         }
-    );
 
-    // =====================================================
+        if (!resourceTypeInput.value) throw new Error("Please select Resource Type.");
+        if (selectedTags.size === 0) throw new Error("Please select at least one Course Tag.");
+
+        if (!thumbnailInput.files.length) throw new Error("Please upload a course thumbnail.");
+        const thumb = thumbnailInput.files[0];
+        if (!["image/jpeg", "image/png"].includes(thumb.type)) {
+            throw new Error("Thumbnail must be JPG, JPEG or PNG.");
+        }
+
+        if (!fileInput.files.length) throw new Error("Please upload a course video or PDF.");
+        const resource = fileInput.files[0];
+        if (resourceTypeInput.value === "video" && resource.type !== "video/mp4") {
+            throw new Error("Resource Type is Video, so please upload an MP4 video.");
+        }
+        if (resourceTypeInput.value === "document" && resource.type !== "application/pdf") {
+            throw new Error("Resource Type is Document, so please upload a PDF file.");
+        }
+    }
+
+    // ---------------------------------------------------------
+    // SUBMIT HANDLER
+    // ---------------------------------------------------------
+    addCourseForm.addEventListener("submit", async e => {
+        e.preventDefault();
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Creating Course...";
+
+        try {
+            updateProgress(5, "Checking Course Information...", "Validating your course details");
+            validateForm();
+
+            updateProgress(10, "Creating Course...", "Sending course information to server");
+            const course = await createCourse();
+            if (!course || !course.id) throw new Error("Course created but course ID was not returned.");
+
+            updateProgress(20, "Course Created", "Preparing thumbnail upload...");
+            await uploadThumbnail(course.id, thumbnailInput.files[0]);
+
+            updateProgress(55, "Uploading Course Resource...", "Preparing video/PDF upload...");
+            await uploadResource(course.id, fileInput.files[0]);
+
+            updateProgress(95, "Finalizing Course...", "Almost finished...");
+            await new Promise(r => setTimeout(r, 500));
+            updateProgress(100, "Course Created Successfully!", "Your course is ready.");
+            await new Promise(r => setTimeout(r, 900));
+
+            hideProgress();
+            alert("Course created successfully!");
+            goToCourses();
+
+        } catch (err) {
+            console.error("Create Course Error:", err);
+            hideProgress();
+            alert(err.message || "Something went wrong.");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit";
+        }
+    });
+
+    // ---------------------------------------------------------
     // INIT
-    // =====================================================
-
-    showSection("courses");
-
-    loadTeacherProfile();
-
-    // -------------------------------
-    // DEFAULT PRICE STATE
-    // -------------------------------
-
-    if (courseTypeInput) {
-
-        window.togglePriceField(
-            courseTypeInput.value
-        );
-    }
-
-});
+    // ---------------------------------------------------------
+    renderTagOptions();
+    renderSelectedTags();
+    togglePriceField();
+})();

@@ -1,0 +1,465 @@
+/* ==========================================================
+   transactions.css
+   Modern LIST design of the Transactions page:
+   - a big green hero banner with the title "My Transactions"
+   - one white panel with numbered rows (1, 2, 3 ...)
+   - the download button at the right end of every row
+
+   IMPORTANT: every rule starts with ".transactions-page" so these
+   styles can never leak out and break the dashboard sidebar,
+   topbar or any other page (same technique as courses.css).
+
+   Main colour of the site: #127c71 (green)
+   ========================================================== */
+
+/* ---------- Page wrapper ---------- */
+.transactions-page {
+  width: 100%;
+  color: #1a202c;
+}
+
+.transactions-page * {
+  box-sizing: border-box;
+}
+
+/* Helper class used by JS to show/hide things */
+.transactions-page .hidden {
+  display: none !important;
+}
+
+
+/* ==========================================================
+   HERO HEADER  (green gradient banner)
+   ========================================================== */
+.transactions-page .tx-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+  padding: 28px 32px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0d5f56 0%, #127c71 55%, #1fa596 100%);
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(18, 124, 113, 0.28);
+}
+
+/* Two soft decorative circles in the corner (pure CSS, no images) */
+.transactions-page .tx-hero::before,
+.transactions-page .tx-hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.transactions-page .tx-hero::before {
+  width: 220px;
+  height: 220px;
+  top: -90px;
+  right: -60px;
+}
+
+.transactions-page .tx-hero::after {
+  width: 140px;
+  height: 140px;
+  bottom: -70px;
+  right: 160px;
+}
+
+.transactions-page .tx-hero-top {
+  position: relative;      /* stays above the decorative circles */
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.transactions-page .tx-hero-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 18px;
+  backdrop-filter: blur(6px);
+}
+
+.transactions-page .tx-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #ffffff;
+}
+
+.transactions-page .tx-subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- Summary chips inside the hero ---------- */
+.transactions-page .tx-summary {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.transactions-page .tx-stat {
+  min-width: 170px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+}
+
+.transactions-page .tx-stat-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.transactions-page .tx-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+
+/* ==========================================================
+   THE LIST (one white panel, rows separated by thin lines)
+   ========================================================== */
+.transactions-page .tx-list {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ==========================================================
+   ONE ROW  =  one purchased course
+   Desktop layout (left -> right):
+   [number] [thumbnail] [name + details + info] [price] [download]
+   ========================================================== */
+.transactions-page .tx-row {
+  display: grid;
+  grid-template-columns: 40px 124px minmax(0, 1fr) auto auto;
+  grid-template-areas: "num thumb info price action";
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #eef2f7;
+  transition: background 0.2s ease;
+}
+
+.transactions-page .tx-row:last-child {
+  border-bottom: none;
+}
+
+.transactions-page .tx-row:hover {
+  background: #f6fbfa;
+}
+
+/* ---------- Row number (1, 2, 3 ...) ---------- */
+.transactions-page .tx-num {
+  grid-area: num;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #127c71;
+  background: #e6f4f2;
+  border-radius: 50%;
+}
+
+/* ---------- Thumbnail ---------- */
+.transactions-page .tx-thumb-wrap {
+  grid-area: thumb;
+  width: 124px;
+  height: 80px;
+  overflow: hidden;
+  background: #e6f4f2;     /* shown while the real thumbnail is still loading */
+  border-radius: 14px;
+}
+
+.transactions-page .tx-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Name, details and small info ---------- */
+.transactions-page .tx-info-block {
+  grid-area: info;
+  min-width: 0;            /* lets long text shrink instead of stretching the row */
+}
+
+.transactions-page .tx-course-name {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #1f2937;
+}
+
+/* Course description: maximum 2 lines, then "..." */
+.transactions-page .tx-course-desc {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Language / date / payment id shown as small pills */
+.transactions-page .tx-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transactions-page .tx-meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 20px;
+}
+
+.transactions-page .tx-meta svg {
+  flex-shrink: 0;
+  color: #127c71;
+}
+
+/* A long payment id must not break the layout: cut it with "..." */
+.transactions-page .tx-meta li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Price block ("Paid" pill + amount) ---------- */
+.transactions-page .tx-price-block {
+  grid-area: price;
+  text-align: right;
+}
+
+.transactions-page .tx-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0a5c52;
+  background: #e6f4f2;
+  border-radius: 20px;
+}
+
+.transactions-page .tx-price-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.transactions-page .tx-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #127c71;
+  white-space: nowrap;
+}
+
+/* ---------- Download button (right end of the row) ---------- */
+.transactions-page .tx-download-btn {
+  grid-area: action;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #127c71, #1fa596);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(18, 124, 113, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.transactions-page .tx-download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(18, 124, 113, 0.32);
+}
+
+.transactions-page .tx-download-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}
+
+
+/* ==========================================================
+   LOADING SPINNER + EMPTY / ERROR MESSAGE
+   (both are shown inside the white list panel)
+   ========================================================== */
+.transactions-page .tx-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 70px 0;
+}
+
+.transactions-page .tx-spinner {
+  width: 46px;
+  height: 46px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #127c71;
+  border-radius: 50%;
+  animation: tx-spin 0.8s linear infinite;
+}
+
+.transactions-page .tx-loader p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+@keyframes tx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.transactions-page .tx-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.transactions-page .tx-message i {
+  display: block;
+  font-size: 38px;
+  margin-bottom: 12px;
+  color: #94a3b8;
+}
+
+.transactions-page .tx-message.error i {
+  color: #d9534f;
+}
+
+
+/* ==========================================================
+   TOAST (small floating message)
+   ========================================================== */
+.transactions-page .tx-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #127c71;
+  border-radius: 30px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  z-index: 9999;
+}
+
+.transactions-page .tx-toast.error {
+  background: #d9534f;
+}
+
+
+/* ==========================================================
+   TABLET / SMALL LAPTOP  (price goes under the info)
+   ========================================================== */
+@media (max-width: 1000px) {
+  .transactions-page .tx-row {
+    grid-template-columns: 40px 110px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "num  thumb info  info"
+      "num  thumb price action";
+    row-gap: 12px;
+  }
+
+  .transactions-page .tx-thumb-wrap {
+    width: 110px;
+    height: 74px;
+  }
+
+  .transactions-page .tx-price-block {
+    text-align: left;
+  }
+}
+
+
+/* ==========================================================
+   MOBILE  (everything stacks neatly)
+   ========================================================== */
+@media (max-width: 640px) {
+  .transactions-page .tx-hero {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .transactions-page .tx-title {
+    font-size: 24px;
+  }
+
+  .transactions-page .tx-stat {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .transactions-page .tx-row {
+    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-areas:
+      "num   thumb"
+      "info  info"
+      "price action";
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .transactions-page .tx-thumb-wrap {
+    width: 100%;
+    height: 130px;
+  }
+
+  .transactions-page .tx-download-btn {
+    justify-self: end;
+  }
+}

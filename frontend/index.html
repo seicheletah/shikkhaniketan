@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillHub</title>
+
+    <title>Shikkhaniketan</title>
 
     <link rel="stylesheet" href="index.css">
 
@@ -18,6 +20,7 @@
 
     <header class="navbar">
 
+        <!-- SkillHub Logo -->
         <div class="logo">
             <span class="logo-icon">
                 <i class="fa-solid fa-graduation-cap"></i>
@@ -25,23 +28,26 @@
             <span class="logo-text">SkillHub</span>
         </div>
 
-        <a href="explore.html" class="explore-btn">
-            Explore
-        </a>
+        <!-- Explore -->
+        <a href="explore.html" class="explore-btn">Explore</a>
 
+        <!-- Search -->
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Search courses">
         </div>
 
+        <!-- Login / Sign Up -->
         <div class="auth-buttons">
+            <a href="ad_signin.html" class="login-btn">Admin</a>
             <a href="login.html" class="login-btn">Log In</a>
             <a href="sign_up.html" class="signup-btn">Sign Up</a>
         </div>
 
     </header>
 
-    <!-- ================= HERO ================= -->
+
+    <!-- ================= HERO SECTION ================= -->
 
     <section class="hero">
 
@@ -58,22 +64,21 @@
 
     </section>
 
-    <!-- ================= POPULAR COURSES ================= -->
 
-    <section class="popular-courses">
+    <!-- ================= POPULAR COURSES (6 courses) ================= -->
+
+    <section class="popular-courses" id="popularCourses">
 
         <div class="section-header">
             <h2>Popular Courses</h2>
-
-            <a href="explore.html" class="view-all-btn">
-                View All
-            </a>
+            <a href="explore.html">Explore All &rarr;</a>
         </div>
 
-        <!-- JS এখানে সর্বোচ্চ ৮টি Course দেখাবে -->
+        <!-- index.js puts the 6 course cards here -->
         <div class="course-grid" id="homeCourseGrid"></div>
 
     </section>
+
 
     <!-- ================= FOOTER ================= -->
 
@@ -81,15 +86,16 @@
 
         <div class="footer-content">
 
+            <!-- Footer Brand -->
             <div class="footer-brand">
                 <div class="footer-logo">SkillHub</div>
-
                 <p>
                     Learn new skills, expand your knowledge,
                     and build a better future with SkillHub.
                 </p>
             </div>
 
+            <!-- Footer Links -->
             <div class="footer-links">
 
                 <div class="footer-column">
@@ -114,6 +120,7 @@
 
         </div>
 
+        <!-- Copyright -->
         <div class="copyright">
             <span>© 2026 SkillHub. All rights reserved.</span>
             <span>Learn. Grow. Succeed.</span>
@@ -121,8 +128,8 @@
 
     </footer>
 
-    <!-- ================= JS ================= -->
     <script src="index.js"></script>
 
 </body>
+
 </html>
