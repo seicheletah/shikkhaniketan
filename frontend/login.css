@@ -17,30 +17,38 @@ body {
 /* Header Section */
 header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     padding: 20px 60px;
 }
 
+/* Logo link with the circular back arrow */
 .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
     font-size: 24px;
     font-weight: 700;
     color: #0f172a;
-}
-
-header nav a {
     text-decoration: none;
-    color: #4a5568;
-    font-weight: 500;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.2s ease;
 }
 
-header nav a:hover {
+/* Circular arrow button */
+.back-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 2px solid #127c71;
+    border-radius: 50%;
     color: #127c71;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logo:hover .back-arrow {
+    background-color: #127c71;
+    color: #ffffff;
 }
 
 /* Main Container Layout */
@@ -190,6 +198,11 @@ header nav a:hover {
 
 .continue-btn:hover {
     background-color: #0e635a;
+}
+
+.continue-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .continue-btn:active {

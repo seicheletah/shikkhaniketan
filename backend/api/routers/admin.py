@@ -2,7 +2,7 @@ import uuid
 import secrets
 import string
 import io
-import pandas
+#import pandas
 from fastapi import Response, status, HTTPException, APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from backend.core.database import SessionDep
@@ -800,30 +800,30 @@ def get_purchases(
     return students
 
 
-@api_router.get("/purchases/export")
-def export_purchases(current_user: AdminDep, db_session: SessionDep):
-    """
-    Get excel sheet for purchases data.
-    """
-    purchase = db_session.exec(select(Purchase)).all()
-    purchase_data = [purchase.model_dump() for purchase in purchase]
-    dataframe = pandas.DataFrame(purchase_data)
-    for col in dataframe.columns:
-        if (
-            pandas.api.types.is_datetime64_any_dtype(dataframe[col])
-            or dataframe[col].dtype == "object"
-        ):
-            try:
-                dataframe[col] = pandas.to_datetime(dataframe[col]).dt.tz_localize(None)
-            except (AttributeError, ValueError, TypeError):
-                pass
-    buffer = io.BytesIO()
-    with pandas.ExcelWriter(buffer, engine="openpyxl") as writer:
-        dataframe.to_excel(writer, index=False, sheet_name="Purchases")
-    buffer.seek(0)
-    headers = {"Content-Disposition": 'attachment; filename="purchases_report.xlsx"'}
-    return StreamingResponse(
-        buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers=headers,
-    )
+# @api_router.get("/purchases/export")
+# def export_purchases(current_user: AdminDep, db_session: SessionDep):
+#     """
+#     Get excel sheet for purchases data.
+#     """
+#     purchase = db_session.exec(select(Purchase)).all()
+#     purchase_data = [purchase.model_dump() for purchase in purchase]
+#     dataframe = pandas.DataFrame(purchase_data)
+#     for col in dataframe.columns:
+#         if (
+#             pandas.api.types.is_datetime64_any_dtype(dataframe[col])
+#             or dataframe[col].dtype == "object"
+#         ):
+#             try:
+#                 dataframe[col] = pandas.to_datetime(dataframe[col]).dt.tz_localize(None)
+#             except (AttributeError, ValueError, TypeError):
+#                 pass
+#     buffer = io.BytesIO()
+#     with pandas.ExcelWriter(buffer, engine="openpyxl") as writer:
+#         dataframe.to_excel(writer, index=False, sheet_name="Purchases")
+#     buffer.seek(0)
+#     headers = {"Content-Disposition": 'attachment; filename="purchases_report.xlsx"'}
+#     return StreamingResponse(
+#         buffer,
+#         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+#         headers=headers,
+#     )

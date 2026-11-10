@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    const API_BASE = "http://127.0.0.1:8000/api/v1";
+
     const loginForm = document.getElementById("loginForm");
     const passwordInput = document.getElementById("password");
     const togglePassword = document.getElementById("togglePassword");
@@ -19,6 +21,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!loginForm) return;
 
+    // Send the login request to one endpoint and return { ok, data }
+    async function sendLogin(url, email, password) {
+        const formData = new URLSearchParams();
+        formData.append("username", email);
+        formData.append("password", password);
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+        return { ok: response.ok, data };
+    }
+
+    // Build a readable error message from the API response
+    function getErrorMessage(data, fallback) {
+        if (data && typeof data.detail === "string") return data.detail;
+        if (data && Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
+            return data.detail[0].msg;
+        }
+        return fallback;
+    }
+
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -30,26 +57,29 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const submitButton = loginForm.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
         try {
 
-            const formData = new URLSearchParams();
-            formData.append("username", email);
-            formData.append("password", password);
+            // 1) Try the normal login (student / teacher)
+            let result = await sendLogin(`${API_BASE}/login`, email, password);
+            const firstError = result.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/v1/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: formData
-            });
+            // 2) If it failed, try the admin login endpoint
+            if (!result.ok) {
+                const adminResult = await sendLogin(`${API_BASE}/login-admin`, email, password);
+                if (adminResult.ok) {
+                    result = adminResult;
+                }
+            }
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.detail || "Invalid email or password.");
+            if (!result.ok) {
+                alert(getErrorMessage(firstError, "Invalid email or password."));
                 return;
             }
+
+            const data = result.data;
 
             // SAVE TOKEN
             localStorage.setItem("access_token", data.access_token);
@@ -70,6 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
             console.error("Login Error:", error);
             alert("Unable to connect to the server.");
+        } finally {
+            if (submitButton) submitButton.disabled = false;
         }
     });
 

@@ -2,77 +2,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const signupForm = document.getElementById('signupForm');
 
+    if (!signupForm) return;
+
     signupForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        // Signup page থেকে data নেওয়া
+        // Read the values from the sign up form
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const role = document.getElementById('role').value;
 
-        // সব field check করা
+        // Check that every field is filled
         if (!email || !password || !role) {
             alert('Please fill in all fields');
             return;
         }
 
-        // Data temporary ভাবে browser-এ save করা
+        // Temporarily save the data in the browser for the next step
         localStorage.setItem('signupEmail', email);
         localStorage.setItem('signupPassword', password);
         localStorage.setItem('signupRole', role);
 
-        console.log('Signup Step 1 Data:', {
-            email,
-            password,
-            role
-        });
-
-        // এরপর Account Creation page-এ যাওয়া
+        // Go to the Create Account page (works for student, teacher and admin)
         window.location.href = 'create_account.html';
-
-    ```css
-.button-container {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-    margin-top: 35px;
-}
-
-.continue-btn {
-    flex: 1;
-    padding: 16px;
-    background-color: #137f73;
-    color: white;
-    border: 2px solid #137f73;
-    border-radius: 35px;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.login-btn {
-    flex: 1;
-    padding: 16px;
-    background-color: white;
-    color: #137f73;
-    border: 2px solid #137f73;
-    border-radius: 35px;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.continue-btn:hover {
-    background-color: #0e685f;
-}
-
-.login-btn:hover {
-    background-color: #137f73;
-    color: white;
-}
-```
     });
 
 });
-
-
