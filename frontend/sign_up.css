@@ -5,6 +5,11 @@
     font-family: 'Poppins', sans-serif;
 }
 
+/* Make the HTML "hidden" attribute always win */
+[hidden] {
+    display: none !important;
+}
+
 /* Background matching Page 1 theme */
 body {
     background: radial-gradient(circle at 10% 20%, #eef7ff 0%, #f9fbfd 60%, #ffffff 100%);
@@ -140,7 +145,24 @@ header {
     box-shadow: 0 0 0 3px rgba(18, 124, 113, 0.1);
 }
 
-/* Continue Button */
+/* OTP step */
+.otp-info {
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+    margin-bottom: 18px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+#otp {
+    text-align: center;
+    letter-spacing: 6px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Continue / Verify Button */
 .continue-btn {
     width: 100%;
     background-color: #127c71;
@@ -157,4 +179,9 @@ header {
 
 .continue-btn:hover {
     background-color: #0e635a;
+}
+
+.continue-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }

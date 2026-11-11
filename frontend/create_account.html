@@ -17,9 +17,9 @@
 
 <body>
 
-    <!-- Header Section: circular back arrow + logo (goes to sign_up.html) -->
+    <!-- Header Section: circular back arrow + logo (goes to index.html) -->
     <header>
-        <a href="sign_up.html" class="logo" aria-label="Back to sign up">
+        <a href="index.html" class="logo" aria-label="Back to home">
             <span class="back-arrow">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -50,32 +50,27 @@
 
             <div class="form-card">
 
-                <h2 id="formTitle">CREATE ACCOUNT</h2>
+                <h2>CREATE ACCOUNT</h2>
 
-
-                <!-- STEP 1: Details form -->
+                <!-- Profile details form (shown after the email OTP is verified) -->
                 <form id="profileForm">
 
-                    <!-- First Name -->
                     <div class="form-group">
                         <label for="first-name">First Name</label>
                         <input type="text" id="first-name" name="first_name" placeholder="First Name" required>
                     </div>
 
-                    <!-- Last Name -->
                     <div class="form-group">
                         <label for="last-name">Last Name</label>
                         <input type="text" id="last-name" name="last_name" placeholder="Last Name" required>
                     </div>
 
-                    <!-- Phone Number (student / teacher only) -->
-                    <div class="form-group profile-only">
+                    <div class="form-group">
                         <label for="phone">Phone Number</label>
                         <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
                     </div>
 
-                    <!-- Gender (student / teacher only) -->
-                    <div class="form-group profile-only">
+                    <div class="form-group">
                         <label for="gender">Gender</label>
                         <select id="gender" name="gender" required>
                             <option value="" disabled selected hidden>Gender</option>
@@ -85,59 +80,30 @@
                         </select>
                     </div>
 
-                    <!-- Date of Birth (student / teacher only) -->
-                    <div class="form-group profile-only">
+                    <div class="form-group">
                         <label for="dob">Date of Birth</label>
                         <input type="date" id="dob" name="dob" required>
                     </div>
 
-                    <!-- Address (student / teacher only) -->
-                    <div class="form-group profile-only">
+                    <div class="form-group">
                         <label for="address">Address</label>
                         <input type="text" id="address" name="address" placeholder="Enter your address">
                     </div>
 
-                    <!-- About (student / teacher only) -->
-                    <div class="form-group profile-only">
+                    <div class="form-group">
                         <label for="about">About</label>
                         <input type="text" id="about" name="about" placeholder="Tell something about yourself...">
                     </div>
 
-                    <!-- Profile Picture (student / teacher only) -->
-                    <div class="form-group profile-only">
+                    <!-- Profile Picture -->
+                    <div class="form-group">
                         <label for="profile-pic">Profile Picture</label>
                         <input type="file" id="profile-pic" name="file" accept="image/png, image/jpeg, image/webp">
                         <img id="pic-preview" alt="Preview"
                             style="display:none; width:90px; height:90px; object-fit:cover; border-radius:50%; margin-top:10px;">
                     </div>
 
-                    <!-- Seed Admin Password (admin only) -->
-                    <div class="form-group admin-only" id="seedGroup" hidden>
-                        <label for="seed-password">Seed Admin Password</label>
-                        <input type="password" id="seed-password" name="seed_password"
-                            placeholder="Enter seed admin password" autocomplete="off">
-                    </div>
-
-                    <!-- Continue Button -->
-                    <button type="submit" id="continueBtn">Continue</button>
-
-                </form>
-
-
-                <!-- STEP 2: OTP form (hidden until the account is created) -->
-                <form id="otpForm" hidden>
-
-                    <p class="otp-info" id="otpInfo">
-                        We sent a verification code to your email.
-                    </p>
-
-                    <div class="form-group">
-                        <label for="otp">Verification Code (OTP)</label>
-                        <input type="text" id="otp" name="otp" placeholder="Enter OTP"
-                            inputmode="numeric" autocomplete="one-time-code" required>
-                    </div>
-
-                    <button type="submit" id="verifyBtn">Verify &amp; Finish</button>
+                    <button type="submit" id="continueBtn">Finish</button>
 
                 </form>
 

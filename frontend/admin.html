@@ -1,100 +1,115 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Makes the page scale correctly on mobile screens -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>SkillHub - Admin Dashboard</title>
+
+    <!-- Main stylesheet for the whole admin layout -->
     <link rel="stylesheet" href="admin.css">
-    <!-- FontAwesome Icons for UI -->
-    <link rel="stylesheet" href="">
+
+    <!-- FontAwesome: icon library used for the menu button and the logo.
+         1) LOCAL copy first (folder "fontawesome" next to this file).
+         2) CDN copy second, used as a backup if the local folder is missing. -->
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Root wrapper: sidebar on the left, main content on the right -->
+    <div class="app-container">
 
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-        <div class="brand">
-            
-            <h2>admin</h2>
-        </div>
-        <nav>
-            <div class="nav-section-title"></div>
-            <a href="#" class="active"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="#"><i class="fa-solid fa-users"></i> User Management</a>
-            <a href="#"><i class="fa-solid fa-graduation-cap"></i> Student Management</a>
-            <a href="#"><i class="fa-solid fa-chalkboard-user"></i> Teacher Management</a>
-            <a href="#"><i class="fa-solid fa-book-open"></i> Course Management</a>
-            <a href="#"><i class="fa-solid fa-star"></i> Review Management</a>
-            <a href="#"><i class="fa-solid fa-cart-shopping"></i> Purchase Management</a>
-            <a href="#"><i class="fa-solid fa-clock-rotate-left"></i> Action History</a>
-            <a href="#"><i class="fa-solid fa-key"></i> Access Token</a>
-            <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
-        </nav>
-    </aside>
+        <!-- Hamburger button: only visible on mobile (<= 768px) to open/close the sidebar -->
+        <button class="mobile-toggle" id="menuToggle">
+            <i class="fa-solid fa-bars"></i>
+        </button>
 
-    <!-- Main Content Area -->
-    <div class="main-wrapper">
-        <!-- Top Navbar -->
-        <header class="navbar">
-            <div class="navbar-left">
-                <!-- Requested Home Button -->
-                
-                <!-- Search Bar -->
-                
+        <!-- ===================== SIDEBAR (fixed, dark navy) ===================== -->
+        <aside class="sidebar" id="sidebar">
+
+            <!-- Logo + site name; clicking it goes to the home page -->
+            <div class="brand">
+                <i class="fa-solid fa-graduation-cap brand-icon"></i>
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <h2>SkillHub</h2>
+                </a>
             </div>
 
-            <div class="navbar-right">
-                <button class="icon-btn"><i class="fa-regular fa-moon"></i></button>
-                <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
-                <button class="icon-btn"><i class="fa-regular fa-envelope"></i></button>
-                
+            <!-- Navigation menu.
+                 Links with a "data-page" attribute load that page inside the
+                 content area with fetch() (no full page reload). -->
+            <nav class="nav-menu">
+                <a href="admin_dashboard.html" class="nav-link active" data-page="admin_dashboard.html">
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin_users.html" class="nav-link" data-page="admin_users.html">
+                    <span>User Management</span>
+                </a>
+                <a href="admin_students.html" class="nav-link" data-page="admin_students.html">
+                    <span>Student Management</span>
+                </a>
+                <a href="admin_teachers.html" class="nav-link" data-page="admin_teachers.html">
+                    <span>Teacher Management</span>
+                </a>
+                <a href="admin_courses.html" class="nav-link" data-page="admin_courses.html">
+                    <span>Course Management</span>
+                </a>
+                <a href="admin_reviews.html" class="nav-link" data-page="admin_reviews.html">
+                    <span>Review Management</span>
+                </a>
+                <a href="admin_purchases.html" class="nav-link" data-page="admin_purchases.html">
+                    <span>Purchase Management</span>
+                </a>
+                <a href="admin_history.html" class="nav-link" data-page="admin_history.html">
+                    <span>Action History</span>
+                </a>
+                <a href="admin_tokens.html" class="nav-link" data-page="admin_tokens.html">
+                    <span>Access Token</span>
+                </a>
+                <a href="admin_settings.html" class="nav-link" data-page="admin_settings.html">
+                    <span>Settings</span>
+                </a>
+
+                <!-- Logout link:
+                     - NO "data-page" attribute on purpose, so the page-loader ignores it.
+                     - Has its own id so admin.js can attach the logout logic. -->
+                <a href="#logout" class="nav-link" id="logoutBtn">
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Dark transparent backdrop shown behind the sidebar on mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ===================== MAIN AREA (topbar + content) ===================== -->
+        <div class="main-wrapper">
+
+            <!-- TOPBAR: welcome text on the left, profile picture on the right -->
+            <header class="topbar">
+                <!-- LEFT SIDE: "Welcome to Admin Dashboard, <name>"
+                     The <span> with id="adminUserName" is filled with the real
+                     name by admin.js. "Admin" is only the fallback. -->
+                <div class="welcome-text">
+                    Welcome to Admin Dashboard,
+                    <span class="user-name" id="adminUserName">Admin</span>
+                </div>
+
+                <!-- RIGHT SIDE: neutral inline avatar (no image download needed) -->
                 <div class="user-profile">
-                    <span>User Name</span>
-                    <div class="avatar">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
-                    
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23ccfbf1'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%230f766e'/%3E%3Cpath d='M40 200C40 140 70 124 100 124S160 140 160 200Z' fill='%230f766e'/%3E%3C/svg%3E"
+                         alt="Admin Profile" class="profile-img">
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <!-- Dashboard Content -->
-        <main class="dashboard-content">
-            <div class="page-title">
-                
-               
-            </div>
-
-            <!-- Metrics Cards Grid -->
-            <div class="metrics-grid">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">TOTAL STUDENTS</span>
-                        <div class="card-icon student-icon"><i class="fa-solid fa-users"></i></div>
-                    </div>
-                    <div class="count">1,248</div>
-                    <span class="badge positive">+12% vs last month</span>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">TOTAL TEACHERS</span>
-                        <div class="card-icon teacher-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
-                    </div>
-                    <div class="count">84</div>
-                    <span class="badge positive">+4 new this week</span>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">TOTAL COURSES</span>
-                        <div class="card-icon course-icon"><i class="fa-solid fa-book-open"></i></div>
-                    </div>
-                    <div class="count">42</div>
-                    <span class="badge neutral">2 pending review</span>
-                </div>
-            </div>
-        </main>
+            <!-- Scrollable content area.
+                 All admin pages are loaded here with fetch(). -->
+            <main class="content-area" id="main-content">
+            </main>
+        </div>
     </div>
 
+    <!-- Main admin logic (auth check, navigation, profile, logout) -->
+    <script src="admin.js"></script>
 </body>
 </html>

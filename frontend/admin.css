@@ -1,277 +1,321 @@
-/* Reset & Base Styles */
+/* ==========================================================
+   GLOBAL RESET
+   Remove default browser spacing and make sizing predictable
+   (padding/border are included inside width and height).
+   ========================================================== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
+/* ==========================================================
+   DESIGN TOKENS (CSS variables)
+   Change a color or size here and it updates everywhere.
+   ========================================================== */
+:root {
+    --sidebar-bg: #1e293b;        /* dark navy sidebar */
+    --sidebar-text: #94a3b8;      /* muted text of inactive menu items */
+    --sidebar-text-hover: #ffffff;
+    --accent: #0f766e;            /* teal: active menu item, avatar, highlights */
+    --accent-dark: #0b5a54;
+    --topbar-bg: #ffffff;
+    --bg-light: #f3f5f9;          /* light grey page background */
+    --text-dark: #0f172a;
+    --text-muted: #475569;
+    --card-bg: #ffffff;
+    --card-border: #e5e9f0;
+    --sidebar-width: 250px;
+    --topbar-height: 64px;
+}
+
+/* ==========================================================
+   BODY
+   The body never scrolls; only .content-area scrolls.
+   ========================================================== */
 body {
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Root flex container: sidebar + main area */
+.app-container {
     display: flex;
     height: 100vh;
-    background-color: #f4f6f9;
-    color: #334155;
+    width: 100vw;
+    position: relative;
 }
 
-/* Sidebar Styling (Dark Slate Color Scheme) */
-.sidebar {
-    width: 250px;
-    background-color: #1e293b;
-    color: #94a3b8;
-    padding: 20px 16px;
-    display: flex;
-    flex-direction: column;
-    
-}
-
-.sidebar .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 24px;
-    padding-left: 8px;
-    border-left: 4px solid #ffffff;
-}
-
-.sidebar .logo {
-    background: #0ea5e9;
+/* ==========================================================
+   MOBILE MENU BUTTON
+   Hidden on desktop, shown only inside the mobile media query.
+   ========================================================== */
+.mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 15px;
+    z-index: 1001;   /* above the sidebar so it is always clickable */
+    background: var(--sidebar-bg);
     color: #fff;
-    font-weight: bold;
+    border: none;
+    padding: 8px 12px;
     border-radius: 6px;
-    padding: 4px 10px;
+    font-size: 18px;
+    cursor: pointer;
 }
 
-.sidebar .brand h2 {
-    color: #ffffff;
-    font-size: 1.1rem;
-}
-
-.sidebar .brand h2 span {
-    font-size: 0.75rem;
-    color: #ffffff;
-}
-
-.nav-section-title {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #64748b;
-    margin: 12px 0 8px 8px;
-    letter-spacing: 0.5px;
-}
-
-.sidebar nav {
+/* ==========================================================
+   SIDEBAR (fixed on the left)
+   ========================================================== */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    height: 100vh;
+    position: fixed;   /* stays in place while content scrolls */
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    padding: 24px 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    overflow-y: auto;  /* menu scrolls if the screen is very short */
+    transition: transform 0.3s ease;  /* smooth slide in/out on mobile */
 }
 
-.sidebar a {
-    text-decoration: none;
-    color: #94a3b8;
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 10px 14px;
-    border-radius: 8px;
+/* Logo row: icon + site name */
+.brand {
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: all 0.2s ease;
+    margin-bottom: 36px;
+    padding-left: 5px;
 }
 
-.sidebar a:hover {
-    background-color: #334155;
+.brand-icon {
+    font-size: 22px;
+    background: rgba(255, 255, 255, 0.15);  /* soft translucent square behind icon */
+    padding: 8px;
+    border-radius: 8px;
     color: #ffffff;
 }
 
-.sidebar a.active {
-    background-color: #0f766e; /* Teal Green */
+.brand h2 {
+    font-size: 22px;
+    font-weight: 700;
     color: #ffffff;
 }
 
-/* Main Wrapper */
-.main-wrapper {
-    flex: 1;
+/* Vertical list of menu links */
+.nav-menu {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    gap: 6px;
 }
 
-/* Top Navbar */
-.navbar {
-    height: 64px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
+.nav-link {
+    display: block;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.2s ease;  /* smooth hover effect */
+}
+
+.nav-link:hover {
+    color: var(--sidebar-text-hover);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Currently selected menu item: teal pill with white text */
+.nav-link.active {
+    background-color: var(--accent);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* ==========================================================
+   MAIN WRAPPER
+   Pushed right by the sidebar width so nothing hides behind it.
+   ========================================================== */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* ==========================================================
+   TOPBAR (always visible)
+   Layout: [ Welcome text ........................ Profile pic ]
+   ========================================================== */
+.topbar {
+    height: var(--topbar-height);
+    background-color: var(--topbar-bg);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 30px;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    border-bottom: 1px solid var(--card-border);
 }
 
-.navbar-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-/* Home Button */
-.home-btn {
-    text-decoration: none;
-    color: #475569;
+/* Left side text: "Welcome to Admin Dashboard, <name>" */
+.welcome-text {
+    font-size: 18px;
     font-weight: 600;
-    font-size: 0.9rem;
-    padding: 8px 14px;
-    border-radius: 6px;
-    background-color: #f1f5f9;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s;
+    color: var(--text-dark);
+    white-space: nowrap;        /* never wrap to a second line */
+    overflow: hidden;
+    text-overflow: ellipsis;    /* show "..." if the text is too long */
+    margin-right: 15px;
 }
 
-.home-btn:hover {
-    background-color: #e2e8f0;
-    color: #0f766e;
+/* The admin's name inside the welcome text (highlighted in teal) */
+.user-name {
+    font-weight: 700;
+    color: var(--accent);
 }
 
-/* Search Bar */
-.search-box {
-    display: flex;
-    align-items: center;
-    background-color: #f1f5f9;
-    padding: 8px 14px;
-    border-radius: 6px;
-    gap: 8px;
-    width: 280px;
-}
-
-.search-box i {
-    color: #94a3b8;
-}
-
-.search-box input {
-    border: none;
-    background: transparent;
-    outline: none;
-    font-size: 0.85rem;
-    width: 100%;
-}
-
-/* Navbar Right */
-.navbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.icon-btn {
-    background: transparent;
-    border: none;
-    color: #64748b;
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 50%;
-}
-
-.icon-btn:hover {
-    color: #0f766e;
-}
-
+/* Right side: container for the profile picture */
 .user-profile {
     display: flex;
     align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
+    gap: 12px;
+    flex-shrink: 0;  /* never let the picture get squeezed */
 }
 
-.avatar {
-    width: 34px;
-    height: 34px;
+/* Round profile picture */
+.profile-img {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background-color: #0f766e;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    object-fit: cover;  /* crop to fill the circle without stretching */
 }
 
-/* Main Dashboard Content */
-.dashboard-content {
-    padding: 24px;
+/* ==========================================================
+   SCROLLABLE CONTENT AREA
+   Admin pages are injected here.
+   ========================================================== */
+.content-area {
+    flex: 1;               /* take all remaining height under the topbar */
+    padding: 36px 30px;
+    overflow-y: auto;      /* only this box scrolls when content is long */
+    background-color: var(--bg-light);
 }
 
 .page-title {
-    margin-bottom: 20px;
-}
-
-.page-title span {
-    font-size: 0.75rem;
-    color: #64748b;
+    font-size: 26px;
     font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 18px;
 }
 
-.page-title h1 {
-    font-size: 1.5rem;
-    color: #1e293b;
+.empty-text {
+    color: var(--text-muted);
+    font-size: 16px;
 }
 
-/* Metrics Cards Grid */
-.metrics-grid {
+/* ==========================================================
+   DASHBOARD STAT CARDS
+   Used by admin_dashboard.html
+   ========================================================== */
+.stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, 1fr);  /* 3 equal cards in a row */
     gap: 20px;
 }
 
-.card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
-.card-header {
+/* Top row of a card: label on the left, colored square on the right */
+.stat-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
 }
 
-.card-title {
-    font-size: 0.75rem;
+.stat-label {
+    font-size: 13px;
     font-weight: 700;
-    color: #64748b;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #475f7b;
 }
 
-.card-icon {
+/* Small rounded square icon holder */
+.stat-icon {
     width: 32px;
     height: 32px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
+    border-radius: 8px;
 }
 
-.student-icon { background-color: #ccfbf1; color: #0d9488; }
-.teacher-icon { background-color: #e0f2fe; color: #0284c7; }
-.course-icon { background-color: #fef3c7; color: #d97706; }
+.stat-icon.mint   { background: #ccfbf1; }
+.stat-icon.blue   { background: #e0f2fe; }
+.stat-icon.yellow { background: #fef3c7; }
 
-.card .count {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 6px;
+.stat-value {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 18px 0 8px;
 }
 
-.badge {
-    font-size: 0.75rem;
+.stat-note {
+    font-size: 13px;
     font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 4px;
+    color: var(--text-muted);
+    padding-left: 7px;
 }
 
-.badge.positive { color: #16a34a; }
-.badge.neutral { color: #64748b; }
+.stat-note.up { color: #16a34a; }  /* green growth text */
+
+/* ==========================================================
+   MOBILE OVERLAY
+   Dark layer behind the open sidebar; click it to close the menu.
+   ========================================================== */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+}
+
+/* ==========================================================
+   RESPONSIVE RULES (screens 768px wide or smaller)
+   ========================================================== */
+@media (max-width: 768px) {
+    .mobile-toggle { display: block; }          /* show the hamburger button */
+    .sidebar { transform: translateX(-100%); }  /* hide the sidebar off-screen */
+    .sidebar.open { transform: translateX(0); } /* JS adds .open to slide it in */
+    .sidebar-overlay.active { display: block; } /* JS adds .active to show the backdrop */
+
+    .main-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Left padding leaves room for the hamburger button */
+    .topbar { padding: 0 20px 0 65px; }
+    .welcome-text { font-size: 14px; }
+
+    /* Stat cards stack vertically */
+    .stats-grid { grid-template-columns: 1fr; }
+}

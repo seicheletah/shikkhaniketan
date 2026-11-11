@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skillhub - Create Account</title>
+    <title>Skillhub - Sign Up</title>
     <link rel="stylesheet" href="sign_up.css">
 
     <!-- Google Fonts -->
@@ -37,36 +37,47 @@
         <!-- Right Section: Form Box -->
         <section class="right-section">
             <div class="form-card">
-                <h2>CREATE ACCOUNT</h2>
+                <h2 id="formTitle">SIGN UP</h2>
 
-                <!-- Form Section -->
+                <!-- STEP 1: email, password, role -->
                 <form id="signupForm">
 
-                    <!-- Email Input -->
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" id="email" name="email" placeholder="Enter your email" required>
                     </div>
 
-                    <!-- Password Input -->
                     <div class="form-group">
                         <label for="password">Password</label>
                         <input type="password" id="password" name="password" placeholder="Enter your password" required>
                     </div>
 
-                    <!-- Role Dropdown Input -->
+                    <!-- Role Dropdown Input (student / teacher only) -->
                     <div class="form-group">
                         <label for="role">Role</label>
                         <select id="role" name="role" required>
                             <option value="" disabled selected hidden>Select Role</option>
-                            <option value="admin">Admin</option>
                             <option value="student">Student</option>
                             <option value="teacher">Teacher</option>
                         </select>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="continue-btn">Continue</button>
+                    <button type="submit" id="signupBtn" class="continue-btn">Continue</button>
+
+                </form>
+
+                <!-- STEP 2: email OTP (hidden until the account is created) -->
+                <form id="otpForm" hidden>
+
+                    <p class="otp-info" id="otpInfo">We sent a verification code to your email.</p>
+
+                    <div class="form-group">
+                        <label for="otp">Verification Code (OTP)</label>
+                        <input type="text" id="otp" name="otp" placeholder="Enter OTP"
+                            inputmode="numeric" autocomplete="one-time-code" required>
+                    </div>
+
+                    <button type="submit" id="verifyBtn" class="continue-btn">Verify OTP</button>
 
                 </form>
             </div>

@@ -1,0 +1,84 @@
+<!-- ==========================================================
+     ACTION HISTORY PAGE (loaded inside admin.html with fetch)
+     API: GET /admin/actions?offset=&limit=
+     ========================================================== -->
+<style>
+    .ah-box { background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:20px; }
+    .ah-wrap { overflow-x:auto; }
+    table.ah-table { width:100%; border-collapse:collapse; font-size:14px; }
+    table.ah-table th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:#475f7b; border-bottom:1px solid #e5e9f0; white-space:nowrap; }
+    table.ah-table td { padding:10px 12px; border-bottom:1px solid #eef1f6; vertical-align:top; }
+    .ah-btn { background:#e2e8f0; color:#0f172a; border:0; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; }
+    .ah-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .ah-pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+    .ah-tag { background:#ccfbf1; color:#0f766e; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+    .ah-data { max-width:320px; white-space:pre-wrap; word-break:break-all; font-size:12px; color:#475569; }
+</style>
+
+<h1 class="page-title">Action History</h1>
+
+<div class="ah-box">
+    <div class="ah-wrap">
+        <table class="ah-table">
+            <thead>
+                <tr><th>Time</th><th>Admin</th><th>Action</th><th>Resource</th><th>Resource ID</th><th>Data</th></tr>
+            </thead>
+            <tbody id="ahBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+        </table>
+    </div>
+    <div class="ah-pager">
+        <button class="ah-btn" id="ahPrev">Previous</button>
+        <span id="ahPageText" class="empty-text"></span>
+        <button class="ah-btn" id="ahNext">Next</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    const API = 'http://127.0.0.1:8000/api/v1';
+    const LIMIT = 50;
+    let offset = 0;
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    async function loadActions() {
+        const body = $('ahBody');
+        body.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+        try {
+            const res = await fetch(`${API}/admin/actions?offset=${offset}&limit=${LIMIT}`, {
+                headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+            });
+            if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return; }
+            const list = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(typeof list.detail === 'string' ? list.detail : 'Request failed (' + res.status + ')');
+
+            if (!list.length) {
+                body.innerHTML = '<tr><td colspan="6">No actions found.</td></tr>';
+            } else {
+                body.innerHTML = list.map(a => {
+                    const data = typeof a.resource_data === 'string' ? a.resource_data : JSON.stringify(a.resource_data);
+                    return `
+                    <tr>
+                        <td>${esc(a.created_at ? new Date(a.created_at).toLocaleString() : '-')}</td>
+                        <td>${esc((a.first_name || '') + ' ' + (a.last_name || ''))}</td>
+                        <td><span class="ah-tag">${esc(a.action)}</span></td>
+                        <td>${esc(a.resource)}</td>
+                        <td title="${esc(a.resource_id)}">${esc(String(a.resource_id ?? '').slice(0, 8))}</td>
+                        <td class="ah-data">${esc(data)}</td>
+                    </tr>`;
+                }).join('');
+            }
+            $('ahPageText').textContent = 'Page ' + (offset / LIMIT + 1);
+            $('ahPrev').disabled = offset === 0;
+            $('ahNext').disabled = list.length < LIMIT;
+        } catch (e) {
+            body.innerHTML = '<tr><td colspan="6" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
+        }
+    }
+
+    $('ahPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadActions(); });
+    $('ahNext').addEventListener('click', () => { offset += LIMIT; loadActions(); });
+    loadActions();
+})();
+</script>

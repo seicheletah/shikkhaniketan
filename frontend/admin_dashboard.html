@@ -1,0 +1,66 @@
+<!-- ==========================================================
+     ADMIN DASHBOARD PAGE (loaded inside admin.html with fetch)
+     Counts come from GET /admin/users (all pages are read).
+     ========================================================== -->
+<h1 class="page-title">Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-label">Total Students</span><span class="stat-icon mint"></span></div>
+        <div class="stat-value" id="dbStudents">...</div>
+        <div class="stat-note">Registered students</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-label">Total Teachers</span><span class="stat-icon blue"></span></div>
+        <div class="stat-value" id="dbTeachers">...</div>
+        <div class="stat-note">Registered teachers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-top"><span class="stat-label">Total Admins</span><span class="stat-icon yellow"></span></div>
+        <div class="stat-value" id="dbAdmins">...</div>
+        <div class="stat-note">Registered admins</div>
+    </div>
+</div>
+
+<p id="dbError" class="empty-text" style="color:#d9534f; margin-top:16px;"></p>
+
+<script>
+(function () {
+    const API = 'http://127.0.0.1:8000/api/v1';
+    const LIMIT = 50;
+
+    async function loadCounts() {
+        const counts = { student: 0, teacher: 0, admin: 0 };
+        let lastId = null;
+
+        try {
+            // Read every page of users and count them by role
+            for (let page = 0; page < 200; page++) {
+                const res = await fetch(`${API}/admin/users?limit=${LIMIT}` + (lastId ? `&last_id=${lastId}` : ''), {
+                    headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+                });
+                if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return; }
+                const list = await res.json().catch(() => []);
+                if (!res.ok) throw new Error('Could not load users (' + res.status + ')');
+
+                list.forEach(u => {
+                    const role = String(u.role || '').toLowerCase();
+                    if (role in counts) counts[role]++;
+                });
+
+                if (list.length < LIMIT) break;
+                lastId = list[list.length - 1].id;
+            }
+
+            document.getElementById('dbStudents').textContent = counts.student;
+            document.getElementById('dbTeachers').textContent = counts.teacher;
+            document.getElementById('dbAdmins').textContent = counts.admin;
+        } catch (e) {
+            ['dbStudents', 'dbTeachers', 'dbAdmins'].forEach(id => document.getElementById(id).textContent = '-');
+            document.getElementById('dbError').textContent = e.message;
+        }
+    }
+
+    loadCounts();
+})();
+</script>
