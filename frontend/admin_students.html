@@ -1,0 +1,262 @@
+<!-- ==========================================================
+     Student MANAGEMENT PAGE (loaded inside admin.html with fetch)
+     APIs: GET   /admin/students?offset=&limit=
+           GET   /admin/students/{id}
+           PATCH /admin/students/{id}  { first_name, last_name, phone_no, gender,
+                                       date_of_birth, address, about }
+     ========================================================== -->
+<style>
+    .st-box { background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:20px; }
+    .st-bar { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .st-search { flex:1; min-width:200px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; }
+    .st-search:focus { border-color:#0f766e; }
+    .st-wrap { overflow-x:auto; }
+    table.st-table { width:100%; border-collapse:collapse; font-size:14px; }
+    table.st-table th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:#475f7b; border-bottom:1px solid #e5e9f0; white-space:nowrap; }
+    table.st-table td { padding:10px 12px; border-bottom:1px solid #eef1f6; vertical-align:middle; }
+    .st-mono { font-family:Consolas,'Courier New',monospace; font-size:12px; word-break:break-all; min-width:150px; }
+    .st-long { min-width:160px; max-width:260px; word-break:break-word; }
+    .st-avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; background:#ccfbf1; display:block; }
+    .st-btn { border:0; border-radius:8px; padding:8px 14px; font-weight:600; font-size:13px; cursor:pointer; background:#0f766e; color:#fff; }
+    .st-btn.edit { background:#e0f2fe; color:#075985; }
+    .st-btn.light { background:#e2e8f0; color:#0f172a; }
+    .st-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .st-pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+
+    /* Details / edit popup */
+    .st-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:2000; align-items:flex-start; justify-content:center; padding:20px 16px; overflow-y:auto; }
+    .st-modal.open { display:flex; }
+    .st-card { background:#fff; border-radius:14px; padding:24px; width:100%; max-width:520px; margin:auto; }
+    .st-card h3 { margin-bottom:14px; }
+    .st-pic { display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+    .st-pic img { width:84px; height:84px; border-radius:50%; object-fit:cover; background:#ccfbf1; }
+    .st-card label { display:block; font-size:13px; font-weight:600; margin:12px 0 6px; }
+    .st-card input, .st-card select, .st-card textarea { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit; }
+    .st-card input[readonly] { background:#f1f5f9; color:#475569; }
+    .st-card textarea { min-height:80px; resize:vertical; }
+    .st-two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .st-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+    .st-note { font-size:12px; color:#64748b; margin-top:8px; }
+</style>
+
+<h1 class="page-title">Student Management</h1>
+
+<div class="st-box">
+    <div class="st-bar">
+        <input class="st-search" id="stSearch" type="text" placeholder="Search this page by name, phone, address or user ID...">
+    </div>
+    <div class="st-wrap">
+        <table class="st-table">
+            <thead>
+                <tr>
+                    <th>Photo</th><th>Name</th><th>Phone</th><th>Gender</th><th>Date of Birth</th>
+                    <th>Address</th><th>About</th><th>Created</th><th>User ID</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="stBody"><tr><td colspan="10">Loading...</td></tr></tbody>
+        </table>
+    </div>
+    <div class="st-pager">
+        <button class="st-btn light" id="stPrev">Previous</button>
+        <span id="stPageText" class="empty-text"></span>
+        <button class="st-btn light" id="stNext">Next</button>
+    </div>
+</div>
+
+<!-- Details + edit popup -->
+<div class="st-modal" id="stModal">
+    <div class="st-card">
+        <h3>Student Details</h3>
+
+        <div class="st-pic">
+            <img id="stPicPreview" alt="Profile picture">
+            <div class="st-note" id="stPicNote"></div>
+        </div>
+
+        <div class="st-two">
+            <div><label for="stFirst">First name</label><input type="text" id="stFirst"></div>
+            <div><label for="stLast">Last name</label><input type="text" id="stLast"></div>
+        </div>
+
+        <label for="stPhone">Phone number</label>
+        <input type="tel" id="stPhone">
+
+        <div class="st-two">
+            <div>
+                <label for="stGender">Gender</label>
+                <select id="stGender">
+                    <option value="m">Male</option>
+                    <option value="f">Female</option>
+                    <option value="o">Other</option>
+                </select>
+            </div>
+            <div><label for="stDob">Date of birth</label><input type="date" id="stDob"></div>
+        </div>
+
+        <label for="stAddress">Address</label>
+        <input type="text" id="stAddress">
+
+        <label for="stAbout">About</label>
+        <textarea id="stAbout"></textarea>
+
+        <label for="stUserId">User ID</label>
+        <input type="text" id="stUserId" readonly>
+
+        <label for="stCreated">Created at</label>
+        <input type="text" id="stCreated" readonly>
+
+        <label for="stPicPath">Profile picture (stored value)</label>
+        <input type="text" id="stPicPath" readonly>
+
+        <div class="st-actions">
+            <button class="st-btn light" id="stCancel">Close</button>
+            <button class="st-btn" id="stSave">Save changes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const API = 'http://127.0.0.1:8000/api/v1';
+    const EP = 'students';       // students / teachers
+    const LIMIT = 50;
+    let offset = 0;
+    let items = [];            // rows of the current page
+    let editingId = null;      // user_id of the person inside the popup
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
+    const GENDER = { m: 'Male', f: 'Female', o: 'Other' };
+
+    // Neutral avatar used when there is no picture or the picture can not load
+    const AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23ccfbf1'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%230f766e'/%3E%3Cpath d='M40 200C40 140 70 124 100 124S160 140 160 200Z' fill='%230f766e'/%3E%3C/svg%3E";
+    const picSrc = (p) => (p && /^(https?:|data:|\/)/.test(p)) ? p : AVATAR;
+
+    async function api(path, options = {}) {
+        const res = await fetch(API + path, {
+            ...options,
+            headers: {
+                'Accept': 'application/json',
+                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
+        if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+        return data;
+    }
+
+    // ---------- Table ----------
+    function render() {
+        const q = $('stSearch').value.trim().toLowerCase();
+        const rows = items.filter(s => !q || [s.first_name, s.last_name, s.phone_no, s.address, s.user_id]
+            .some(v => String(v || '').toLowerCase().includes(q)));
+
+        $('stBody').innerHTML = rows.length ? rows.map(s => `
+            <tr>
+                <td><img class="st-avatar" src="${esc(picSrc(s.profile_pic))}" alt="" onerror="this.onerror=null;this.src='${AVATAR}'"></td>
+                <td>${esc((s.first_name || '') + ' ' + (s.last_name || ''))}</td>
+                <td>${esc(s.phone_no)}</td>
+                <td>${esc(GENDER[s.gender] || s.gender)}</td>
+                <td>${esc(s.date_of_birth)}</td>
+                <td class="st-long">${esc(s.address)}</td>
+                <td class="st-long">${esc(s.about)}</td>
+                <td>${esc(fmt(s.created_at))}</td>
+                <td class="st-mono">${esc(s.user_id)}</td>
+                <td><button class="st-btn edit" data-id="${esc(s.user_id)}">View / Edit</button></td>
+            </tr>`).join('') : '<tr><td colspan="10">No records found.</td></tr>';
+    }
+
+    async function load() {
+        $('stBody').innerHTML = '<tr><td colspan="10">Loading...</td></tr>';
+        try {
+            const list = await api(`/admin/${EP}?offset=${offset}&limit=${LIMIT}`);
+            if (!list) return;
+            items = list;
+            render();
+            $('stPageText').textContent = 'Page ' + (offset / LIMIT + 1);
+            $('stPrev').disabled = offset === 0;
+            $('stNext').disabled = list.length < LIMIT;
+        } catch (e) {
+            $('stBody').innerHTML = '<tr><td colspan="10" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
+        }
+    }
+
+    // ---------- Popup (details + edit) ----------
+    function fillModal(s) {
+        editingId = s.user_id;
+        $('stPicPreview').onerror = function () { this.onerror = null; this.src = AVATAR; };
+        $('stPicPreview').src = picSrc(s.profile_pic);
+        $('stPicNote').textContent = s.profile_pic ? '' : 'No profile picture uploaded.';
+        $('stFirst').value = s.first_name || '';
+        $('stLast').value = s.last_name || '';
+        $('stPhone').value = s.phone_no || '';
+
+        // If the stored gender is not m / f / o, keep it as an extra option so it is not lost
+        const g = $('stGender');
+        [...g.querySelectorAll('option[data-extra]')].forEach(o => o.remove());
+        if (s.gender && !GENDER[s.gender]) {
+            const o = document.createElement('option');
+            o.value = s.gender; o.textContent = s.gender; o.dataset.extra = '1';
+            g.appendChild(o);
+        }
+        g.value = s.gender || 'm';
+
+        $('stDob').value = (s.date_of_birth || '').slice(0, 10);
+        $('stAddress').value = s.address || '';
+        $('stAbout').value = s.about || '';
+        $('stUserId').value = s.user_id || '';
+        $('stCreated').value = fmt(s.created_at);
+        $('stPicPath').value = s.profile_pic || '';
+        $('stModal').classList.add('open');
+    }
+
+    $('stBody').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-id]');
+        if (!btn) return;
+        btn.disabled = true;
+        try {
+            // Load the latest details of this one record (GET /admin/students/{id})
+            const fresh = await api(`/admin/${EP}/${btn.dataset.id}`);
+            if (fresh) fillModal(fresh);
+        } catch (err) { alert(err.message); }
+        btn.disabled = false;
+    });
+
+    $('stCancel').addEventListener('click', () => $('stModal').classList.remove('open'));
+
+    $('stSave').addEventListener('click', async () => {
+        const body = {
+            first_name: $('stFirst').value.trim(),
+            last_name: $('stLast').value.trim(),
+            phone_no: $('stPhone').value.trim(),
+            gender: $('stGender').value,
+            date_of_birth: $('stDob').value,
+            address: $('stAddress').value.trim(),
+            about: $('stAbout').value.trim()
+        };
+        if (!body.first_name || !body.last_name || !body.phone_no || !body.date_of_birth) {
+            alert('First name, last name, phone number and date of birth are required.');
+            return;
+        }
+
+        const btn = $('stSave');
+        btn.disabled = true; btn.textContent = 'Saving...';
+        try {
+            const updated = await api(`/admin/${EP}/${editingId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            if (updated) items = items.map(s => s.user_id === editingId ? { ...s, ...updated } : s);
+            $('stModal').classList.remove('open');
+            render();
+        } catch (err) { alert(err.message); }
+        btn.disabled = false; btn.textContent = 'Save changes';
+    });
+
+    $('stSearch').addEventListener('input', render);
+    $('stPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); load(); });
+    $('stNext').addEventListener('click', () => { offset += LIMIT; load(); });
+
+    load();
+})();
+</script>

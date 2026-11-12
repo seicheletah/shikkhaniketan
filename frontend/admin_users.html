@@ -19,6 +19,8 @@
     .um-btn.light { background:#e2e8f0; color:#0f172a; }
     .um-btn:disabled { opacity:.6; cursor:not-allowed; }
     .um-role { background:#ccfbf1; color:#0f766e; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; text-transform:capitalize; }
+    /* Full ID is shown in one piece; long values wrap inside the cell */
+    .um-mono { font-family: Consolas, 'Courier New', monospace; font-size:12px; word-break:break-all; min-width:150px; }
     .um-more { text-align:center; margin-top:16px; }
 
     /* Edit popup */
@@ -35,14 +37,14 @@
 
 <div class="um-box">
     <div class="um-bar">
-        <input class="um-search" id="umSearch" type="text" placeholder="Search by email or role...">
+        <input class="um-search" id="umSearch" type="text" placeholder="Search by ID, email or role...">
     </div>
     <div class="um-wrap">
         <table class="um-table">
             <thead>
-                <tr><th>Email</th><th>Role</th><th>Verified</th><th>Created</th><th>Actions</th></tr>
+                <tr><th>ID</th><th>Email</th><th>Role</th><th>Verified</th><th>Created</th><th>Actions</th></tr>
             </thead>
-            <tbody id="umBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+            <tbody id="umBody"><tr><td colspan="6">Loading...</td></tr></tbody>
         </table>
     </div>
     <div class="um-more"><button class="um-btn light" id="umMore" style="display:none;">Load more</button></div>
@@ -92,9 +94,10 @@
     // ---------- Table ----------
     function render() {
         const q = $('umSearch').value.trim().toLowerCase();
-        const rows = users.filter(u => !q || (u.email_id || '').toLowerCase().includes(q) || (u.role || '').toLowerCase().includes(q));
+        const rows = users.filter(u => !q || String(u.id || '').toLowerCase().includes(q) || (u.email_id || '').toLowerCase().includes(q) || (u.role || '').toLowerCase().includes(q));
         $('umBody').innerHTML = rows.length ? rows.map(u => `
             <tr>
+                <td class="um-mono">${esc(u.id)}</td>
                 <td>${esc(u.email_id)}</td>
                 <td><span class="um-role">${esc(u.role)}</span></td>
                 <td>${u.is_verified ? 'Yes' : 'No'}</td>
@@ -103,7 +106,7 @@
                     <button class="um-btn edit" data-action="edit" data-id="${esc(u.id)}">Edit</button>
                     <button class="um-btn del" data-action="delete" data-id="${esc(u.id)}">Delete</button>
                 </td>
-            </tr>`).join('') : '<tr><td colspan="5">No users found.</td></tr>';
+            </tr>`).join('') : '<tr><td colspan="6">No users found.</td></tr>';
         $('umMore').style.display = hasMore ? 'inline-block' : 'none';
     }
 
@@ -118,7 +121,7 @@
             hasMore = list.length === LIMIT;
             render();
         } catch (e) {
-            $('umBody').innerHTML = '<tr><td colspan="5" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
+            $('umBody').innerHTML = '<tr><td colspan="6" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
         }
     }
 

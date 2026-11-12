@@ -1,0 +1,195 @@
+<!-- ==========================================================
+     ADMIN SETTINGS PAGE (loaded inside admin.html with fetch)
+     APIs: GET    /admin/me                 -> own admin details
+           PATCH  /admin/users/{id}         { email_id, hashed_password }
+           DELETE /admin/users/{id}         -> delete own account
+     ========================================================== -->
+<style>
+    .se-box { background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:24px; max-width:560px; }
+    .se-box h2 { font-size:18px; margin-bottom:12px; color:#0f172a; }
+    .se-row { display:flex; justify-content:space-between; gap:16px; padding:11px 0; border-bottom:1px solid #eef1f6; font-size:14px; }
+    .se-label { color:#475f7b; font-weight:600; flex-shrink:0; }
+    .se-value { text-align:right; word-break:break-all; color:#0f172a; }
+    .se-mono { font-family:Consolas,'Courier New',monospace; font-size:12px; }
+    .se-badge { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+    .se-badge.yes { background:#dcfce7; color:#166534; }
+    .se-badge.no { background:#fee2e2; color:#991b1b; }
+    .se-buttons { display:flex; gap:12px; margin-top:20px; flex-wrap:wrap; }
+    .se-btn { border:0; border-radius:8px; padding:10px 20px; font-weight:600; font-size:14px; cursor:pointer; background:#0f766e; color:#fff; }
+    .se-btn:hover { background:#0b5a54; }
+    .se-btn.del { background:#dc2626; }
+    .se-btn.del:hover { background:#b91c1c; }
+    .se-btn.light { background:#e2e8f0; color:#0f172a; }
+    .se-btn.light:hover { background:#cbd5e1; }
+    .se-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .se-box label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px; }
+    .se-box input { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; }
+    .se-box input:focus { border-color:#0f766e; }
+    .se-msg { margin-top:14px; font-size:13px; display:none; padding:9px 12px; border-radius:8px; }
+    .se-msg.ok { display:block; background:#ecfdf5; color:#166534; border:1px solid #bbf7d0; }
+    .se-msg.err { display:block; background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+</style>
+
+<h1 class="page-title">Settings</h1>
+
+<!-- ========== VIEW 1: MY DETAILS (GET /admin/me) ========== -->
+<div class="se-box" id="seDetailsView">
+    <h2>My Details</h2>
+    <div id="seDetails"><p class="empty-text">Loading...</p></div>
+
+    <div class="se-buttons">
+        <button class="se-btn" id="seUpdateBtn" disabled>Update Profile</button>
+        <button class="se-btn del" id="seDeleteBtn" disabled>Delete Account</button>
+    </div>
+    <div class="se-msg" id="seDelMsg"></div>
+</div>
+
+<!-- ========== VIEW 2: UPDATE PROFILE (PATCH /admin/users/{id}) ========== -->
+<div class="se-box" id="seUpdateView" hidden>
+    <h2>Update Profile</h2>
+
+    <label for="seEmail">Email</label>
+    <input type="email" id="seEmail" autocomplete="off">
+
+    <label for="sePassword">New password</label>
+    <input type="password" id="sePassword" autocomplete="new-password" placeholder="Leave empty to keep the old password">
+
+    <label for="sePassword2">Confirm new password</label>
+    <input type="password" id="sePassword2" autocomplete="new-password" placeholder="Type the new password again">
+
+    <div class="se-buttons">
+        <button class="se-btn" id="seSave">Save</button>
+        <button class="se-btn light" id="seCancel">Cancel</button>
+    </div>
+    <div class="se-msg" id="seSaveMsg"></div>
+</div>
+
+<script>
+(function () {
+    const API = 'http://127.0.0.1:8000/api/v1';
+    let me = null;   // own admin details
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    async function api(path, options = {}) {
+        const res = await fetch(API + path, {
+            ...options,
+            headers: {
+                'Accept': 'application/json',
+                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
+        if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
+        const data = await res.json().catch(() => ({}));   // DELETE answers 204 (no body)
+        if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+        return data;
+    }
+
+    function setMsg(el, type, text) {
+        el.className = 'se-msg' + (type ? ' ' + type : '');
+        el.textContent = text || '';
+    }
+
+    const yesNo = (v) => `<span class="se-badge ${v ? 'yes' : 'no'}">${v ? 'Yes' : 'No'}</span>`;
+
+    // Switch between the details view and the update view (same place on the page)
+    function showView(name) {
+        $('seDetailsView').hidden = name !== 'details';
+        $('seUpdateView').hidden = name !== 'update';
+    }
+
+    // ---------- My details ----------
+    function showDetails() {
+        const full = ((me.first_name || '') + ' ' + (me.last_name || '')).trim() || '-';
+        $('seDetails').innerHTML = `
+            <div class="se-row"><span class="se-label">Name</span><span class="se-value">${esc(full)}</span></div>
+            <div class="se-row"><span class="se-label">Email</span><span class="se-value">${esc(me.email_id)}</span></div>
+            <div class="se-row"><span class="se-label">Role</span><span class="se-value" style="text-transform:capitalize;">${esc(me.role)}</span></div>
+            <div class="se-row"><span class="se-label">Email verified</span><span class="se-value">${yesNo(me.is_verified)}</span></div>
+            <div class="se-row"><span class="se-label">Admin access</span><span class="se-value">${yesNo(me.admin_access)}</span></div>
+            <div class="se-row"><span class="se-label">User ID</span><span class="se-value se-mono">${esc(me.id)}</span></div>`;
+        $('seUpdateBtn').disabled = false;
+        $('seDeleteBtn').disabled = false;
+    }
+
+    async function loadMe() {
+        try {
+            me = await api('/admin/me');
+            if (me) showDetails();
+        } catch (e) {
+            $('seDetails').innerHTML = '<p style="color:#d9534f;">' + esc(e.message) + '</p>';
+        }
+    }
+
+    // ---------- Update Profile button: open the update form ----------
+    $('seUpdateBtn').addEventListener('click', () => {
+        $('seEmail').value = me.email_id || '';
+        $('sePassword').value = '';
+        $('sePassword2').value = '';
+        setMsg($('seSaveMsg'), '', '');
+        showView('update');
+    });
+
+    $('seCancel').addEventListener('click', () => showView('details'));
+
+    // ---------- Save (PATCH /admin/users/{id}) ----------
+    $('seSave').addEventListener('click', async () => {
+        const msg = $('seSaveMsg');
+        const email = $('seEmail').value.trim();
+        const pass = $('sePassword').value;
+        const pass2 = $('sePassword2').value;
+
+        if (!email) { setMsg(msg, 'err', 'Email cannot be empty.'); return; }
+        if (pass !== pass2) { setMsg(msg, 'err', 'The two passwords do not match.'); return; }
+
+        const emailChanged = email !== me.email_id;
+        if (!emailChanged && !pass) { setMsg(msg, 'err', 'Nothing was changed.'); return; }
+
+        const body = { email_id: email };
+        if (pass) body.hashed_password = pass;   // only sent when a new password is typed
+
+        const btn = $('seSave');
+        btn.disabled = true; btn.textContent = 'Saving...';
+        setMsg(msg, '', '');
+        try {
+            const updated = await api('/admin/users/' + me.id, { method: 'PATCH', body: JSON.stringify(body) });
+            if (!updated) return;
+
+            // The login uses the email, so after an email change the admin logs in again
+            if (emailChanged) {
+                alert('Saved. Please log in again with your new email.');
+                if (typeof logoutUser === 'function') logoutUser();
+                return;
+            }
+
+            me = { ...me, ...updated };
+            showDetails();
+            showView('details');
+        } catch (e) {
+            setMsg(msg, 'err', e.message);
+        }
+        btn.disabled = false; btn.textContent = 'Save';
+    });
+
+    // ---------- Delete Account (DELETE /admin/users/{id}) ----------
+    $('seDeleteBtn').addEventListener('click', async () => {
+        if (!confirm('Delete your account permanently? This cannot be undone.')) return;
+
+        const btn = $('seDeleteBtn');
+        btn.disabled = true; btn.textContent = 'Deleting...';
+        setMsg($('seDelMsg'), '', '');
+        try {
+            await api('/admin/users/' + me.id, { method: 'DELETE' });
+            if (typeof logoutUser === 'function') logoutUser();
+            else window.location.replace('login.html');
+        } catch (e) {
+            setMsg($('seDelMsg'), 'err', e.message);
+            btn.disabled = false; btn.textContent = 'Delete Account';
+        }
+    });
+
+    loadMe();
+})();
+</script>

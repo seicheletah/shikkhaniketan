@@ -8,6 +8,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 100px;   /* the fixed header never hides a section that is scrolled into view */
 }
 
 body {
@@ -31,6 +32,12 @@ body {
     background: linear-gradient(110deg, #edf9ff, #ffffff, #f0fbff);
 
     gap: 30px;
+
+    /* FIXED HEADER: stays at the top while the rest of the page scrolls */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(15, 118, 110, 0.10);
 }
 
 
@@ -68,6 +75,14 @@ body {
     font-size: 23px;
 
     box-shadow: none;
+}
+
+/* SkillHub logo image (skillhublogo.jpeg) */
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .logo-text {
@@ -241,12 +256,12 @@ body {
 .hero {
     width: 100%;
 
-    min-height: 650px;
+    min-height: 400px;   /* was 650px: smaller so Popular Courses is visible without scrolling */
 
     display: flex;
     align-items: center;
 
-    padding: 50px 7%;
+    padding: 25px 7%;
 
     background: linear-gradient(110deg, #edf9ff, #ffffff, #f0fbff);
 }
@@ -257,7 +272,7 @@ body {
 }
 
 .hero-content h1 {
-    font-size: 60px;
+    font-size: 48px;
     line-height: 1.15;
     font-weight: 750;
     letter-spacing: -1.5px;
@@ -281,8 +296,9 @@ body {
 }
 
 .hero-image img {
-    width: 100%;
-    max-width: 620px;
+    width: auto;
+    max-width: 100%;
+    max-height: 340px;   /* keeps the picture from filling the whole screen */
     object-fit: contain;
 }
 
@@ -305,7 +321,7 @@ body {
     --star: #e59819;
     --radius: 14px;
 
-    padding: 60px 7% 70px;
+    padding: 40px 7% 70px;
     background: var(--bg);
     color: var(--text);
     font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
@@ -690,11 +706,11 @@ body {
     }
 
     .hero {
-        padding: 50px 5%;
+        padding: 25px 5%;
     }
 
     .hero-content h1 {
-        font-size: 52px;
+        font-size: 42px;
     }
 
     .popular-courses {
@@ -749,7 +765,7 @@ body {
     .hero {
         flex-direction: column;
         text-align: center;
-        padding: 60px 20px;
+        padding: 35px 20px;
     }
 
     .hero-content {
@@ -758,7 +774,7 @@ body {
     }
 
     .hero-content h1 {
-        font-size: 45px;
+        font-size: 36px;
     }
 
     .hero-content p {
@@ -768,7 +784,11 @@ body {
 
     .hero-image {
         width: 100%;
-        margin-top: 35px;
+        margin-top: 20px;
+    }
+
+    .hero-image img {
+        max-height: 240px;
     }
 
     /* ---------- Courses ---------- */
@@ -859,11 +879,11 @@ body {
     /* ---------- Hero ---------- */
 
     .hero {
-        padding: 50px 20px;
+        padding: 30px 20px;
     }
 
     .hero-content h1 {
-        font-size: 38px;
+        font-size: 30px;
         letter-spacing: -1px;
     }
 

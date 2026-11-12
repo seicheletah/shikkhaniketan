@@ -9,9 +9,7 @@
     <!-- Main stylesheet for the whole admin layout -->
     <link rel="stylesheet" href="admin.css">
 
-    <!-- FontAwesome: icon library used for the menu button and the logo.
-         1) LOCAL copy first (folder "fontawesome" next to this file).
-         2) CDN copy second, used as a backup if the local folder is missing. -->
+    <!-- FontAwesome: local copy first, CDN copy as backup -->
     <link rel="stylesheet" href="fontawesome/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -29,7 +27,7 @@
 
             <!-- Logo + site name; clicking it goes to the home page -->
             <div class="brand">
-                <i class="fa-solid fa-graduation-cap brand-icon"></i>
+                <img src="skillhublogo.jpeg" alt="SkillHub logo" class="brand-logo">
                 <a href="index.html" style="text-decoration: none; color: inherit;">
                     <h2>SkillHub</h2>
                 </a>
@@ -41,6 +39,9 @@
             <nav class="nav-menu">
                 <a href="admin_dashboard.html" class="nav-link active" data-page="admin_dashboard.html">
                     <span>Dashboard</span>
+                </a>
+                <a href="admin_tokens.html" class="nav-link" data-page="admin_tokens.html">
+                    <span>Access Token</span>
                 </a>
                 <a href="admin_users.html" class="nav-link" data-page="admin_users.html">
                     <span>User Management</span>
@@ -63,16 +64,12 @@
                 <a href="admin_history.html" class="nav-link" data-page="admin_history.html">
                     <span>Action History</span>
                 </a>
-                <a href="admin_tokens.html" class="nav-link" data-page="admin_tokens.html">
-                    <span>Access Token</span>
-                </a>
+                
                 <a href="admin_settings.html" class="nav-link" data-page="admin_settings.html">
                     <span>Settings</span>
                 </a>
 
-                <!-- Logout link:
-                     - NO "data-page" attribute on purpose, so the page-loader ignores it.
-                     - Has its own id so admin.js can attach the logout logic. -->
+                <!-- Logout link: NO "data-page" on purpose, admin.js handles it by id -->
                 <a href="#logout" class="nav-link" id="logoutBtn">
                     <span>Logout</span>
                 </a>
@@ -85,25 +82,24 @@
         <!-- ===================== MAIN AREA (topbar + content) ===================== -->
         <div class="main-wrapper">
 
-            <!-- TOPBAR: welcome text on the left, profile picture on the right -->
+            <!-- TOPBAR: welcome text on the left, [admin name + profile picture] on the right -->
             <header class="topbar">
-                <!-- LEFT SIDE: "Welcome to Admin Dashboard, <name>"
-                     The <span> with id="adminUserName" is filled with the real
-                     name by admin.js. "Admin" is only the fallback. -->
+                <!-- LEFT SIDE: only the welcome text now -->
                 <div class="welcome-text">
-                    Welcome to Admin Dashboard,
-                    <span class="user-name" id="adminUserName">Admin</span>
+                    Welcome to Admin Dashboard
                 </div>
 
-                <!-- RIGHT SIDE: neutral inline avatar (no image download needed) -->
+                <!-- RIGHT SIDE: the admin name sits BEFORE the profile picture.
+                     The <span> with id="adminUserName" is filled with the real
+                     name by admin.js. "Admin" is only the fallback. -->
                 <div class="user-profile">
+                    <span class="user-name" id="adminUserName">Admin</span>
                     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23ccfbf1'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%230f766e'/%3E%3Cpath d='M40 200C40 140 70 124 100 124S160 140 160 200Z' fill='%230f766e'/%3E%3C/svg%3E"
                          alt="Admin Profile" class="profile-img">
                 </div>
             </header>
 
-            <!-- Scrollable content area.
-                 All admin pages are loaded here with fetch(). -->
+            <!-- Scrollable content area. All admin pages are loaded here with fetch(). -->
             <main class="content-area" id="main-content">
             </main>
         </div>

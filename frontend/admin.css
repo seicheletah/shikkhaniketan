@@ -103,6 +103,17 @@ body {
     color: #ffffff;
 }
 
+/* SkillHub logo image (skillhublogo.jpeg) */
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #ffffff;   /* white square so the logo is clear on the sidebar */
+    padding: 2px;
+    flex-shrink: 0;
+}
+
 .brand h2 {
     font-size: 22px;
     font-weight: 700;
@@ -153,7 +164,7 @@ body {
 
 /* ==========================================================
    TOPBAR (always visible)
-   Layout: [ Welcome text ........................ Profile pic ]
+   Layout: [ Welcome text ................ Admin name + Profile pic ]
    ========================================================== */
 .topbar {
     height: var(--topbar-height);
@@ -168,7 +179,7 @@ body {
     border-bottom: 1px solid var(--card-border);
 }
 
-/* Left side text: "Welcome to Admin Dashboard, <name>" */
+/* Left side text: "Welcome to Admin Dashboard" */
 .welcome-text {
     font-size: 18px;
     font-weight: 600;
@@ -179,13 +190,13 @@ body {
     margin-right: 15px;
 }
 
-/* The admin's name inside the welcome text (highlighted in teal) */
+/* The admin's name (now shown before the profile picture, highlighted in teal) */
 .user-name {
     font-weight: 700;
     color: var(--accent);
 }
 
-/* Right side: container for the profile picture */
+/* Right side: admin name + profile picture */
 .user-profile {
     display: flex;
     align-items: center;

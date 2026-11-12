@@ -19,6 +19,9 @@
     .tk-badge { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
     .tk-badge.on { background:#dcfce7; color:#166534; }
     .tk-badge.off { background:#fee2e2; color:#991b1b; }
+    /* Full IDs and tokens are shown in one piece; long values wrap inside the cell */
+    .tk-mono { font-family: Consolas, 'Courier New', monospace; font-size:12px; word-break:break-all; min-width:150px; }
+    .tk-token { min-width:260px; }
     .tk-pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
 </style>
 
@@ -116,10 +119,10 @@
             } else {
                 body.innerHTML = list.map(t => `
                     <tr>
-                        <td title="${esc(t.token)}">${esc(String(t.token).slice(0, 14))}...</td>
+                        <td class="tk-mono tk-token">${esc(t.token)}</td>
                         <td>${esc(fmt(t.expires_at))}</td>
-                        <td title="${esc(t.creator_user_id)}">${esc(String(t.creator_user_id).slice(0, 8))}...</td>
-                        <td title="${esc(t.client_user_id)}">${t.client_user_id ? esc(String(t.client_user_id).slice(0, 8)) + '...' : '-'}</td>
+                        <td class="tk-mono">${esc(t.creator_user_id)}</td>
+                        <td class="tk-mono">${t.client_user_id ? esc(t.client_user_id) : '-'}</td>
                         <td><span class="tk-badge ${t.is_active ? 'on' : 'off'}">${t.is_active ? 'Active' : 'Inactive'}</span></td>
                         <td><button class="tk-btn light" data-token="${esc(t.token)}">Copy</button></td>
                     </tr>`).join('');

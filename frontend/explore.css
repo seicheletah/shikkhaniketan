@@ -29,6 +29,23 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 .search-box input:focus { border-color: var(--teal); background: #fff; box-shadow: 0 0 0 4px rgba(13,104,96,.1); }
 
+/* ---------------- TOP BAR LOGO: [ arrow + logo + SkillHub ] [ search ] ---------------- */
+.explore-top { display: flex; align-items: center; gap: 20px; max-width: 1400px; margin: 0 auto; }
+.explore-brand {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #17384d;
+  font-size: 24px; font-weight: 800; letter-spacing: -0.6px; white-space: nowrap; flex-shrink: 0;
+}
+/* Circular arrow: click it to go back to the home page */
+.explore-back {
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  border: 2px solid var(--teal); border-radius: 50%; color: var(--teal);
+  transition: background-color .2s ease, color .2s ease;
+}
+.explore-brand:hover .explore-back { background-color: var(--teal); color: #fff; }
+.explore-brand img { width: 40px; height: 40px; object-fit: contain; }
+/* The search box fills the remaining space in the top bar */
+.explore-top .search-box { flex: 1; max-width: 720px; margin: 0 auto; }
+
 /* ---------------- LAYOUT ---------------- */
 .full-page-container { display: flex; gap: 28px; max-width: 1400px; margin: 0 auto; padding: 28px 24px 50px; align-items: flex-start; }
 
@@ -146,4 +163,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   .full-page-container { flex-direction: column; }
   .filter-sidebar { width: 100%; position: static; max-height: none; }
   .tag-list { max-height: 180px; }
+}
+
+/* Small screens: logo row on top, search box below it */
+@media (max-width: 700px) {
+  .explore-top { flex-wrap: wrap; gap: 12px; }
+  .explore-top .search-box { flex: 1 1 100%; max-width: none; }
 }

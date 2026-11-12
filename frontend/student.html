@@ -9,11 +9,7 @@
     <!-- Main stylesheet for the whole dashboard layout -->
     <link rel="stylesheet" href="student.css">
 
-    <!-- FontAwesome: icon library used for the menu button, logo, etc.
-         1) LOCAL copy first (folder "fontawesome" next to this file).
-            It works even without internet and can not be blocked.
-         2) CDN copy second, used as a backup if the local folder is missing.
-         If a file is missing the browser simply ignores it, so having both is safe. -->
+    <!-- FontAwesome: local copy first, CDN copy as backup -->
     <link rel="stylesheet" href="fontawesome/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -30,7 +26,7 @@
         <aside class="sidebar" id="sidebar">
             <!-- Logo + site name; clicking it goes to the home page -->
             <div class="brand">
-                <i class="fa-solid fa-graduation-cap brand-icon"></i>
+                <img src="skillhublogo.jpeg" alt="SkillHub logo" class="brand-logo">
                 <a href="index.html" style="text-decoration: none; color: inherit;">
                     <h2>SkillHub</h2>
                 </a>
@@ -50,19 +46,12 @@
                     <span>Settings</span>
                 </a>
 
-                <!-- Transactions link.
-                     It sits between Settings and Logout. Because it has a
-                     "data-page" attribute, student.js loads transactions.html
-                     into the content area with fetch(), just like Courses,
-                     Quiz and Settings. -->
+                <!-- Transactions link (loaded into the content area by student.js) -->
                 <a href="transactions.html" class="nav-link" data-page="transactions.html">
                     <span>Transactions</span>
                 </a>
 
-                <!-- Logout link:
-                     - It has NO "data-page" attribute on purpose, so the page-loader
-                       in student.js ignores it.
-                     - It has its own id so student.js can attach the logout logic. -->
+                <!-- Logout link: NO "data-page" on purpose, student.js handles it by id -->
                 <a href="#logout" class="nav-link" id="logoutBtn">
                     <span>Logout</span>
                 </a>
@@ -77,19 +66,14 @@
 
             <!-- TOPBAR: welcome text on the left, profile picture on the right -->
             <header class="topbar">
-                <!-- LEFT SIDE: "Welcome to Student Dashboard, <name>"
-                     The <span> with id="studentUserName" is filled with the
-                     real first name by student.js after the profile loads.
-                     "Student" is just the fallback shown until then. -->
+                <!-- The <span> with id="studentUserName" is filled with the
+                     real first name by student.js after the profile loads. -->
                 <div class="welcome-text">
                     Welcome to Student Dashboard,
                     <span class="user-name" id="studentUserName">Student</span>
                 </div>
 
-                <!-- RIGHT SIDE: profile picture.
-                     The src below is only a neutral placeholder (inline image,
-                     no download). student.js replaces it with the uploaded photo,
-                     or with the male / female default avatar. -->
+                <!-- RIGHT SIDE: profile picture (student.js replaces the placeholder) -->
                 <div class="user-profile">
                     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e3f3ee'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23096858'/%3E%3Cpath d='M40 200C40 140 70 124 100 124S160 140 160 200Z' fill='%23096858'/%3E%3C/svg%3E"
                          alt="User Profile" class="profile-img">

@@ -99,6 +99,17 @@ body {
     color: #ffffff;
 }
 
+/* SkillHub logo image (skillhublogo.jpeg) */
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #ffffff;   /* white square so the logo is clear on the sidebar */
+    padding: 2px;
+    flex-shrink: 0;
+}
+
 .brand h2 {
     font-size: 22px;
     font-weight: 700;
