@@ -1,0 +1,198 @@
+<!-- ==========================================================
+     PURCHASE MANAGEMENT PAGE
+     This file is loaded INSIDE admin.html (admin.js fetches it and puts it in the
+     content area), so it has no <html>/<head>/<body> tags.
+
+     API used on this page:
+       GET /admin/purchases?offset=&limit=
+           -> every purchase (a student buying a course through Razorpay)
+
+     Every purchase returned by the API has these fields (all are shown below):
+       id, student_id, course_id, amount, currency, status,
+       razorpay_order_id, razorpay_payment_id, razorpay_signature, created_at
+
+     The API only lists purchases. It has no edit or delete, so this page is read-only.
+     ========================================================== -->
+<style>
+    /* "pu-" prefix = Purchase page, so these class names never clash with other pages */
+    .pu-box { background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:20px; }
+    .pu-bar { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .pu-input { flex:1; min-width:200px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; }
+    .pu-input:focus { border-color:#0f766e; }
+    .pu-select { padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#fff; }
+    .pu-wrap { overflow-x:auto; }                       /* wide table scrolls sideways inside this box */
+    table.pu-table { width:100%; border-collapse:collapse; font-size:14px; }
+    table.pu-table th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:#475f7b; border-bottom:1px solid #e5e9f0; white-space:nowrap; }
+    table.pu-table td { padding:10px 12px; border-bottom:1px solid #eef1f6; vertical-align:top; }
+    .pu-mono { font-family:Consolas,'Courier New',monospace; font-size:12px; word-break:break-all; min-width:170px; }   /* full IDs / signatures wrap, never cut */
+    .pu-badge { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; text-transform:capitalize; background:#e2e8f0; color:#334155; }
+    .pu-badge.ok { background:#dcfce7; color:#166534; }        /* paid / captured / success */
+    .pu-badge.wait { background:#fef3c7; color:#92400e; }      /* created / pending */
+    .pu-badge.bad { background:#fee2e2; color:#991b1b; }       /* failed / refunded */
+    .pu-btn { border:0; border-radius:8px; padding:9px 16px; font-weight:600; font-size:13px; cursor:pointer; background:#e2e8f0; color:#0f172a; }
+    .pu-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .pu-pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+</style>
+
+<h1 class="page-title">Purchase Management</h1>
+
+<div class="pu-box">
+
+    <!-- Search + status filter (both work on the purchases already loaded on this page) -->
+    <div class="pu-bar">
+        <input class="pu-input" id="puSearch" type="text" placeholder="Search this page by any ID (purchase, student, course, Razorpay order or payment)...">
+        <select class="pu-select" id="puStatus">
+            <option value="">All statuses</option>
+            <!-- The status options are added by the script from the data that was loaded -->
+        </select>
+    </div>
+
+    <div class="pu-wrap">
+        <table class="pu-table">
+            <thead>
+                <tr>
+                    <th>Purchase ID</th>            <!-- id -->
+                    <th>Student ID</th>             <!-- student_id -->
+                    <th>Course ID</th>              <!-- course_id -->
+                    <th>Amount</th>                 <!-- amount (paise / 100 = rupees) + currency -->
+                    <th>Status</th>                 <!-- status -->
+                    <th>Razorpay Order ID</th>      <!-- razorpay_order_id -->
+                    <th>Razorpay Payment ID</th>    <!-- razorpay_payment_id -->
+                    <th>Razorpay Signature</th>     <!-- razorpay_signature -->
+                    <th>Created</th>                <!-- created_at -->
+                </tr>
+            </thead>
+            <tbody id="puBody"><tr><td colspan="9">Loading...</td></tr></tbody>
+        </table>
+    </div>
+
+    <!-- Page buttons (50 purchases per page) -->
+    <div class="pu-pager">
+        <button class="pu-btn" id="puPrev">Previous</button>
+        <span id="puPageText" class="empty-text"></span>
+        <button class="pu-btn" id="puNext">Next</button>
+    </div>
+</div>
+
+<script>
+/* The whole script is wrapped in a function so its variable names never clash
+   when admin.js loads this page again (it re-runs the script every time). */
+(function () {
+
+    // ---------- Settings ----------
+    const API = 'http://127.0.0.1:8000/api/v1';
+    const LIMIT = 50;           // purchases per page (API default is 50)
+
+    // ---------- State ----------
+    let offset = 0;             // how many purchases to skip (page number x LIMIT)
+    let items = [];             // purchases of the current page
+
+    // ---------- Small helpers ----------
+    const $ = (id) => document.getElementById(id);
+
+    // Makes text safe before putting it in HTML
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    // Turns an ISO date from the API into the admin's local date and time
+    const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
+
+    // Razorpay sends the amount in the smallest unit (paise): 200000 paise = 2000 rupees.
+    // So we divide by 100 before showing it. (If the amount is not a number, it is shown as it is.)
+    function money(amount) {
+        const n = Number(amount);
+        if (amount === null || amount === undefined || Number.isNaN(n)) return amount ?? '';
+        return (n / 100).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+
+    // Picks the badge colour from the status text (green = good, yellow = waiting, red = problem)
+    function badgeClass(status) {
+        const s = String(status || '').toLowerCase();
+        if (['paid', 'captured', 'success', 'successful', 'completed', 'authorized'].includes(s)) return 'ok';
+        if (['created', 'pending', 'attempted'].includes(s)) return 'wait';
+        if (['failed', 'refunded', 'cancelled', 'canceled'].includes(s)) return 'bad';
+        return '';
+    }
+
+    // Calls the backend with the admin's saved login token
+    async function api(path) {
+        const res = await fetch(API + path, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
+
+        // 401 = token expired or invalid -> log the admin out (function comes from admin.js)
+        if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(typeof data.detail === 'string' ? data.detail
+                : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+        }
+        return data;
+    }
+
+    // Fills the status drop-down with the statuses found in the loaded purchases
+    function fillStatusOptions() {
+        const select = $('puStatus');
+        const current = select.value;
+        const statuses = [...new Set(items.map(p => p.status).filter(Boolean))];
+        select.innerHTML = '<option value="">All statuses</option>' +
+            statuses.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+        select.value = statuses.includes(current) ? current : '';
+    }
+
+    // ---------- Draw the table ----------
+    function render() {
+        const q = $('puSearch').value.trim().toLowerCase();
+        const status = $('puStatus').value;
+
+        const rows = items.filter(p =>
+            (!status || p.status === status) &&
+            (!q || [p.id, p.student_id, p.course_id, p.razorpay_order_id, p.razorpay_payment_id]
+                .some(v => String(v || '').toLowerCase().includes(q))));
+
+        $('puBody').innerHTML = rows.length ? rows.map(p => `
+            <tr>
+                <td class="pu-mono">${esc(p.id)}</td>
+                <td class="pu-mono">${esc(p.student_id)}</td>
+                <td class="pu-mono">${esc(p.course_id)}</td>
+                <td style="white-space:nowrap;"><strong>${esc(money(p.amount))}</strong> ${esc(p.currency)}</td>
+                <td><span class="pu-badge ${badgeClass(p.status)}">${esc(p.status)}</span></td>
+                <td class="pu-mono">${esc(p.razorpay_order_id)}</td>
+                <td class="pu-mono">${esc(p.razorpay_payment_id)}</td>
+                <td class="pu-mono">${esc(p.razorpay_signature)}</td>
+                <td>${esc(fmt(p.created_at))}</td>
+            </tr>`).join('') : '<tr><td colspan="9">No purchases found.</td></tr>';
+    }
+
+    // ---------- Load one page of purchases ----------
+    async function load() {
+        $('puBody').innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
+        try {
+            const list = await api(`/admin/purchases?offset=${offset}&limit=${LIMIT}`);
+            if (!list) return;
+            items = Array.isArray(list) ? list : [];
+            fillStatusOptions();
+            render();
+
+            // Page buttons: Previous is off on page 1, Next is off when a page is not full
+            $('puPageText').textContent = 'Page ' + (offset / LIMIT + 1);
+            $('puPrev').disabled = offset === 0;
+            $('puNext').disabled = items.length < LIMIT;
+        } catch (e) {
+            $('puBody').innerHTML = '<tr><td colspan="9" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
+        }
+    }
+
+    // ---------- Search box, status filter, page buttons ----------
+    $('puSearch').addEventListener('input', render);
+    $('puStatus').addEventListener('change', render);
+    $('puPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); load(); });
+    $('puNext').addEventListener('click', () => { offset += LIMIT; load(); });
+
+    // First load when the page opens
+    load();
+})();
+</script>

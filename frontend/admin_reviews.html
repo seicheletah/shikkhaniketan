@@ -1,0 +1,230 @@
+<!-- ==========================================================
+     REVIEW MANAGEMENT PAGE
+     This file is loaded INSIDE admin.html (admin.js fetches it and puts it in the
+     content area), so it has no <html>/<head>/<body> tags.
+
+     APIs used on this page:
+       1) GET    /admin/reviews?offset=&limit=
+                 -> every review of every course
+       2) GET    /admin/reviews/courses/{id}?offset=&limit=
+                 -> only the reviews of ONE course (the "Filter by course" box)
+       3) DELETE /admin/reviews/students/{student_id}/courses/{course_id}
+                 -> deletes the review that one student wrote for one course (answers 204, no body)
+
+     Every review returned by the API has these fields (all are shown below):
+       comment, rate, first_name, last_name, course_id, user_id, created_at
+     ========================================================== -->
+<style>
+    /* "rv-" prefix = Review page, so these class names never clash with other pages */
+    .rv-box { background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:20px; }
+    .rv-bar { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .rv-input { flex:1; min-width:200px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; }
+    .rv-input:focus { border-color:#0f766e; }
+    .rv-wrap { overflow-x:auto; }                       /* wide table scrolls sideways inside this box */
+    table.rv-table { width:100%; border-collapse:collapse; font-size:14px; }
+    table.rv-table th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:#475f7b; border-bottom:1px solid #e5e9f0; white-space:nowrap; }
+    table.rv-table td { padding:10px 12px; border-bottom:1px solid #eef1f6; vertical-align:top; }
+    .rv-mono { font-family:Consolas,'Courier New',monospace; font-size:12px; word-break:break-all; min-width:150px; }   /* full IDs wrap, never cut */
+    .rv-comment { min-width:240px; max-width:420px; white-space:pre-wrap; word-break:break-word; }                   /* full comment text */
+    .rv-stars { color:#e59819; letter-spacing:1px; white-space:nowrap; }
+    .rv-btn { border:0; border-radius:8px; padding:8px 14px; font-weight:600; font-size:13px; cursor:pointer; background:#0f766e; color:#fff; }
+    .rv-btn.del { background:#fee2e2; color:#991b1b; }
+    .rv-btn.light { background:#e2e8f0; color:#0f172a; }
+    .rv-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .rv-pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+    .rv-info { font-size:13px; color:#475569; margin-bottom:12px; display:none; }
+</style>
+
+<h1 class="page-title">Review Management</h1>
+
+<div class="rv-box">
+
+    <!-- Search + course filter -->
+    <div class="rv-bar">
+        <!-- Searches only the reviews already loaded on this page (name, comment, IDs) -->
+        <input class="rv-input" id="rvSearch" type="text" placeholder="Search this page by name, comment, course ID or user ID...">
+
+        <!-- Loads only the reviews of one course (API 2) -->
+        <input class="rv-input" id="rvCourseId" type="text" placeholder="Filter by course: paste the full course ID" style="max-width:360px;">
+        <button class="rv-btn" id="rvFilterBtn">Filter by course</button>
+        <button class="rv-btn light" id="rvResetBtn">Show all</button>
+    </div>
+
+    <!-- Tells the admin which list is on screen (all reviews, or one course) -->
+    <div class="rv-info" id="rvInfo"></div>
+
+    <div class="rv-wrap">
+        <table class="rv-table">
+            <thead>
+                <tr>
+                    <th>Student</th>          <!-- first_name + last_name -->
+                    <th>Rating</th>           <!-- rate -->
+                    <th>Comment</th>          <!-- comment -->
+                    <th>Created</th>          <!-- created_at -->
+                    <th>Course ID</th>        <!-- course_id -->
+                    <th>User ID</th>          <!-- user_id (the student who wrote it) -->
+                    <th>Actions</th>          <!-- delete button -->
+                </tr>
+            </thead>
+            <tbody id="rvBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+        </table>
+    </div>
+
+    <!-- Page buttons (50 reviews per page) -->
+    <div class="rv-pager">
+        <button class="rv-btn light" id="rvPrev">Previous</button>
+        <span id="rvPageText" class="empty-text"></span>
+        <button class="rv-btn light" id="rvNext">Next</button>
+    </div>
+</div>
+
+<script>
+/* The whole script is wrapped in a function so its variable names never clash
+   when admin.js loads this page again (it re-runs the script every time). */
+(function () {
+
+    // ---------- Settings ----------
+    const API = 'http://127.0.0.1:8000/api/v1';
+    const LIMIT = 50;           // reviews per page (API default is 50)
+
+    // ---------- State ----------
+    let offset = 0;             // how many reviews to skip (page number x LIMIT)
+    let items = [];             // reviews of the current page
+    let courseFilter = '';      // empty = all reviews, otherwise the course ID being filtered
+
+    // ---------- Small helpers ----------
+    const $ = (id) => document.getElementById(id);
+
+    // Makes text safe before putting it in HTML (so a comment can never inject code)
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    // Turns an ISO date from the API into the admin's local date and time
+    const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
+
+    // Rating number -> stars, e.g. 4 -> ★★★★☆ (the number is shown next to it)
+    function stars(rate) {
+        const n = Math.max(0, Math.min(5, Math.round(Number(rate) || 0)));
+        return '★'.repeat(n) + '☆'.repeat(5 - n);
+    }
+
+    // Calls the backend with the admin's saved login token
+    async function api(path, options = {}) {
+        const res = await fetch(API + path, {
+            ...options,
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            }
+        });
+
+        // 401 = token expired or invalid -> log the admin out (function comes from admin.js)
+        if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
+
+        const data = await res.json().catch(() => ({}));   // DELETE answers 204 with no body
+        if (!res.ok) {
+            throw new Error(typeof data.detail === 'string' ? data.detail
+                : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+        }
+        return data;
+    }
+
+    // ---------- Draw the table ----------
+    function render() {
+        // Client-side search over the reviews that are already loaded
+        const q = $('rvSearch').value.trim().toLowerCase();
+        const rows = items.filter(r => !q || [r.first_name, r.last_name, r.comment, r.course_id, r.user_id]
+            .some(v => String(v || '').toLowerCase().includes(q)));
+
+        $('rvBody').innerHTML = rows.length ? rows.map(r => `
+            <tr>
+                <td>${esc((r.first_name || '') + ' ' + (r.last_name || ''))}</td>
+                <td><span class="rv-stars">${stars(r.rate)}</span> ${esc(r.rate)}</td>
+                <td class="rv-comment">${esc(r.comment)}</td>
+                <td>${esc(fmt(r.created_at))}</td>
+                <td class="rv-mono">${esc(r.course_id)}</td>
+                <td class="rv-mono">${esc(r.user_id)}</td>
+                <td>
+                    <!-- data-* attributes carry the two IDs the DELETE API needs -->
+                    <button class="rv-btn del" data-student="${esc(r.user_id)}" data-course="${esc(r.course_id)}">Delete</button>
+                </td>
+            </tr>`).join('') : '<tr><td colspan="7">No reviews found.</td></tr>';
+    }
+
+    // ---------- Load one page of reviews ----------
+    async function load() {
+        $('rvBody').innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+
+        // Pick API 2 (one course) or API 1 (all reviews)
+        const path = courseFilter
+            ? `/admin/reviews/courses/${encodeURIComponent(courseFilter)}?offset=${offset}&limit=${LIMIT}`
+            : `/admin/reviews?offset=${offset}&limit=${LIMIT}`;
+
+        try {
+            const list = await api(path);
+            if (!list) return;
+            items = Array.isArray(list) ? list : [];
+            render();
+
+            // Page buttons: Previous is off on page 1, Next is off when a page is not full
+            $('rvPageText').textContent = 'Page ' + (offset / LIMIT + 1);
+            $('rvPrev').disabled = offset === 0;
+            $('rvNext').disabled = items.length < LIMIT;
+
+            // Info line above the table
+            const info = $('rvInfo');
+            info.style.display = courseFilter ? 'block' : 'none';
+            info.textContent = courseFilter ? 'Showing only the reviews of course: ' + courseFilter : '';
+        } catch (e) {
+            $('rvBody').innerHTML = '<tr><td colspan="7" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
+        }
+    }
+
+    // ---------- Filter by course ----------
+    $('rvFilterBtn').addEventListener('click', () => {
+        const id = $('rvCourseId').value.trim();
+        if (!id) { alert('Paste the full course ID first.'); return; }
+        courseFilter = id;
+        offset = 0;          // start again from page 1
+        load();
+    });
+
+    // "Show all" clears the filter and goes back to API 1
+    $('rvResetBtn').addEventListener('click', () => {
+        courseFilter = '';
+        $('rvCourseId').value = '';
+        offset = 0;
+        load();
+    });
+
+    // ---------- Delete a review (API 3) ----------
+    $('rvBody').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-student]');
+        if (!btn) return;
+
+        const studentId = btn.dataset.student;
+        const courseId = btn.dataset.course;
+
+        if (!confirm('Delete this review? This cannot be undone.')) return;
+
+        btn.disabled = true;
+        try {
+            await api(`/admin/reviews/students/${encodeURIComponent(studentId)}/courses/${encodeURIComponent(courseId)}`, { method: 'DELETE' });
+
+            // Remove the deleted review from the list on screen (no reload needed)
+            items = items.filter(r => !(String(r.user_id) === studentId && String(r.course_id) === courseId));
+            render();
+        } catch (err) {
+            alert(err.message);
+            btn.disabled = false;
+        }
+    });
+
+    // ---------- Search box, page buttons ----------
+    $('rvSearch').addEventListener('input', render);
+    $('rvPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); load(); });
+    $('rvNext').addEventListener('click', () => { offset += LIMIT; load(); });
+
+    // First load when the page opens
+    load();
+})();
+</script>
