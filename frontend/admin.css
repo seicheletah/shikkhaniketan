@@ -268,15 +268,24 @@ body {
 }
 
 /* Small rounded square icon holder */
+/* The icon (an inline SVG drawing, so it needs no internet or icon library) is centered inside the square */
 .stat-icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.stat-icon.mint   { background: #ccfbf1; }
-.stat-icon.blue   { background: #e0f2fe; }
-.stat-icon.yellow { background: #fef3c7; }
+.stat-icon svg {
+    width: 20px;
+    height: 20px;   /* the drawing takes the color of the square (currentColor) */
+}
+
+.stat-icon.mint   { background: #ccfbf1; color: #0f766e; }
+.stat-icon.blue   { background: #e0f2fe; color: #0369a1; }
+.stat-icon.yellow { background: #fef3c7; color: #b45309; }
 
 .stat-value {
     font-size: 30px;

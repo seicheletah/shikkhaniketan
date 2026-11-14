@@ -35,13 +35,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #17384d;
   font-size: 24px; font-weight: 800; letter-spacing: -0.6px; white-space: nowrap; flex-shrink: 0;
 }
-/* Circular arrow: click it to go back to the home page */
-.explore-back {
-  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
-  border: 2px solid var(--teal); border-radius: 50%; color: var(--teal);
-  transition: background-color .2s ease, color .2s ease;
-}
-.explore-brand:hover .explore-back { background-color: var(--teal); color: #fff; }
+
+
 .explore-brand img { width: 40px; height: 40px; object-fit: contain; }
 /* The search box fills the remaining space in the top bar */
 .explore-top .search-box { flex: 1; max-width: 720px; margin: 0 auto; }
