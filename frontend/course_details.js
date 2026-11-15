@@ -7,6 +7,8 @@
      - list of student reviews
    The Purchase button starts a Razorpay payment (unchanged logic).
 
+   There is NO back button on this page any more.
+
    API used (exactly as in the backend docs):
      GET /courses/{id}                          -> course data
      GET /courses/{id}/media/thumbnail/access   -> thumbnail (see loadThumbnail)
@@ -110,18 +112,6 @@
             course.course_paid === "true"
         );
     }
-
-
-    /* ------------------------------------------------------
-       BACK BUTTON
-       ------------------------------------------------------ */
-    document.getElementById("cdBackBtn").addEventListener("click", () => {
-        if (typeof window.loadDashboardPage === "function") {
-            window.loadDashboardPage("courses.html");
-        } else {
-            window.location.href = "student.html";
-        }
-    });
 
 
     /* ------------------------------------------------------
@@ -409,6 +399,8 @@
 
     /* ------------------------------------------------------
        PURCHASE FLOW (unchanged)
+       The guard script in course_details.html runs BEFORE this code:
+       it handles visitors, teachers and the automatic purchase after login.
        ------------------------------------------------------ */
 
     /** Opens the course view page (after purchase or for free courses). */

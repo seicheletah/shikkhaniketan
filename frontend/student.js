@@ -13,6 +13,15 @@ const LOGIN_PAGE = 'login.html';
 // The localStorage key where the login token is saved
 const TOKEN_KEY = 'access_token';
 
+// The localStorage key where a course chosen BEFORE login is remembered
+// (written by course_details.html). It can hold these flags:
+//   purchase: true -> the visitor clicked Purchase and had to log in first
+//   enrolled: true -> the payment just finished, show the course view
+const PENDING_COURSE_KEY = 'pending_course';
+
+// A remembered course is only valid for 30 minutes
+const PENDING_COURSE_MAX_AGE = 30 * 60 * 1000;
+
 
 /* ==========================================================
    DEFAULT PROFILE PICTURES (by gender)
@@ -199,6 +208,33 @@ async function loadStudentProfile() {
 
 
 /* ==========================================================
+   ENROLLMENT CHECK
+   Returns true when the student has already purchased the course.
+
+   /students/me contains the enrolled courses, so we simply look
+   for the course id inside that answer. A course id is a unique id,
+   so it can only appear there when the student owns the course.
+   ========================================================== */
+async function isEnrolledInCourse(courseId) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return false;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/students/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        return JSON.stringify(data).includes(String(courseId));
+    } catch (error) {
+        console.error('Enrollment check failed:', error);
+        return false;
+    }
+}
+
+
+/* ==========================================================
    MAIN SETUP
    Runs once the HTML is fully loaded.
    ========================================================== */
@@ -301,7 +337,74 @@ document.addEventListener('DOMContentLoaded', () => {
         loadStudentProfile();
     };
 
-    // ---- Sidebar menu clicks (Courses, Quiz, Settings) ----
+    /**
+     * Handles the course that was remembered by course_details.html.
+     * Returns true when something was opened, false when nothing was pending.
+     *
+     *   1. enrolled flag (payment just finished) -> course view
+     *   2. student already owns the course       -> course view
+     *   3. purchase flag (came back from login)  -> go back to the course
+     *      details page, which clicks "Purchase" automatically
+     *   4. otherwise                             -> course details inside the dashboard
+     */
+    async function openPendingCourse() {
+        const raw = localStorage.getItem(PENDING_COURSE_KEY);
+        if (!raw) return false;
+
+        // The remembered course is used only ONCE
+        localStorage.removeItem(PENDING_COURSE_KEY);
+
+        let pending = null;
+        try {
+            pending = JSON.parse(raw);
+        } catch (error) {
+            return false;
+        }
+
+        // Ignore broken or old (older than 30 minutes) entries
+        if (!pending || !pending.id || Date.now() - pending.time > PENDING_COURSE_MAX_AGE) {
+            return false;
+        }
+
+        // The course pages read the id from this key
+        localStorage.setItem('selected_course_id', pending.id);
+
+        // 1. Just purchased -> show the course view (no need to ask the server)
+        if (pending.enrolled) {
+            window.loadDashboardPage('course_view.html');
+            return true;
+        }
+
+        // 2. Already owned -> show the course view
+        if (await isEnrolledInCourse(pending.id)) {
+            window.loadDashboardPage('course_view.html');
+            return true;
+        }
+
+        // 3. The visitor wanted to buy it -> back to the course details page,
+        //    where "Purchase" is clicked automatically
+        if (pending.purchase) {
+            window.location.replace(
+                `course_details.html?id=${encodeURIComponent(pending.id)}&autopurchase=1`
+            );
+            return true;
+        }
+
+        // 4. Plain course details inside the dashboard
+        window.loadDashboardPage('course_details.html');
+        return true;
+    }
+
+    /** Opens the normal first page (Settings if the URL ends with #settings, otherwise Courses). */
+    function openDefaultPage() {
+        if (window.location.hash === '#settings') {
+            window.goToSettings();
+        } else {
+            fetchAndRenderPage('courses.html');
+        }
+    }
+
+    // ---- Sidebar menu clicks (Courses, Quiz, Settings, Transactions) ----
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault(); // stop the browser from leaving the dashboard
@@ -345,11 +448,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---- Initial page load ----
-    // If the URL ends with #settings open Settings, otherwise open Courses.
-    if (window.location.hash === '#settings') {
-        window.goToSettings();
+    // 1. A remembered course (after login / after payment) -> handle it.
+    // 2. Otherwise -> the normal first page.
+    if (localStorage.getItem(PENDING_COURSE_KEY)) {
+        openPendingCourse().then(opened => {
+            if (!opened) openDefaultPage();
+        });
     } else {
-        fetchAndRenderPage('courses.html');
+        openDefaultPage();
     }
 
     // Load the name and picture for the topbar

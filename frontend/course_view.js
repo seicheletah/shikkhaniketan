@@ -4,8 +4,10 @@
    video player, PDF reader, resource list, a form to write a
    review (comment + 5 clickable stars) and the list of reviews.
 
-   NEW in this version: the student can UPDATE and DELETE
-   his / her own review.
+   The student can UPDATE and DELETE his / her own review.
+
+   There is NO back button on this page any more. The student uses
+   the sidebar of the dashboard to move around.
 
    API used (exactly as in the backend docs):
      POST   /courses/{id}/review               body: { comment, rate }   -> 201
@@ -62,7 +64,7 @@
     const submitBtn = document.getElementById("cvSubmitReview");
     const cancelBtn = document.getElementById("cvCancelEdit");
 
-    // NEW: "Your review" card elements
+    // "Your review" card elements
     const myReviewCard = document.getElementById("myReviewCard");
     const myStarsEl = document.getElementById("cvMyStars");
     const myCommentEl = document.getElementById("cvMyComment");
@@ -104,18 +106,6 @@
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
     }
-
-
-    /* ======================================================
-       BACK BUTTON
-       ====================================================== */
-    document.getElementById("cvBackBtn").addEventListener("click", () => {
-        if (typeof window.loadDashboardPage === "function") {
-            window.loadDashboardPage("course_details.html");
-        } else {
-            window.location.href = "student.html";
-        }
-    });
 
 
     /* ======================================================

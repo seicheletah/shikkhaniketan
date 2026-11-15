@@ -8,18 +8,15 @@
    4. Left sidebar: tag search, Language and Price filters.
    5. Top search box searches COURSES by name (debounced).
    6. Shows "No courses found" when the result is empty.
-
-   FIX in this version:
-   - Price filter: "Free" now shows ONLY free courses and "Paid" shows
-     ONLY paid courses. The filter is also applied in the browser,
-     so it works even if the backend ignores paid=false.
-
-   NOTE: tag list is now inside this file (no tags.js needed).
+   7. Click on a course -> course_details.html?id=...
+      (login is NOT asked here; it is asked only when "Purchase"
+      is clicked on the course details page).
    ========================================================= */
 
 /* =========================================================
-   TAGS  (আগে tags.js ফাইলে ছিল, এখন এই ফাইলের ভেতরেই)
-   সব tag-এর তালিকা + tag-কে সুন্দর label-এ বদলানোর helper (tagLabel)
+   TAGS
+   The list of all tags + a helper (tagLabel) that turns a tag
+   into a nice label.
    ========================================================= */
 
 window.SKILLHUB_TAGS = [
@@ -46,13 +43,13 @@ window.SKILLHUB_TAGS = [
   "education","pedagogy"
 ];
 
-// এগুলো UPPER CASE-এ দেখাবে (ডিগ্রির নাম / acronym)
+// These tags are shown in UPPER CASE (degree names / acronyms)
 const UPPER_TAGS = new Set([
   "ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed","mbbs","bds","bams","bhms",
   "bpharma","llb","ma","msc","mcom","mtech","me","mca","mba","md","llm","med","phd","sql","php"
 ]);
 
-// যে label সাধারণ নিয়মে বানানো যায় না
+// Labels that the simple rule below cannot produce
 const SPECIAL_TAG_LABELS = {
   c_plus_plus: "C++",
   c_sharp: "C#",
@@ -133,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
            c.course_paid === "1" || c.course_paid === "true";
   }
 
-  // Price filter applied in the browser (the fix)
+  // Price filter applied in the browser (works even if the backend ignores paid=false)
   function matchesPaidFilter(c) {
     if (state.paid === "") return true;          // All
     if (state.paid === "true") return isPaid(c); // Paid only
@@ -159,6 +156,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!media) return "";
     return media.url || media.media_url || media.file_url ||
            media.signed_url || media.download_url || media.link || "";
+  }
+
+  // =========================================================
+  // OPEN A COURSE
+  // Everybody (visitor, student, teacher) goes to the course
+  // details page. That page decides what "Purchase" does:
+  // visitor -> login, logged-in student -> buys directly.
+  // =========================================================
+  function openCourse(courseId) {
+    localStorage.setItem("selected_course_id", courseId);
+    window.location.href = `course_details.html?id=${encodeURIComponent(courseId)}`;
   }
 
   // =========================================================
@@ -247,14 +255,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, true);
 
-  // Click on a card -> go to the login page
+  // Click on a card -> open the course details page
   grid.addEventListener("click", e => {
     const card = e.target.closest(".course-card[data-id]");
-    if (card) {
-      // remember which course was clicked (useful after login)
-      localStorage.setItem("selected_course_id", card.dataset.id);
-      window.location.href = "login.html";
-    }
+    if (card) openCourse(card.dataset.id);
   });
 
   // =========================================================
@@ -288,9 +292,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // =========================================================
   // THUMBNAIL SCHEDULER
-  // আগে কার্ডের structure (নাম, details, price...) screen-এ আসে।
-  // Browser সেটা আঁকার পরেই thumbnail download শুরু হয়,
-  // তাই পেজ load হতে দেরি হয় না।
+  // The card structure (name, details, price...) is drawn first.
+  // Thumbnails start downloading only after the browser painted it,
+  // so the page never waits for images.
   // =========================================================
   function scheduleThumbnails() {
     requestAnimationFrame(() => {
@@ -339,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const rawCourses = await res.json();
 
-      // ---- THE FIX: apply Free / Paid filter in the browser too ----
+      // Apply the Free / Paid filter in the browser too
       const courses = rawCourses.filter(matchesPaidFilter);
 
       if (!append) grid.innerHTML = "";

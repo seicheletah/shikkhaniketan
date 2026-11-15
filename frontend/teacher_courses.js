@@ -5,6 +5,9 @@
    - newest course first, search, rating, type, price
    - "Publish New Course" -> add_course.html (inside the dashboard)
    - "Edit Course"        -> edit_course.html (inside the dashboard)
+   - click on a course    -> course_details.html with "view=teacher",
+                             so the Purchase button is hidden
+                             (a teacher can never buy his own course)
    Wrapped in (function(){ ... })() so variables never clash when
    the page is loaded again.
    ========================================================== */
@@ -206,9 +209,11 @@
             return;
         }
 
-        // Click on the card -> course details (separate page, as before)
+        // Click on the card -> course details page.
+        // "view=teacher" tells that page to hide the Purchase button,
+        // because a teacher can never buy his own course.
         localStorage.setItem('selected_course_id', id);
-        window.location.href = `course_details.html?id=${encodeURIComponent(id)}`;
+        window.location.href = `course_details.html?id=${encodeURIComponent(id)}&view=teacher`;
     });
 
     searchEl.addEventListener('input', () => {
