@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Skillhub - Admin Sign Up</title>
+    <title>Skillhub - Admin</title>
+
+    <!-- FAVICON: the small icon shown in the browser tab -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="256x256" href="favicon.png">
 
     <!-- Reuse the same styles as the Create Account page -->
     <link rel="stylesheet" href="create_account.css">
@@ -15,8 +19,18 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 
+    <!-- Font Awesome: gives us the small icons (envelope, lock, eye) in the login form -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* Small "Already have an account?" text under the buttons */
+        /* Make the HTML "hidden" attribute always win.
+           The page shows ONE form at a time by switching "hidden" on and off. */
+        [hidden] {
+            display: none !important;
+        }
+
+        /* Small text under the buttons, for example "Already an admin? Log in" */
         .login-text {
             text-align: center;
             font-size: 13px;
@@ -41,15 +55,105 @@
             margin-top: 6px;
             line-height: 1.5;
         }
+
+        /* ------------------------------------------------------------
+           ADMIN LOGIN FORM STYLES
+           Every class here starts with "al-" (admin login), so it can
+           never clash with the styles of create_account.css.
+           It has the same look as the normal login page:
+           an icon inside each box, and an eye icon to show the password.
+           ------------------------------------------------------------ */
+
+        /* One label + input block */
+        .al-group {
+            margin-bottom: 18px;
+        }
+
+        .al-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        /* The box that holds the icon and the input */
+        .al-input-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Icon on the left (envelope / lock) */
+        .al-input-icon {
+            position: absolute;
+            left: 14px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        /* Eye icon on the right (show / hide password) */
+        .al-toggle {
+            position: absolute;
+            right: 14px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* The input itself: left and right padding leave room for the icons */
+        .al-input-box input {
+            width: 100%;
+            padding: 12px 38px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            background-color: #f8fafc;
+            color: #2d3748;
+            transition: all 0.2s ease;
+        }
+
+        .al-input-box input:focus {
+            border-color: #127c71;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(18, 124, 113, 0.1);
+        }
+
+        /* The green "Log In" button */
+        .al-btn {
+            width: 100%;
+            background-color: #127c71;
+            color: #ffffff;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .al-btn:hover {
+            background-color: #0e635a;
+        }
+
+        .al-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- Header Section: circular back arrow + logo (goes to index.html) -->
+    <!-- Header Section: logo (goes to index.html) -->
     <header>
         <a href="index.html" class="logo" aria-label="Back to home">
-           
+
             <span>Skillhub</span>
         </a>
     </header>
@@ -73,11 +177,49 @@
 
             <div class="form-card">
 
-                <h2 id="formTitle">ADMIN SIGN UP</h2>
+                <!-- The title changes together with the visible form (admin_signup.js does this) -->
+                <h2 id="formTitle">ADMIN LOGIN</h2>
 
 
-                <!-- STEP 1: Admin details form -->
-                <form id="adminForm">
+                <!-- ====================================================
+                     STEP 0: ADMIN LOGIN  (this is the FIRST thing a visitor sees)
+                     Only existing admins can log in here.
+                     "Sign up" at the bottom opens the admin sign up form.
+                     ==================================================== -->
+                <form id="adminLoginForm">
+
+                    <div class="al-group">
+                        <label for="login-email">Email</label>
+                        <div class="al-input-box">
+                            <i class="fa-regular fa-envelope al-input-icon"></i>
+                            <input type="email" id="login-email" name="email"
+                                placeholder="Enter your admin email" required>
+                        </div>
+                    </div>
+
+                    <div class="al-group">
+                        <label for="login-password">Password</label>
+                        <div class="al-input-box">
+                            <i class="fa-solid fa-lock al-input-icon"></i>
+                            <input type="password" id="login-password" name="password"
+                                placeholder="Enter your password" required>
+                            <i class="fa-regular fa-eye al-toggle" id="loginTogglePassword"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="loginBtn" class="al-btn">Log In</button>
+
+                    <p class="login-text">
+                        Don't have an admin account? <a href="#" id="showSignupLink">Sign up</a>
+                    </p>
+
+                </form>
+
+
+                <!-- ====================================================
+                     STEP 1: ADMIN SIGN UP details form (hidden until "Sign up" is clicked)
+                     ==================================================== -->
+                <form id="adminForm" hidden>
 
                     <div class="form-group">
                         <label for="first-name">First Name</label>
@@ -101,9 +243,9 @@
 
                     <button type="submit" id="createBtn">Continue</button>
 
-                    <!-- <p class="login-text">
-                        Already an admin? <a href="login.html">Log in</a>
-                    </p> -->
+                    <p class="login-text">
+                        Already an admin? <a href="#" id="showLoginLink">Log in</a>
+                    </p>
 
                 </form>
 

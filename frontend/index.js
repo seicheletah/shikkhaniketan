@@ -2,6 +2,9 @@
    index.js  (full file)
 
    What this file does:
+   0. Header buttons: a visitor sees "Admin / Log In / Sign Up".
+      A logged-in user (student, teacher or admin) sees
+      "Dashboard" and "Logout" instead.
    1. Shows skeleton cards instantly in the "Popular Courses" section.
    2. Loads ALL courses (video + document) from GET /api/v1/courses/
       and shows only the first 6, using the SAME card design as the
@@ -13,6 +16,76 @@
       (login is NOT asked here; it is asked only when "Purchase"
       is clicked on the course details page).
    ========================================================= */
+
+
+/* =========================================================
+   HEADER BUTTONS  (Admin / Log In / Sign Up  <->  Dashboard / Logout)
+
+   HOW IT WORKS
+   - After a successful login, login.js saves "access_token" and
+     "userRole" in localStorage.
+   - So if "access_token" exists, the user is logged in.
+   - Logout simply deletes everything that was saved at login.
+   ========================================================= */
+
+// All keys that belong to a login session (deleted together on logout)
+const SESSION_KEYS = [
+  "access_token",
+  "token_type",
+  "userRole",
+  "role",
+  "pending_course",
+  "selected_course_id"
+];
+
+// Which dashboard page belongs to which role
+function dashboardPageForRole(role) {
+  if (role === "teacher") return "teacher.html";
+  if (role === "admin") return "admin.html";
+  return "student.html";
+}
+
+// Logout: delete the saved session, then redraw the header buttons
+function logoutFromHome() {
+  SESSION_KEYS.forEach(key => localStorage.removeItem(key));
+  renderAuthButtons();
+}
+
+// Draws the right header buttons for the current situation
+function renderAuthButtons() {
+  const box = document.getElementById("authButtons");
+  if (!box) return;
+
+  const loggedIn = !!localStorage.getItem("access_token");
+
+  // ---- Visitor: Admin / Log In / Sign Up ----
+  if (!loggedIn) {
+    box.innerHTML = `
+      <a href="admin_signup.html" class="login-btn">Admin</a>
+      <a href="login.html" class="login-btn">Log In</a>
+      <a href="sign_up.html" class="signup-btn">Sign Up</a>`;
+    return;
+  }
+
+  // ---- Logged-in user: Dashboard + Logout ----
+  const dashboard = dashboardPageForRole(localStorage.getItem("userRole"));
+
+  box.innerHTML = `
+    <a href="${dashboard}" class="login-btn">Dashboard</a>
+    <button type="button" class="signup-btn" id="logoutBtn">Logout</button>`;
+
+  document.getElementById("logoutBtn").addEventListener("click", logoutFromHome);
+}
+
+// Draw the buttons right away (this script is at the end of the page,
+// so the header already exists)
+renderAuthButtons();
+
+// When the user comes back with the browser Back button, the browser may
+// show an old copy of this page. "pageshow" runs in that case too, so the
+// buttons always match the real login state.
+window.addEventListener("pageshow", renderAuthButtons);
+
 
 /* =========================================================
    TAGS

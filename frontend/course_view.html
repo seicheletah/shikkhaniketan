@@ -1,3 +1,5 @@
+
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <!-- Styles for this page only (scoped to .course-view-page) -->
 <link rel="stylesheet" href="course_view.css">
 
@@ -13,39 +15,24 @@
         <h1 class="cv-title" id="cvTitle">Course</h1>
         <p class="cv-desc" id="cvOverview">Loading course details...</p>
 
-        <!-- Video / Documents toggle -->
-        <div class="media-toggle-bar">
-            <button class="toggle-btn active" data-media="video">
-                <i class="fa-regular fa-circle-play"></i> Video
-            </button>
-            <button class="toggle-btn" data-media="pdf">
-                <i class="fa-regular fa-file-lines"></i> Documents
-            </button>
-        </div>
+        <!-- Message line: shows "Loading..." first, and an error text if the content
+             cannot be shown. course_view.js hides it when the player is ready. -->
+        <p class="cv-empty" id="cvMediaMsg">Loading course content...</p>
 
-        <!-- Video player -->
-        <div class="media-box" id="videoPlayerBox">
+        <!-- Video player.
+             Hidden at first. course_view.js shows it ONLY when the course resource is a video. -->
+        <div class="media-box hidden" id="videoPlayerBox">
             <video controls>
                 Your browser does not support the video tag.
             </video>
         </div>
 
-        <!-- PDF reader -->
+        <!-- PDF reader.
+             Hidden at first. course_view.js shows it ONLY when the course resource is a document. -->
         <div class="media-box hidden" id="pdfReaderBox">
             <iframe title="PDF Reader"></iframe>
         </div>
 
-    </div>
-
-    <!-- ================= COURSE RESOURCES ================= -->
-    <div class="cv-card cv-section">
-        <div class="cv-section-head">
-            <h3>Course resources</h3>
-            <span class="cv-meta" id="cvFileCount">0 files</span>
-        </div>
-        <ul id="cvResourceList">
-            <li class="cv-empty">Loading resources...</li>
-        </ul>
     </div>
 
     <!-- ================= YOUR REVIEW =================

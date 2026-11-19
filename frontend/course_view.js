@@ -1,15 +1,20 @@
 /* ==========================================================
    course_view.js
-   The page a student sees AFTER purchasing a course:
-   video player, PDF reader, resource list, a form to write a
-   review (comment + 5 clickable stars) and the list of reviews.
+   The page a student sees AFTER purchasing a course.
 
-   The student can UPDATE and DELETE his / her own review.
+   WHAT THE PLAYER SHOWS (new rule)
+   - The course resource is a VIDEO    -> ONLY the video player is shown.
+   - The course resource is a DOCUMENT -> ONLY the document (PDF) reader is shown.
+   - The other one is never shown.
+   - The "Course resources" file list (file names + download icons)
+     and the Video / Documents toggle were removed.
 
-   There is NO back button on this page any more. The student uses
-   the sidebar of the dashboard to move around.
+   The page also has: a form to write a review (comment + 5 clickable
+   stars), the list of reviews, and Edit / Delete for the student's own review.
 
    API used (exactly as in the backend docs):
+     GET    /courses/{id}                      -> course data (title, description, course_resource_type)
+     GET    /courses/{id}/media/resource/access -> the video / document link
      POST   /courses/{id}/review               body: { comment, rate }   -> 201
      GET    /courses/{id}/review               -> [{ comment, rate, first_name, last_name, course_id }]
      GET    /courses/{id}/rating               -> { total_reviews, average_rating, course_id }
@@ -44,13 +49,18 @@
     /* ------------------------------------------------------
        DOM ELEMENTS
        ------------------------------------------------------ */
+
+    // The two players (only ONE of them is ever shown)
+    const videoBox = document.getElementById("videoPlayerBox");
+    const pdfBox = document.getElementById("pdfReaderBox");
     const video = document.querySelector("#videoPlayerBox video");
     const pdf = document.querySelector("#pdfReaderBox iframe");
 
+    // The text line above the players ("Loading..." or an error)
+    const mediaMsg = document.getElementById("cvMediaMsg");
+
     const titleEl = document.getElementById("cvTitle");
     const overviewEl = document.getElementById("cvOverview");
-    const resourceList = document.getElementById("cvResourceList");
-    const fileCountEl = document.getElementById("cvFileCount");
     const reviewList = document.getElementById("cvReviewList");
     const avgRatingEl = document.getElementById("cvAvgRating");
 
@@ -94,46 +104,21 @@
 
 
     /* ======================================================
-       SCROLL TO TOP
-       Inside the dashboard the scrolling happens in #main-content,
-       NOT in the browser window, so window.scrollTo alone does nothing.
+       MESSAGE ABOVE THE PLAYERS
        ====================================================== */
-    function scrollToTop() {
-        const scroller = document.getElementById("main-content");
-        if (scroller && scroller.scrollHeight > scroller.clientHeight) {
-            scroller.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
+
+    /** Shows a text line (loading / error) and hides both players. */
+    function showMediaMessage(text) {
+        mediaMsg.textContent = text;
+        mediaMsg.classList.remove("hidden");
+        videoBox.classList.add("hidden");
+        pdfBox.classList.add("hidden");
     }
-
-
-    /* ======================================================
-       VIDEO / DOCUMENTS TOGGLE
-       ====================================================== */
-    const mediaButtons = document.querySelectorAll(".toggle-btn");
-
-    function showMedia(type) {
-        mediaButtons.forEach(b => {
-            b.classList.toggle("active", b.getAttribute("data-media") === type);
-        });
-
-        document.getElementById("videoPlayerBox")
-            .classList.toggle("hidden", type !== "video");
-        document.getElementById("pdfReaderBox")
-            .classList.toggle("hidden", type !== "pdf");
-    }
-
-    mediaButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            showMedia(btn.getAttribute("data-media"));
-        });
-    });
 
     if (!courseId) {
         titleEl.textContent = "Course not found!";
         overviewEl.textContent = "";
-        if (resourceList) resourceList.innerHTML = "<li class='cv-empty'>Course not found.</li>";
+        showMediaMessage("Course not found.");
         return;
     }
 
@@ -141,15 +126,6 @@
     /* ======================================================
        HELPERS
        ====================================================== */
-
-    function setResourceMessage(text) {
-        if (!resourceList) return;
-        resourceList.innerHTML = "";
-        const li = document.createElement("li");
-        li.className = "cv-empty";
-        li.textContent = text;
-        resourceList.appendChild(li);
-    }
 
     /** Finds the file link in an item (the backend field name can vary). */
     function getItemUrl(item) {
@@ -220,23 +196,17 @@
         return "other";
     }
 
-    function getResourceName(item, index) {
-        const direct =
-            item.file_name || item.filename || item.original_name ||
-            item.original_filename || item.title || item.name;
+    /**
+     * What kind of course is this? Read from the course data
+     * (the same field courses.js uses: course_resource_type).
+     * Returns "video", "pdf", or "" when the course does not say.
+     */
+    function getCourseType(course) {
+        const raw = String((course && course.course_resource_type) || "").toLowerCase();
 
-        if (direct) return direct;
-
-        // Try to read the file name from the link
-        try {
-            const path = new URL(getItemUrl(item), window.location.href).pathname;
-            const last = decodeURIComponent(path.split("/").filter(Boolean).pop() || "");
-            if (last && last.includes(".")) return last;
-        } catch (e) { /* ignore */ }
-
-        return detectType(item) === "video"
-            ? `Video ${index + 1}`
-            : `Document ${index + 1}`;
+        if (raw.includes("doc") || raw.includes("pdf")) return "pdf";
+        if (raw.includes("video")) return "video";
+        return "";
     }
 
     /** "Soumya De" -> "SD" (letters shown inside the round avatar). */
@@ -290,6 +260,8 @@
 
     /* ======================================================
        LOAD COURSE (title + description)
+       Returns the course object (or null when it failed), because
+       the player needs "course_resource_type" from it.
        ====================================================== */
     async function loadCourse() {
         try {
@@ -300,8 +272,7 @@
             if (!res.ok) {
                 titleEl.textContent = "Course load failed";
                 overviewEl.textContent = "";
-                setResourceMessage(`Course load failed (status ${res.status}).`);
-                return;
+                return null;
             }
 
             const course = await res.json();
@@ -309,115 +280,22 @@
             titleEl.textContent = course.course_name || "";
             overviewEl.textContent = course.course_details || "";
 
+            return course;
+
         } catch (err) {
             console.log("loadCourse error:", err);
             titleEl.textContent = "Course load failed";
             overviewEl.textContent = "";
-            setResourceMessage("Could not reach the server.");
+            return null;
         }
     }
 
 
     /* ======================================================
-       PLAY A RESOURCE IN THE PLAYER
-       ====================================================== */
-    function playResource(item) {
-        const type = detectType(item);
-        const url = absoluteUrl(getItemUrl(item));
-
-        if (type === "video") {
-            video.src = url;
-            video.load();
-            showMedia("video");
-            video.play().catch(() => { /* autoplay blocked, ignore */ });
-            scrollToTop();
-            return;
-        }
-
-        if (type === "pdf") {
-            // #view=FitH makes the PDF fit the width of the viewer
-            pdf.src = url + "#view=FitH";
-            showMedia("pdf");
-            scrollToTop();
-            return;
-        }
-
-        window.open(url, "_blank", "noopener");
-    }
-
-
-    /* ======================================================
-       RESOURCE LIST
-       ====================================================== */
-    function renderResources(files) {
-        if (!resourceList) return;
-
-        resourceList.innerHTML = "";
-        fileCountEl.textContent = `${files.length} ${files.length === 1 ? "file" : "files"}`;
-
-        if (!files.length) {
-            setResourceMessage("No resources uploaded yet.");
-            return;
-        }
-
-        files.forEach((item, index) => {
-            const type = detectType(item);
-            const url = absoluteUrl(getItemUrl(item));
-
-            const li = document.createElement("li");
-            li.className = "cv-res-item";
-
-            // Icon
-            const icon = document.createElement("div");
-            icon.className = "cv-res-icon " + (type === "video" ? "video" : "doc");
-            icon.innerHTML = type === "video"
-                ? '<i class="fa-regular fa-circle-play"></i>'
-                : '<i class="fa-regular fa-file-lines"></i>';
-
-            // Name + type label
-            const info = document.createElement("div");
-            info.className = "cv-res-info";
-
-            const name = document.createElement("span");
-            name.className = "cv-res-name";
-            name.textContent = getResourceName(item, index);
-
-            const typeLabel = document.createElement("span");
-            typeLabel.className = "cv-res-type";
-            typeLabel.textContent = type === "video" ? "Video" : "Document";
-
-            info.append(name, typeLabel);
-
-            // Right action: open (video) or download (document)
-            const action = document.createElement("a");
-            action.className = "cv-res-action";
-            action.href = url;
-            action.target = "_blank";
-            action.rel = "noopener";
-            action.title = type === "video" ? "Open in new tab" : "Download";
-            action.innerHTML = type === "video"
-                ? '<i class="fa-solid fa-arrow-up-right-from-square"></i>'
-                : '<i class="fa-solid fa-download"></i>';
-
-            if (type !== "video") {
-                action.setAttribute("download", "");
-            }
-
-            // Clicking the icon opens the link directly, not the player
-            action.addEventListener("click", e => e.stopPropagation());
-
-            li.append(icon, info, action);
-
-            // Clicking anywhere else plays it in the player
-            li.addEventListener("click", () => playResource(item));
-
-            resourceList.appendChild(li);
-        });
-    }
-
-
-    /* ======================================================
-       LOAD VIDEO / PDF RESOURCES
+       LOAD THE VIDEO / DOCUMENT FILES
+       GET /courses/{id}/media/resource/access
+       Returns the list of files, or null when something went wrong
+       (the reason is already shown on the page in that case).
        ====================================================== */
     async function loadMedia() {
         try {
@@ -429,52 +307,108 @@
             if (!res.ok) {
                 const errBody = await res.text().catch(() => "");
                 console.log("media error:", res.status, errBody);
-                setResourceMessage(
-                    `Could not load resources (status ${res.status}). ${errBody.slice(0, 150)}`
+                showMediaMessage(
+                    `Could not load the course content (status ${res.status}). ${errBody.slice(0, 150)}`
                 );
-                return;
+                return null;
             }
 
             const data = await res.json();
             const media = normalizeList(data);
 
             if (!media) {
-                setResourceMessage("Unexpected response format. Check the browser console.");
-                return;
+                showMediaMessage("Unexpected response format. Check the browser console.");
+                return null;
             }
 
+            // Keep only the items that really have a file link
             const files = media.filter(item => getItemUrl(item));
 
             if (!files.length && media.length) {
                 console.log("Items have no usable url field:", media);
-                setResourceMessage("Resources found but no file link in response. Check the browser console.");
-                return;
+                showMediaMessage("Content found but no file link in the response. Check the browser console.");
+                return null;
             }
 
-            renderResources(files);
-
-            // Preload the first video and first PDF into the players
-            const firstVideo = files.find(item => detectType(item) === "video");
-            const firstPdf = files.find(item => detectType(item) === "pdf");
-
-            if (firstVideo) {
-                video.src = absoluteUrl(getItemUrl(firstVideo));
-                video.load();
-            }
-
-            if (firstPdf) {
-                pdf.src = absoluteUrl(getItemUrl(firstPdf)) + "#view=FitH";
-            }
-
-            // No video but a PDF exists -> open the Documents tab
-            if (!firstVideo && firstPdf) {
-                showMedia("pdf");
-            }
+            return files;
 
         } catch (err) {
             console.log("loadMedia error:", err);
-            setResourceMessage("Could not load resources: " + err.message);
+            showMediaMessage("Could not load the course content: " + err.message);
+            return null;
         }
+    }
+
+
+    /* ======================================================
+       SHOW ONLY THE RIGHT PLAYER
+       Rule:
+         1. The course says "video"    -> show the video player only.
+         2. The course says "document" -> show the PDF reader only.
+         3. If the course does not say (or the file of that kind is
+            missing), look at the real files: a video wins, then a PDF.
+       ====================================================== */
+    function showResource(course, files) {
+
+        const videos = files.filter(item => detectType(item) === "video");
+        const pdfs = files.filter(item => detectType(item) === "pdf");
+
+        // Step 1: what does the course say?
+        let type = getCourseType(course);
+
+        // Step 2: the course says "video" but there is no video file (or the same for pdf)
+        if (type === "video" && !videos.length) type = "";
+        if (type === "pdf" && !pdfs.length) type = "";
+
+        // Step 3: decide from the real files
+        if (!type) {
+            if (videos.length) type = "video";
+            else if (pdfs.length) type = "pdf";
+        }
+
+        // Nothing we can show
+        if (!type) {
+            showMediaMessage("No course content has been uploaded yet.");
+            return;
+        }
+
+        // Hide the "Loading..." line
+        mediaMsg.classList.add("hidden");
+
+        if (type === "video") {
+            // ---- VIDEO COURSE: show the video player, the PDF reader stays hidden ----
+            video.src = absoluteUrl(getItemUrl(videos[0]));
+            video.load();
+
+            videoBox.classList.remove("hidden");
+            pdfBox.classList.add("hidden");
+            pdf.removeAttribute("src");   // make sure the hidden reader loads nothing
+            return;
+        }
+
+        // ---- DOCUMENT COURSE: show the PDF reader, the video player stays hidden ----
+        // #view=FitH makes the PDF fit the width of the viewer
+        pdf.src = absoluteUrl(getItemUrl(pdfs[0])) + "#view=FitH";
+
+        pdfBox.classList.remove("hidden");
+        videoBox.classList.add("hidden");
+        video.removeAttribute("src");   // make sure the hidden player loads nothing
+        video.load();
+    }
+
+    /**
+     * Loads the course data and the files AT THE SAME TIME (faster),
+     * then decides which player to show.
+     */
+    async function loadContent() {
+        showMediaMessage("Loading course content...");
+
+        const [course, files] = await Promise.all([loadCourse(), loadMedia()]);
+
+        // loadMedia() already showed the reason on the page
+        if (files === null) return;
+
+        showResource(course || {}, files);
     }
 
 
@@ -936,8 +870,7 @@
 
     /* ======================================================
        START
-       All requests start at the SAME TIME (before: the media, reviews
-       and rating requests waited until the course had loaded).
+       All requests start at the SAME TIME.
        For the reviews we first find out which review is the student's
        own, then draw the list and the correct card.
        ====================================================== */
@@ -949,8 +882,7 @@
         updateReviewUI();         // show "Your review" card or the form
     }
 
-    loadCourse();
-    loadMedia();
+    loadContent();          // course title + the video OR the document
     loadRating();
     loadReviewSection();
 
