@@ -180,237 +180,237 @@
                                           student dashboard
      ========================================================================== -->
 <script>
-(function () {
+    (function () {
 
-    // ---- Settings ----
-    var API_BASE = 'http://127.0.0.1:8000/api/v1';
-    var TOKEN_KEY = 'access_token';
-    var ROLE_KEY = 'userRole';
-    var PENDING_KEY = 'pending_course';
-    var LOGIN_PAGE = 'login.html';
-    var STUDENT_PAGE = 'student.html';
+        // ---- Settings ----
+        var API_BASE = 'api/v1';
+        var TOKEN_KEY = 'access_token';
+        var ROLE_KEY = 'userRole';
+        var PENDING_KEY = 'pending_course';
+        var LOGIN_PAGE = 'login.html';
+        var STUDENT_PAGE = 'student.html';
 
-    // The dashboard has an element with id "main-content"; a normal page does not
-    var inDashboard = !!document.getElementById('main-content');
+        // The dashboard has an element with id "main-content"; a normal page does not
+        var inDashboard = !!document.getElementById('main-content');
 
-    var params = new URLSearchParams(window.location.search);
-    var urlCourseId = params.get('id');
-    var teacherView = params.get('view') === 'teacher';       // teacher opened his own course
-    var autoPurchase = params.get('autopurchase') === '1';    // come back from login
+        var params = new URLSearchParams(window.location.search);
+        var urlCourseId = params.get('id');
+        var teacherView = params.get('view') === 'teacher';       // teacher opened his own course
+        var autoPurchase = params.get('autopurchase') === '1';    // come back from login
 
-    // course_details.js reads the course id from this localStorage key
-    if (!inDashboard && urlCourseId) {
-        localStorage.setItem('selected_course_id', urlCourseId);
-    }
+        // course_details.js reads the course id from this localStorage key
+        if (!inDashboard && urlCourseId) {
+            localStorage.setItem('selected_course_id', urlCourseId);
+        }
 
-    // ---- Who is looking at the page? ----
-    function role() { return localStorage.getItem(ROLE_KEY); }
-    function isLoggedIn() { return !!localStorage.getItem(TOKEN_KEY); }
-    function isStudent() { return isLoggedIn() && role() === 'student'; }
-    function isTeacher() { return isLoggedIn() && role() === 'teacher'; }
+        // ---- Who is looking at the page? ----
+        function role() { return localStorage.getItem(ROLE_KEY); }
+        function isLoggedIn() { return !!localStorage.getItem(TOKEN_KEY); }
+        function isStudent() { return isLoggedIn() && role() === 'student'; }
+        function isTeacher() { return isLoggedIn() && role() === 'teacher'; }
 
-    // Page that belongs to the logged-in user (used by the "My Dashboard" link)
-    function dashboardPage() {
-        if (role() === 'teacher') return 'teacher.html';
-        if (role() === 'admin') return 'admin.html';
-        return STUDENT_PAGE;
-    }
+        // Page that belongs to the logged-in user (used by the "My Dashboard" link)
+        function dashboardPage() {
+            if (role() === 'teacher') return 'teacher.html';
+            if (role() === 'admin') return 'admin.html';
+            return STUDENT_PAGE;
+        }
 
-    // Remembers the course for 30 minutes. `extra` can add flags:
-    //   purchase: true  -> after login, come back and buy it
-    //   enrolled: true  -> the course is bought, show the course view
-    function savePendingCourse(extra) {
-        var id = localStorage.getItem('selected_course_id');
-        if (!id) return;
-        var data = { id: id, time: Date.now() };
-        for (var key in (extra || {})) { data[key] = extra[key]; }
-        localStorage.setItem(PENDING_KEY, JSON.stringify(data));
-    }
+        // Remembers the course for 30 minutes. `extra` can add flags:
+        //   purchase: true  -> after login, come back and buy it
+        //   enrolled: true  -> the course is bought, show the course view
+        function savePendingCourse(extra) {
+            var id = localStorage.getItem('selected_course_id');
+            if (!id) return;
+            var data = { id: id, time: Date.now() };
+            for (var key in (extra || {})) { data[key] = extra[key]; }
+            localStorage.setItem(PENDING_KEY, JSON.stringify(data));
+        }
 
-    // Asks the backend if the logged-in student already owns the course
-    // (the enrolled courses are part of the /students/me answer).
-    function checkEnrolled(courseId) {
-        return fetch(API_BASE + '/students/me', {
-            headers: { Authorization: 'Bearer ' + localStorage.getItem(TOKEN_KEY) }
-        })
-            .then(function (res) { return res.ok ? res.json() : null; })
-            .then(function (data) {
-                return !!data && JSON.stringify(data).indexOf(String(courseId)) !== -1;
+        // Asks the backend if the logged-in student already owns the course
+        // (the enrolled courses are part of the /students/me answer).
+        function checkEnrolled(courseId) {
+            return fetch(API_BASE + '/students/me', {
+                headers: { Authorization: 'Bearer ' + localStorage.getItem(TOKEN_KEY) }
             })
-            .catch(function () { return false; });
-    }
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) {
+                    return !!data && JSON.stringify(data).indexOf(String(courseId)) !== -1;
+                })
+                .catch(function () { return false; });
+        }
 
-    // ---- Normal page: after payment the original code asks the dashboard
-    //      to open "course_view.html". There is no dashboard here, so we
-    //      send the student to the dashboard, which opens the course view.
-    if (!inDashboard) {
-        window.loadDashboardPage = function (page) {
-            if (String(page).indexOf('course_view') !== -1) {
-                savePendingCourse({ enrolled: true });
-                window.location.href = STUDENT_PAGE;
-            } else {
-                window.location.href = page;
+        // ---- Normal page: after payment the original code asks the dashboard
+        //      to open "course_view.html". There is no dashboard here, so we
+        //      send the student to the dashboard, which opens the course view.
+        if (!inDashboard) {
+            window.loadDashboardPage = function (page) {
+                if (String(page).indexOf('course_view') !== -1) {
+                    savePendingCourse({ enrolled: true });
+                    window.location.href = STUDENT_PAGE;
+                } else {
+                    window.location.href = page;
+                }
+            };
+        }
+
+        // ---- Click guard (capture phase = runs BEFORE course_details.js) ----
+        // The dashboard loads this page again and again. The old guard is removed
+        // first, so only ONE guard is ever active.
+        if (window.__cdGuardHandler) {
+            document.removeEventListener('click', window.__cdGuardHandler, true);
+        }
+
+        window.__cdGuardHandler = function (e) {
+
+            if (!e.target.closest('#cdPurchaseBtn')) return;
+
+            // A teacher looking at his own course can never purchase it
+            if (teacherView && isTeacher()) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return;
             }
+
+            // Not logged in -> remember the course and open the login page
+            if (!isLoggedIn()) {
+                e.preventDefault();
+                e.stopImmediatePropagation();   // the original purchase code must not run
+                savePendingCourse({ purchase: true });
+                window.location.href = LOGIN_PAGE;
+                return;
+            }
+
+            // Logged in, but not as a student (teacher / admin) -> student login needed
+            if (!isStudent()) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                var ok = window.confirm(
+                    'You are logged in as a ' + (role() || 'different user') + '. ' +
+                    'To purchase a course you need a student account. ' +
+                    'Log out and log in as a student?'
+                );
+
+                if (ok) {
+                    savePendingCourse({ purchase: true });
+                    localStorage.removeItem(TOKEN_KEY);
+                    localStorage.removeItem('token_type');
+                    localStorage.removeItem(ROLE_KEY);
+                    window.location.href = LOGIN_PAGE;
+                }
+            }
+            // Logged-in student -> nothing here, the original purchase code runs
         };
-    }
 
-    // ---- Click guard (capture phase = runs BEFORE course_details.js) ----
-    // The dashboard loads this page again and again. The old guard is removed
-    // first, so only ONE guard is ever active.
-    if (window.__cdGuardHandler) {
-        document.removeEventListener('click', window.__cdGuardHandler, true);
-    }
+        document.addEventListener('click', window.__cdGuardHandler, true);
 
-    window.__cdGuardHandler = function (e) {
-
-        if (!e.target.closest('#cdPurchaseBtn')) return;
-
-        // A teacher looking at his own course can never purchase it
+        // ---- Teacher opened his own course: hide the Purchase button ----
         if (teacherView && isTeacher()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return;
+            var purchaseBtn = document.getElementById('cdPurchaseBtn');
+            if (purchaseBtn) {
+                purchaseBtn.style.display = 'none';
+
+                var note = document.createElement('p');
+                note.textContent = 'This is your own course. Teachers cannot purchase courses.';
+                note.style.cssText = 'margin:0 0 6px;padding:12px;border-radius:10px;background:#e6f4f2;' +
+                    'color:#0d6860;font-size:14px;font-weight:600;text-align:center;';
+                purchaseBtn.parentNode.insertBefore(note, purchaseBtn);
+            }
         }
 
-        // Not logged in -> remember the course and open the login page
-        if (!isLoggedIn()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();   // the original purchase code must not run
-            savePendingCourse({ purchase: true });
-            window.location.href = LOGIN_PAGE;
-            return;
+        // ---- Normal page only ----
+        if (!inDashboard) {
+
+            document.title = 'SkillHub - Course Details';
+
+            // ---- Top bar (styles + HTML) ----
+            var style = document.createElement('style');
+            style.textContent =
+                'body{margin:0;background:#eef7f4;font-family:"Segoe UI",Arial,sans-serif;}' +
+                '.cd-public-bar{position:sticky;top:0;z-index:100;height:70px;display:flex;align-items:center;' +
+                'justify-content:space-between;padding:0 5%;background:#fff;box-shadow:0 2px 10px rgba(9,104,88,.10);}' +
+                '.cd-public-brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#17384d;' +
+                'font-size:24px;font-weight:800;letter-spacing:-.6px;}' +
+                '.cd-public-brand img{width:40px;height:40px;object-fit:contain;}' +
+                '.cd-public-auth{display:flex;align-items:center;gap:18px;}' +
+                '.cd-public-login{text-decoration:none;color:#17384d;font-weight:600;font-size:15px;}' +
+                '.cd-public-signup{text-decoration:none;background:#159b91;color:#fff;padding:10px 22px;' +
+                'border-radius:22px;font-weight:600;font-size:14px;}' +
+                '.cd-public-signup:hover{background:#0f766e;}' +
+                '.course-details-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;}' +
+                '@media(max-width:500px){.cd-public-bar{padding:0 16px;}.cd-public-brand{font-size:20px;}' +
+                '.course-details-page{padding:18px 14px 40px;}}';
+            document.head.appendChild(style);
+
+            // Right side of the bar: dashboard link for a logged-in user, otherwise Log In / Sign Up
+            var rightSide = isLoggedIn()
+                ? '<a href="' + dashboardPage() + '" class="cd-public-signup">My Dashboard</a>'
+                : '<a href="login.html" class="cd-public-login">Log In</a>' +
+                '<a href="sign_up.html" class="cd-public-signup">Sign Up</a>';
+
+            var bar = document.createElement('header');
+            bar.className = 'cd-public-bar';
+            bar.innerHTML =
+                '<a href="index.html" class="cd-public-brand">' +
+                '<img src="skillhublogo.jpeg" alt="SkillHub logo"><span>SkillHub</span></a>' +
+                '<div class="cd-public-auth">' + rightSide + '</div>';
+            document.body.prepend(bar);
+
+            // ---- Logged-in student ----
+            if (isStudent()) {
+
+                var pageRoot = document.querySelector('.course-details-page');
+                var courseId = localStorage.getItem('selected_course_id');
+
+                // Hide the page while we check, so an owned course never flashes on screen
+                if (pageRoot) pageRoot.style.visibility = 'hidden';
+
+                checkEnrolled(courseId).then(function (enrolled) {
+
+                    // Already purchased -> the student dashboard shows the course view
+                    if (enrolled) {
+                        savePendingCourse({ enrolled: true });
+                        window.location.replace(STUDENT_PAGE);
+                        return;
+                    }
+
+                    if (pageRoot) pageRoot.style.visibility = '';
+
+                    // Come back from login: click Purchase automatically
+                    if (autoPurchase) runAutoPurchase(courseId);
+                });
+            }
         }
 
-        // Logged in, but not as a student (teacher / admin) -> student login needed
-        if (!isStudent()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
+        // Waits until the course data is loaded, then clicks Purchase once
+        function runAutoPurchase(courseId) {
 
-            var ok = window.confirm(
-                'You are logged in as a ' + (role() || 'different user') + '. ' +
-                'To purchase a course you need a student account. ' +
-                'Log out and log in as a student?'
+            // Remove "autopurchase" from the address so a refresh does not buy again
+            window.history.replaceState(
+                null, '', window.location.pathname + '?id=' + encodeURIComponent(courseId)
             );
 
-            if (ok) {
-                savePendingCourse({ purchase: true });
-                localStorage.removeItem(TOKEN_KEY);
-                localStorage.removeItem('token_type');
-                localStorage.removeItem(ROLE_KEY);
-                window.location.href = LOGIN_PAGE;
-            }
-        }
-        // Logged-in student -> nothing here, the original purchase code runs
-    };
+            var tries = 0;
+            var timer = setInterval(function () {
+                tries++;
 
-    document.addEventListener('click', window.__cdGuardHandler, true);
+                var title = document.getElementById('cdTitle');
+                var button = document.getElementById('cdPurchaseBtn');
+                var text = title ? title.textContent : '';
+                var loaded = text.indexOf('Loading Course') === -1;
+                var failed = text.indexOf('failed') !== -1 || text.indexOf('not found') !== -1;
 
-    // ---- Teacher opened his own course: hide the Purchase button ----
-    if (teacherView && isTeacher()) {
-        var purchaseBtn = document.getElementById('cdPurchaseBtn');
-        if (purchaseBtn) {
-            purchaseBtn.style.display = 'none';
-
-            var note = document.createElement('p');
-            note.textContent = 'This is your own course. Teachers cannot purchase courses.';
-            note.style.cssText = 'margin:0 0 6px;padding:12px;border-radius:10px;background:#e6f4f2;' +
-                'color:#0d6860;font-size:14px;font-weight:600;text-align:center;';
-            purchaseBtn.parentNode.insertBefore(note, purchaseBtn);
-        }
-    }
-
-    // ---- Normal page only ----
-    if (!inDashboard) {
-
-        document.title = 'SkillHub - Course Details';
-
-        // ---- Top bar (styles + HTML) ----
-        var style = document.createElement('style');
-        style.textContent =
-            'body{margin:0;background:#eef7f4;font-family:"Segoe UI",Arial,sans-serif;}' +
-            '.cd-public-bar{position:sticky;top:0;z-index:100;height:70px;display:flex;align-items:center;' +
-            'justify-content:space-between;padding:0 5%;background:#fff;box-shadow:0 2px 10px rgba(9,104,88,.10);}' +
-            '.cd-public-brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#17384d;' +
-            'font-size:24px;font-weight:800;letter-spacing:-.6px;}' +
-            '.cd-public-brand img{width:40px;height:40px;object-fit:contain;}' +
-            '.cd-public-auth{display:flex;align-items:center;gap:18px;}' +
-            '.cd-public-login{text-decoration:none;color:#17384d;font-weight:600;font-size:15px;}' +
-            '.cd-public-signup{text-decoration:none;background:#159b91;color:#fff;padding:10px 22px;' +
-            'border-radius:22px;font-weight:600;font-size:14px;}' +
-            '.cd-public-signup:hover{background:#0f766e;}' +
-            '.course-details-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;}' +
-            '@media(max-width:500px){.cd-public-bar{padding:0 16px;}.cd-public-brand{font-size:20px;}' +
-            '.course-details-page{padding:18px 14px 40px;}}';
-        document.head.appendChild(style);
-
-        // Right side of the bar: dashboard link for a logged-in user, otherwise Log In / Sign Up
-        var rightSide = isLoggedIn()
-            ? '<a href="' + dashboardPage() + '" class="cd-public-signup">My Dashboard</a>'
-            : '<a href="login.html" class="cd-public-login">Log In</a>' +
-              '<a href="sign_up.html" class="cd-public-signup">Sign Up</a>';
-
-        var bar = document.createElement('header');
-        bar.className = 'cd-public-bar';
-        bar.innerHTML =
-            '<a href="index.html" class="cd-public-brand">' +
-            '<img src="skillhublogo.jpeg" alt="SkillHub logo"><span>SkillHub</span></a>' +
-            '<div class="cd-public-auth">' + rightSide + '</div>';
-        document.body.prepend(bar);
-
-        // ---- Logged-in student ----
-        if (isStudent()) {
-
-            var pageRoot = document.querySelector('.course-details-page');
-            var courseId = localStorage.getItem('selected_course_id');
-
-            // Hide the page while we check, so an owned course never flashes on screen
-            if (pageRoot) pageRoot.style.visibility = 'hidden';
-
-            checkEnrolled(courseId).then(function (enrolled) {
-
-                // Already purchased -> the student dashboard shows the course view
-                if (enrolled) {
-                    savePendingCourse({ enrolled: true });
-                    window.location.replace(STUDENT_PAGE);
-                    return;
+                if (loaded && button) {
+                    clearInterval(timer);
+                    if (!failed) button.click();
+                } else if (tries > 50) {
+                    clearInterval(timer);   // gave up after about 10 seconds
                 }
-
-                if (pageRoot) pageRoot.style.visibility = '';
-
-                // Come back from login: click Purchase automatically
-                if (autoPurchase) runAutoPurchase(courseId);
-            });
+            }, 200);
         }
-    }
 
-    // Waits until the course data is loaded, then clicks Purchase once
-    function runAutoPurchase(courseId) {
-
-        // Remove "autopurchase" from the address so a refresh does not buy again
-        window.history.replaceState(
-            null, '', window.location.pathname + '?id=' + encodeURIComponent(courseId)
-        );
-
-        var tries = 0;
-        var timer = setInterval(function () {
-            tries++;
-
-            var title = document.getElementById('cdTitle');
-            var button = document.getElementById('cdPurchaseBtn');
-            var text = title ? title.textContent : '';
-            var loaded = text.indexOf('Loading Course') === -1;
-            var failed = text.indexOf('failed') !== -1 || text.indexOf('not found') !== -1;
-
-            if (loaded && button) {
-                clearInterval(timer);
-                if (!failed) button.click();
-            } else if (tries > 50) {
-                clearInterval(timer);   // gave up after about 10 seconds
-            }
-        }, 200);
-    }
-
-})();
+    })();
 </script>
 
 <script src="course_details.js"></script>

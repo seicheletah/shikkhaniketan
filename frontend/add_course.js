@@ -21,7 +21,7 @@
     const root = document.getElementById('ac-wrapper');
     if (!root) return; // page was replaced already
 
-    const API_BASE = 'http://127.0.0.1:8000/api/v1';
+    const API_BASE = 'api/v1';
     const token = localStorage.getItem('access_token');
 
     if (!token) {

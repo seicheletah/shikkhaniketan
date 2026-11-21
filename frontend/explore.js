@@ -20,33 +20,178 @@
    ========================================================= */
 
 window.SKILLHUB_TAGS = [
-  "diploma","polytechnic_diploma","ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed",
-  "mbbs","bds","bams","bhms","bpharma","bsc_nursing","llb","ba_llb","bba_llb","ma","msc","mcom",
-  "mtech","me","mca","mba","md","ms_medical","llm","med","phd",
-  "class_1","class_2","class_3","class_4","class_5","class_6","class_7","class_8","class_9",
-  "class_10","class_11","class_12",
-  "mathematics","algebra","geometry","calculus","trigonometry","statistics","discrete_math","logic",
-  "computer_science","software_engineering","data_science","artificial_intelligence","cybersecurity",
-  "web_development","mobile_development","data_structures","python","javascript","typescript","java",
-  "c_sharp","c_plus_plus","go_lang","rust","swift","kotlin","php","ruby","sql",
-  "physics","mechanics","thermodynamics","quantum_physics","astrophysics","chemistry","organic_chemistry",
-  "inorganic_chemistry","biochemistry","biology","genetics","microbiology","ecology","astronomy",
-  "earth_science","environmental_science",
-  "psychology","cognitive_psychology","clinical_psychology","economics","microeconomics","macroeconomics",
-  "sociology","political_science","anthropology","history","ancient_history","modern_history",
-  "philosophy","ethics","literature","linguistics","creative_writing",
-  "finance","corporate_finance","investment_banking","accounting","taxation","management",
-  "project_management","human_resources","marketing","digital_marketing","seo_sem","entrepreneurship",
-  "photography","music","music_theory","music_production","visual_arts","graphic_design","fine_arts",
-  "electrical_engineering","mechanical_engineering","civil_engineering","architecture",
-  "medicine","anatomy","pharmacology","nursing","law","constitutional_law","corporate_law",
-  "education","pedagogy"
+  "diploma",
+  "polytechnic_diploma",
+  "ba",
+  "bsc",
+  "bcom",
+  "btech",
+  "be",
+  "bca",
+  "bba",
+  "barch",
+  "bfa",
+  "bed",
+  "mbbs",
+  "bds",
+  "bams",
+  "bhms",
+  "bpharma",
+  "bsc_nursing",
+  "llb",
+  "ba_llb",
+  "bba_llb",
+  "ma",
+  "msc",
+  "mcom",
+  "mtech",
+  "me",
+  "mca",
+  "mba",
+  "md",
+  "ms_medical",
+  "llm",
+  "med",
+  "phd",
+  "class_1",
+  "class_2",
+  "class_3",
+  "class_4",
+  "class_5",
+  "class_6",
+  "class_7",
+  "class_8",
+  "class_9",
+  "class_10",
+  "class_11",
+  "class_12",
+  "mathematics",
+  "algebra",
+  "geometry",
+  "calculus",
+  "trigonometry",
+  "statistics",
+  "discrete_math",
+  "logic",
+  "computer_science",
+  "software_engineering",
+  "data_science",
+  "artificial_intelligence",
+  "cybersecurity",
+  "web_development",
+  "mobile_development",
+  "data_structures",
+  "python",
+  "javascript",
+  "typescript",
+  "java",
+  "c_sharp",
+  "c_plus_plus",
+  "go_lang",
+  "rust",
+  "swift",
+  "kotlin",
+  "php",
+  "ruby",
+  "sql",
+  "physics",
+  "mechanics",
+  "thermodynamics",
+  "quantum_physics",
+  "astrophysics",
+  "chemistry",
+  "organic_chemistry",
+  "inorganic_chemistry",
+  "biochemistry",
+  "biology",
+  "genetics",
+  "microbiology",
+  "ecology",
+  "astronomy",
+  "earth_science",
+  "environmental_science",
+  "psychology",
+  "cognitive_psychology",
+  "clinical_psychology",
+  "economics",
+  "microeconomics",
+  "macroeconomics",
+  "sociology",
+  "political_science",
+  "anthropology",
+  "history",
+  "ancient_history",
+  "modern_history",
+  "philosophy",
+  "ethics",
+  "literature",
+  "linguistics",
+  "creative_writing",
+  "finance",
+  "corporate_finance",
+  "investment_banking",
+  "accounting",
+  "taxation",
+  "management",
+  "project_management",
+  "human_resources",
+  "marketing",
+  "digital_marketing",
+  "seo_sem",
+  "entrepreneurship",
+  "photography",
+  "music",
+  "music_theory",
+  "music_production",
+  "visual_arts",
+  "graphic_design",
+  "fine_arts",
+  "electrical_engineering",
+  "mechanical_engineering",
+  "civil_engineering",
+  "architecture",
+  "medicine",
+  "anatomy",
+  "pharmacology",
+  "nursing",
+  "law",
+  "constitutional_law",
+  "corporate_law",
+  "education",
+  "pedagogy",
 ];
 
 // These tags are shown in UPPER CASE (degree names / acronyms)
 const UPPER_TAGS = new Set([
-  "ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed","mbbs","bds","bams","bhms",
-  "bpharma","llb","ma","msc","mcom","mtech","me","mca","mba","md","llm","med","phd","sql","php"
+  "ba",
+  "bsc",
+  "bcom",
+  "btech",
+  "be",
+  "bca",
+  "bba",
+  "barch",
+  "bfa",
+  "bed",
+  "mbbs",
+  "bds",
+  "bams",
+  "bhms",
+  "bpharma",
+  "llb",
+  "ma",
+  "msc",
+  "mcom",
+  "mtech",
+  "me",
+  "mca",
+  "mba",
+  "md",
+  "llm",
+  "med",
+  "phd",
+  "sql",
+  "php",
 ]);
 
 // Labels that the simple rule below cannot produce
@@ -59,27 +204,28 @@ const SPECIAL_TAG_LABELS = {
   bsc_nursing: "BSc Nursing",
   ms_medical: "MS (Medical)",
   seo_sem: "SEO / SEM",
-  polytechnic_diploma: "Polytechnic Diploma"
+  polytechnic_diploma: "Polytechnic Diploma",
 };
 
 window.tagLabel = function (tag) {
   if (SPECIAL_TAG_LABELS[tag]) return SPECIAL_TAG_LABELS[tag];
   if (UPPER_TAGS.has(tag)) return tag.toUpperCase();
   // "class_10" -> "Class 10", "web_development" -> "Web Development"
-  return tag.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  return tag
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 };
 
-
 document.addEventListener("DOMContentLoaded", () => {
-
   // ---------------------------------------------------------
   // CONFIG
   // ---------------------------------------------------------
-  const API_BASE = "http://127.0.0.1:8000/api/v1";
-  const PAGE_SIZE = 12;                                  // courses loaded per request
-  const token = localStorage.getItem("access_token");   // optional: sent if present
+  const API_BASE = "/api/v1";
+  const PAGE_SIZE = 12; // courses loaded per request
+  const token = localStorage.getItem("access_token"); // optional: sent if present
 
-  const $ = id => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
   // DOM elements
   const grid = $("courseGrid");
@@ -97,50 +243,61 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   const state = {
     name: "",
-    tags: new Set(),      // selected tag values
+    tags: new Set(), // selected tag values
     language: "",
-    paid: "",             // "" (all) | "true" (paid) | "false" (free)
-    type: "video",        // video | document  (the tabs)
-    offset: 0,            // how many courses the SERVER has already sent us
-    loaded: 0             // how many cards are really shown
+    paid: "", // "" (all) | "true" (paid) | "false" (free)
+    type: "video", // video | document  (the tabs)
+    offset: 0, // how many courses the SERVER has already sent us
+    loaded: 0, // how many cards are really shown
   };
 
-  let requestId = 0;      // used to ignore outdated responses
+  let requestId = 0; // used to ignore outdated responses
 
   // =========================================================
   // SMALL HELPERS
   // =========================================================
 
   // Escape text so course data can never inject HTML
-  const esc = str => String(str ?? "").replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const esc = (str) =>
+    String(str ?? "").replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+    );
 
   // Debounce: run fn only after the user stops typing
   function debounce(fn, ms = 350) {
     let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), ms);
+    };
   }
 
   // Format numbers: 1250 -> "1,250"
-  const fmt = n => Number(n || 0).toLocaleString("en-IN");
+  const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 
   // Is this course paid? (handles true / 1 / "1" / "true")
   function isPaid(c) {
-    return c.course_paid === true || c.course_paid === 1 ||
-           c.course_paid === "1" || c.course_paid === "true";
+    return (
+      c.course_paid === true ||
+      c.course_paid === 1 ||
+      c.course_paid === "1" ||
+      c.course_paid === "true"
+    );
   }
 
   // Price filter applied in the browser (works even if the backend ignores paid=false)
   function matchesPaidFilter(c) {
-    if (state.paid === "") return true;          // All
+    if (state.paid === "") return true; // All
     if (state.paid === "true") return isPaid(c); // Paid only
-    return !isPaid(c);                           // Free only
+    return !isPaid(c); // Free only
   }
 
   // Price text: "Free" or "₹1,500"
   function priceText(c) {
     if (!isPaid(c)) return `<span class="price free">Free</span>`;
-    const symbol = (c.course_price_currency || "INR") === "INR" ? "₹" : (c.course_price_currency + " ");
+    const symbol =
+      (c.course_price_currency || "INR") === "INR" ? "₹" : c.course_price_currency + " ";
     return `<span class="price">${symbol}${fmt(c.course_price)}</span>`;
   }
 
@@ -152,10 +309,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Find the thumbnail url inside course.media (fallback only).
   function getThumbnail(course) {
-    const media = (course.media || []).find(m => m.category === "thumbnail");
+    const media = (course.media || []).find((m) => m.category === "thumbnail");
     if (!media) return "";
-    return media.url || media.media_url || media.file_url ||
-           media.signed_url || media.download_url || media.link || "";
+    return (
+      media.url ||
+      media.media_url ||
+      media.file_url ||
+      media.signed_url ||
+      media.download_url ||
+      media.link ||
+      ""
+    );
   }
 
   // =========================================================
@@ -175,7 +339,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Skeleton (grey shimmer) cards shown instantly while data loads
   function skeletonCards(count = 8) {
-    return Array.from({ length: count }, () => `
+    return Array.from(
+      { length: count },
+      () => `
       <div class="course-card skeleton">
         <div class="sk sk-thumb"></div>
         <div class="card-body">
@@ -184,7 +350,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="sk sk-line"></div>
           <div class="sk sk-line short"></div>
         </div>
-      </div>`).join("");
+      </div>`,
+    ).join("");
   }
 
   // One real course card – shows EVERY detail the API returns
@@ -227,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div class="tag-row">
-            ${tags.map(tag => `<span class="tag-pill">${esc(tagLabel(tag))}</span>`).join("")}
+            ${tags.map((tag) => `<span class="tag-pill">${esc(tagLabel(tag))}</span>`).join("")}
             ${extraTags > 0 ? `<span class="tag-pill">+${extraTags}</span>` : ""}
           </div>
 
@@ -240,23 +407,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Fade thumbnails in when they finish loading (event delegation)
-  grid.addEventListener("load", e => {
-    if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
-      e.target.classList.add("loaded");
-      e.target.closest(".card-thumb").classList.add("ready");    // stop shimmer + spinner
-    }
-  }, true);
+  grid.addEventListener(
+    "load",
+    (e) => {
+      if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
+        e.target.classList.add("loaded");
+        e.target.closest(".card-thumb").classList.add("ready"); // stop shimmer + spinner
+      }
+    },
+    true,
+  );
 
   // If a thumbnail fails, remove it (the placeholder stays visible)
-  grid.addEventListener("error", e => {
-    if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
-      e.target.closest(".card-thumb").classList.add("failed");
-      e.target.remove();
-    }
-  }, true);
+  grid.addEventListener(
+    "error",
+    (e) => {
+      if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
+        e.target.closest(".card-thumb").classList.add("failed");
+        e.target.remove();
+      }
+    },
+    true,
+  );
 
   // Click on a card -> open the course details page
-  grid.addEventListener("click", e => {
+  grid.addEventListener("click", (e) => {
     const card = e.target.closest(".course-card[data-id]");
     if (card) openCourse(card.dataset.id);
   });
@@ -266,16 +441,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // GET /courses/{course_id}/media/thumbnail/access -> { course_id, stream_url }
   // Called for every visible card in parallel, cached per course.
   // =========================================================
-  const thumbCache = new Map();     // courseId -> Promise<stream_url>
+  const thumbCache = new Map(); // courseId -> Promise<stream_url>
 
   function getThumbUrl(courseId) {
     if (!thumbCache.has(courseId)) {
       const p = fetch(`${API_BASE}/courses/${courseId}/media/thumbnail/access`, {
-        headers: { Accept: "application/json" }
+        headers: { Accept: "application/json" },
       })
-        .then(res => (res.ok ? res.json() : Promise.reject(new Error(res.status))))
-        .then(data => data.stream_url || "")
-        .catch(() => { thumbCache.delete(courseId); return ""; });
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.status))))
+        .then((data) => data.stream_url || "")
+        .catch(() => {
+          thumbCache.delete(courseId);
+          return "";
+        });
       thumbCache.set(courseId, p);
     }
     return thumbCache.get(courseId);
@@ -283,9 +461,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fill the src of every card image that does not have one yet
   function loadThumbnails() {
-    grid.querySelectorAll("img[data-thumb-id]:not([src])").forEach(async img => {
+    grid.querySelectorAll("img[data-thumb-id]:not([src])").forEach(async (img) => {
       const url = await getThumbUrl(img.dataset.thumbId);
-      if (url && img.isConnected) img.src = url;     // fades in via the "load" listener
+      if (url && img.isConnected)
+        img.src = url; // fades in via the "load" listener
       else img.closest(".card-thumb")?.classList.add("failed");
     });
   }
@@ -324,7 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Build the query string from the state
     const params = new URLSearchParams();
     if (state.name) params.append("name", state.name);
-    state.tags.forEach(tag => params.append("tags", tag));   // tags=mba&tags=python
+    state.tags.forEach((tag) => params.append("tags", tag)); // tags=mba&tags=python
     if (state.language) params.append("language", state.language);
     if (state.paid !== "") params.append("paid", state.paid);
     params.append("type", state.type);
@@ -351,13 +530,13 @@ document.addEventListener("DOMContentLoaded", () => {
       // Render cards
       grid.insertAdjacentHTML(
         "beforeend",
-        courses.map((c, i) => courseCard(c, state.loaded + i)).join("")
+        courses.map((c, i) => courseCard(c, state.loaded + i)).join(""),
       );
 
-      scheduleThumbnails();   // thumbnails come AFTER the cards are visible
+      scheduleThumbnails(); // thumbnails come AFTER the cards are visible
 
       state.loaded += courses.length;
-      state.offset += rawCourses.length;   // paging uses what the SERVER sent
+      state.offset += rawCourses.length; // paging uses what the SERVER sent
 
       // If this whole page was filtered out but the server has more, keep going
       if (state.loaded === 0 && rawCourses.length === PAGE_SIZE) {
@@ -377,7 +556,6 @@ document.addEventListener("DOMContentLoaded", () => {
       loadMoreBtn.hidden = rawCourses.length < PAGE_SIZE;
       loadMoreBtn.disabled = false;
       loadMoreBtn.textContent = "Load more courses";
-
     } catch (err) {
       if (myRequest !== requestId) return;
       console.error("Search error:", err);
@@ -403,8 +581,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderTagFilters(query = "") {
     const q = query.trim().toLowerCase();
 
-    const list = window.SKILLHUB_TAGS.filter(tag =>
-      tagLabel(tag).toLowerCase().includes(q) || tag.includes(q)
+    const list = window.SKILLHUB_TAGS.filter(
+      (tag) => tagLabel(tag).toLowerCase().includes(q) || tag.includes(q),
     );
 
     if (!list.length) {
@@ -412,31 +590,35 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    tagFilterList.innerHTML = list.map(tag => `
+    tagFilterList.innerHTML = list
+      .map(
+        (tag) => `
       <label>
         <input type="checkbox" value="${tag}" ${state.tags.has(tag) ? "checked" : ""}>
         ${esc(tagLabel(tag))}
-      </label>`).join("");
+      </label>`,
+      )
+      .join("");
   }
 
   // Search inside the filter list only
   filterSearch.addEventListener("input", () => renderTagFilters(filterSearch.value));
 
   // Tick / untick a tag -> reload courses
-  tagFilterList.addEventListener("change", e => {
+  tagFilterList.addEventListener("change", (e) => {
     if (e.target.type !== "checkbox") return;
     e.target.checked ? state.tags.add(e.target.value) : state.tags.delete(e.target.value);
     fetchCourses();
   });
 
   // Language radio buttons
-  $("languageFilter").addEventListener("change", e => {
+  $("languageFilter").addEventListener("change", (e) => {
     state.language = e.target.value;
     fetchCourses();
   });
 
   // Free / Paid radio buttons
-  $("paidFilter").addEventListener("change", e => {
+  $("paidFilter").addEventListener("change", (e) => {
     state.paid = e.target.value;
     fetchCourses();
   });
@@ -458,17 +640,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================================================
   // TOP SEARCH – searches courses by name
   // =========================================================
-  courseSearch.addEventListener("input", debounce(() => {
-    state.name = courseSearch.value.trim();
-    fetchCourses();
-  }));
+  courseSearch.addEventListener(
+    "input",
+    debounce(() => {
+      state.name = courseSearch.value.trim();
+      fetchCourses();
+    }),
+  );
 
   // =========================================================
   // VIDEO / DOCUMENT TABS
   // =========================================================
-  document.querySelectorAll(".tab-btn").forEach(btn => {
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.type = btn.dataset.type;
       fetchCourses();

@@ -17,7 +17,6 @@
       is clicked on the course details page).
    ========================================================= */
 
-
 /* =========================================================
    HEADER BUTTONS  (Admin / Log In / Sign Up  <->  Dashboard / Logout)
 
@@ -35,7 +34,7 @@ const SESSION_KEYS = [
   "userRole",
   "role",
   "pending_course",
-  "selected_course_id"
+  "selected_course_id",
 ];
 
 // Which dashboard page belongs to which role
@@ -47,7 +46,7 @@ function dashboardPageForRole(role) {
 
 // Logout: delete the saved session, then redraw the header buttons
 function logoutFromHome() {
-  SESSION_KEYS.forEach(key => localStorage.removeItem(key));
+  SESSION_KEYS.forEach((key) => localStorage.removeItem(key));
   renderAuthButtons();
 }
 
@@ -86,7 +85,6 @@ renderAuthButtons();
 // buttons always match the real login state.
 window.addEventListener("pageshow", renderAuthButtons);
 
-
 /* =========================================================
    TAGS
    The list of all tags + a helper (tagLabel) that turns a tag
@@ -94,33 +92,178 @@ window.addEventListener("pageshow", renderAuthButtons);
    ========================================================= */
 
 window.SKILLHUB_TAGS = [
-  "diploma","polytechnic_diploma","ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed",
-  "mbbs","bds","bams","bhms","bpharma","bsc_nursing","llb","ba_llb","bba_llb","ma","msc","mcom",
-  "mtech","me","mca","mba","md","ms_medical","llm","med","phd",
-  "class_1","class_2","class_3","class_4","class_5","class_6","class_7","class_8","class_9",
-  "class_10","class_11","class_12",
-  "mathematics","algebra","geometry","calculus","trigonometry","statistics","discrete_math","logic",
-  "computer_science","software_engineering","data_science","artificial_intelligence","cybersecurity",
-  "web_development","mobile_development","data_structures","python","javascript","typescript","java",
-  "c_sharp","c_plus_plus","go_lang","rust","swift","kotlin","php","ruby","sql",
-  "physics","mechanics","thermodynamics","quantum_physics","astrophysics","chemistry","organic_chemistry",
-  "inorganic_chemistry","biochemistry","biology","genetics","microbiology","ecology","astronomy",
-  "earth_science","environmental_science",
-  "psychology","cognitive_psychology","clinical_psychology","economics","microeconomics","macroeconomics",
-  "sociology","political_science","anthropology","history","ancient_history","modern_history",
-  "philosophy","ethics","literature","linguistics","creative_writing",
-  "finance","corporate_finance","investment_banking","accounting","taxation","management",
-  "project_management","human_resources","marketing","digital_marketing","seo_sem","entrepreneurship",
-  "photography","music","music_theory","music_production","visual_arts","graphic_design","fine_arts",
-  "electrical_engineering","mechanical_engineering","civil_engineering","architecture",
-  "medicine","anatomy","pharmacology","nursing","law","constitutional_law","corporate_law",
-  "education","pedagogy"
+  "diploma",
+  "polytechnic_diploma",
+  "ba",
+  "bsc",
+  "bcom",
+  "btech",
+  "be",
+  "bca",
+  "bba",
+  "barch",
+  "bfa",
+  "bed",
+  "mbbs",
+  "bds",
+  "bams",
+  "bhms",
+  "bpharma",
+  "bsc_nursing",
+  "llb",
+  "ba_llb",
+  "bba_llb",
+  "ma",
+  "msc",
+  "mcom",
+  "mtech",
+  "me",
+  "mca",
+  "mba",
+  "md",
+  "ms_medical",
+  "llm",
+  "med",
+  "phd",
+  "class_1",
+  "class_2",
+  "class_3",
+  "class_4",
+  "class_5",
+  "class_6",
+  "class_7",
+  "class_8",
+  "class_9",
+  "class_10",
+  "class_11",
+  "class_12",
+  "mathematics",
+  "algebra",
+  "geometry",
+  "calculus",
+  "trigonometry",
+  "statistics",
+  "discrete_math",
+  "logic",
+  "computer_science",
+  "software_engineering",
+  "data_science",
+  "artificial_intelligence",
+  "cybersecurity",
+  "web_development",
+  "mobile_development",
+  "data_structures",
+  "python",
+  "javascript",
+  "typescript",
+  "java",
+  "c_sharp",
+  "c_plus_plus",
+  "go_lang",
+  "rust",
+  "swift",
+  "kotlin",
+  "php",
+  "ruby",
+  "sql",
+  "physics",
+  "mechanics",
+  "thermodynamics",
+  "quantum_physics",
+  "astrophysics",
+  "chemistry",
+  "organic_chemistry",
+  "inorganic_chemistry",
+  "biochemistry",
+  "biology",
+  "genetics",
+  "microbiology",
+  "ecology",
+  "astronomy",
+  "earth_science",
+  "environmental_science",
+  "psychology",
+  "cognitive_psychology",
+  "clinical_psychology",
+  "economics",
+  "microeconomics",
+  "macroeconomics",
+  "sociology",
+  "political_science",
+  "anthropology",
+  "history",
+  "ancient_history",
+  "modern_history",
+  "philosophy",
+  "ethics",
+  "literature",
+  "linguistics",
+  "creative_writing",
+  "finance",
+  "corporate_finance",
+  "investment_banking",
+  "accounting",
+  "taxation",
+  "management",
+  "project_management",
+  "human_resources",
+  "marketing",
+  "digital_marketing",
+  "seo_sem",
+  "entrepreneurship",
+  "photography",
+  "music",
+  "music_theory",
+  "music_production",
+  "visual_arts",
+  "graphic_design",
+  "fine_arts",
+  "electrical_engineering",
+  "mechanical_engineering",
+  "civil_engineering",
+  "architecture",
+  "medicine",
+  "anatomy",
+  "pharmacology",
+  "nursing",
+  "law",
+  "constitutional_law",
+  "corporate_law",
+  "education",
+  "pedagogy",
 ];
 
 // These tags are shown in UPPER CASE (degree names / acronyms)
 const UPPER_TAGS = new Set([
-  "ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed","mbbs","bds","bams","bhms",
-  "bpharma","llb","ma","msc","mcom","mtech","me","mca","mba","md","llm","med","phd","sql","php"
+  "ba",
+  "bsc",
+  "bcom",
+  "btech",
+  "be",
+  "bca",
+  "bba",
+  "barch",
+  "bfa",
+  "bed",
+  "mbbs",
+  "bds",
+  "bams",
+  "bhms",
+  "bpharma",
+  "llb",
+  "ma",
+  "msc",
+  "mcom",
+  "mtech",
+  "me",
+  "mca",
+  "mba",
+  "md",
+  "llm",
+  "med",
+  "phd",
+  "sql",
+  "php",
 ]);
 
 // Labels that the simple rule below cannot produce
@@ -133,25 +276,26 @@ const SPECIAL_TAG_LABELS = {
   bsc_nursing: "BSc Nursing",
   ms_medical: "MS (Medical)",
   seo_sem: "SEO / SEM",
-  polytechnic_diploma: "Polytechnic Diploma"
+  polytechnic_diploma: "Polytechnic Diploma",
 };
 
 window.tagLabel = function (tag) {
   if (SPECIAL_TAG_LABELS[tag]) return SPECIAL_TAG_LABELS[tag];
   if (UPPER_TAGS.has(tag)) return tag.toUpperCase();
   // "class_10" -> "Class 10", "web_development" -> "Web Development"
-  return tag.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  return tag
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 };
 
-
 document.addEventListener("DOMContentLoaded", () => {
-
   // ---------------------------------------------------------
   // CONFIG
   // ---------------------------------------------------------
-  const API_BASE = "http://127.0.0.1:8000/api/v1";
-  const SHOW_COUNT = 6;                                  // how many courses on the home page
-  const token = localStorage.getItem("access_token");   // optional
+  const API_BASE = "api/v1";
+  const SHOW_COUNT = 6; // how many courses on the home page
+  const token = localStorage.getItem("access_token"); // optional
 
   // DOM elements
   const grid = document.getElementById("homeCourseGrid");
@@ -159,29 +303,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.querySelector(".search-box input");
   const searchButton = document.querySelector(".search-box i");
 
-  let allCourses = [];     // every course returned by the API
+  let allCourses = []; // every course returned by the API
 
   // =========================================================
   // SMALL HELPERS
   // =========================================================
 
   // Escape text so course data can never inject HTML
-  const esc = str => String(str ?? "").replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const esc = (str) =>
+    String(str ?? "").replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+    );
 
   // 1250 -> "1,250"
-  const fmt = n => Number(n || 0).toLocaleString("en-IN");
+  const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 
   // Is this course paid? (handles true / 1 / "1" / "true")
   function isPaid(c) {
-    return c.course_paid === true || c.course_paid === 1 ||
-           c.course_paid === "1" || c.course_paid === "true";
+    return (
+      c.course_paid === true ||
+      c.course_paid === 1 ||
+      c.course_paid === "1" ||
+      c.course_paid === "true"
+    );
   }
 
   // Price text: "Free" or "₹1,500"
   function priceText(c) {
     if (!isPaid(c)) return `<span class="price free">Free</span>`;
-    const symbol = (c.course_price_currency || "INR") === "INR" ? "₹" : (c.course_price_currency + " ");
+    const symbol =
+      (c.course_price_currency || "INR") === "INR" ? "₹" : c.course_price_currency + " ";
     return `<span class="price">${symbol}${fmt(c.course_price)}</span>`;
   }
 
@@ -194,10 +346,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Thumbnail url from course.media (fallback only; the real url
   // comes from the /media/thumbnail/access endpoint below)
   function getThumbnail(course) {
-    const media = (course.media || []).find(m => m.category === "thumbnail");
+    const media = (course.media || []).find((m) => m.category === "thumbnail");
     if (!media) return "";
-    return media.url || media.media_url || media.file_url ||
-           media.signed_url || media.download_url || media.link || "";
+    return (
+      media.url ||
+      media.media_url ||
+      media.file_url ||
+      media.signed_url ||
+      media.download_url ||
+      media.link ||
+      ""
+    );
   }
 
   // =========================================================
@@ -217,7 +376,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Grey shimmer cards while data loads
   function skeletonCards(count = SHOW_COUNT) {
-    return Array.from({ length: count }, () => `
+    return Array.from(
+      { length: count },
+      () => `
       <div class="course-card skeleton">
         <div class="sk sk-thumb"></div>
         <div class="card-body">
@@ -226,7 +387,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="sk sk-line"></div>
           <div class="sk sk-line short"></div>
         </div>
-      </div>`).join("");
+      </div>`,
+    ).join("");
   }
 
   // One real course card (identical to the explore page)
@@ -269,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div class="tag-row">
-            ${tags.map(tag => `<span class="tag-pill">${esc(tagLabel(tag))}</span>`).join("")}
+            ${tags.map((tag) => `<span class="tag-pill">${esc(tagLabel(tag))}</span>`).join("")}
             ${extraTags > 0 ? `<span class="tag-pill">+${extraTags}</span>` : ""}
           </div>
 
@@ -282,23 +444,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Thumbnail fades in when loaded (event delegation)
-  grid.addEventListener("load", e => {
-    if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
-      e.target.classList.add("loaded");
-      e.target.closest(".card-thumb").classList.add("ready");
-    }
-  }, true);
+  grid.addEventListener(
+    "load",
+    (e) => {
+      if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
+        e.target.classList.add("loaded");
+        e.target.closest(".card-thumb").classList.add("ready");
+      }
+    },
+    true,
+  );
 
   // If a thumbnail fails, remove it (placeholder stays)
-  grid.addEventListener("error", e => {
-    if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
-      e.target.closest(".card-thumb").classList.add("failed");
-      e.target.remove();
-    }
-  }, true);
+  grid.addEventListener(
+    "error",
+    (e) => {
+      if (e.target.tagName === "IMG" && e.target.closest(".card-thumb")) {
+        e.target.closest(".card-thumb").classList.add("failed");
+        e.target.remove();
+      }
+    },
+    true,
+  );
 
   // Click on a card -> open the course details page
-  grid.addEventListener("click", e => {
+  grid.addEventListener("click", (e) => {
     const card = e.target.closest(".course-card[data-id]");
     if (!card) return;
     openCourse(card.dataset.id);
@@ -313,11 +483,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function getThumbUrl(courseId) {
     if (!thumbCache.has(courseId)) {
       const p = fetch(`${API_BASE}/courses/${courseId}/media/thumbnail/access`, {
-        headers: { Accept: "application/json" }
+        headers: { Accept: "application/json" },
       })
-        .then(res => (res.ok ? res.json() : Promise.reject(new Error(res.status))))
-        .then(data => data.stream_url || "")
-        .catch(() => { thumbCache.delete(courseId); return ""; });
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(res.status))))
+        .then((data) => data.stream_url || "")
+        .catch(() => {
+          thumbCache.delete(courseId);
+          return "";
+        });
       thumbCache.set(courseId, p);
     }
     return thumbCache.get(courseId);
@@ -325,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fill the src of every card image that has no src yet (all in parallel)
   function loadThumbnails() {
-    grid.querySelectorAll("img[data-thumb-id]:not([src])").forEach(async img => {
+    grid.querySelectorAll("img[data-thumb-id]:not([src])").forEach(async (img) => {
       const url = await getThumbUrl(img.dataset.thumbId);
       if (url && img.isConnected) img.src = url;
       else img.closest(".card-thumb")?.classList.add("failed");
@@ -371,14 +544,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 3000);
     }
 
-    scheduleThumbnails();   // thumbnails come AFTER the cards are visible
+    scheduleThumbnails(); // thumbnails come AFTER the cards are visible
   }
 
   // =========================================================
   // LOAD COURSES  (GET /courses/)
   // =========================================================
   async function loadCourses() {
-
     // Show skeletons immediately
     grid.innerHTML = skeletonCards();
 
@@ -390,10 +562,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(`Failed to load courses: ${res.status}`);
 
       const data = await res.json();
-      allCourses = Array.isArray(data) ? data : (data.courses || []);
+      allCourses = Array.isArray(data) ? data : data.courses || [];
 
       renderCourses();
-
     } catch (error) {
       console.error("Course loading error:", error);
       grid.innerHTML = `<div class="home-empty">Could not load courses. Please try again later.</div>`;
@@ -412,9 +583,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const matched = allCourses.find(c =>
-      (c.course_name || "").toLowerCase().includes(text)
-    );
+    const matched = allCourses.find((c) => (c.course_name || "").toLowerCase().includes(text));
 
     if (!matched) {
       renderCourses();
@@ -422,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Matched course goes first, the rest follow
-    const others = allCourses.filter(c => String(c.id) !== String(matched.id));
+    const others = allCourses.filter((c) => String(c.id) !== String(matched.id));
     renderCourses([matched, ...others], matched.id);
 
     section.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -430,7 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   searchButton.addEventListener("click", searchCourse);
 
-  searchInput.addEventListener("keydown", e => {
+  searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") searchCourse();
   });
 

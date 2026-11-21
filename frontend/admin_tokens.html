@@ -5,25 +5,129 @@
      ========================================================== -->
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <style>
-    .tk-box { background:#fff; border:1px solid #e5e9f0; border-radius:12px; padding:20px; margin-bottom:20px; }
-    .tk-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
-    .tk-btn { background:#0f766e; color:#fff; border:0; border-radius:8px; padding:10px 18px; font-weight:600; font-size:14px; cursor:pointer; }
-    .tk-btn:hover { background:#0b5a54; }
-    .tk-btn:disabled { opacity:.6; cursor:not-allowed; }
-    .tk-btn.light { background:#e2e8f0; color:#0f172a; }
-    .tk-new { display:none; margin-top:16px; background:#ecfdf5; border:1px solid #99f6e4; border-radius:10px; padding:14px; }
-    .tk-new code { display:block; word-break:break-all; background:#fff; border:1px solid #ccfbf1; border-radius:8px; padding:10px; margin:8px 0; font-size:13px; }
-    .tk-wrap { overflow-x:auto; }
-    table.tk-table { width:100%; border-collapse:collapse; font-size:14px; }
-    table.tk-table th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:#475f7b; border-bottom:1px solid #e5e9f0; white-space:nowrap; }
-    table.tk-table td { padding:10px 12px; border-bottom:1px solid #eef1f6; vertical-align:middle; }
-    .tk-badge { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
-    .tk-badge.on { background:#dcfce7; color:#166534; }
-    .tk-badge.off { background:#fee2e2; color:#991b1b; }
+    .tk-box {
+        background: #fff;
+        border: 1px solid #e5e9f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .tk-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .tk-btn {
+        background: #0f766e;
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .tk-btn:hover {
+        background: #0b5a54;
+    }
+
+    .tk-btn:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+    .tk-btn.light {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .tk-new {
+        display: none;
+        margin-top: 16px;
+        background: #ecfdf5;
+        border: 1px solid #99f6e4;
+        border-radius: 10px;
+        padding: 14px;
+    }
+
+    .tk-new code {
+        display: block;
+        word-break: break-all;
+        background: #fff;
+        border: 1px solid #ccfbf1;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 8px 0;
+        font-size: 13px;
+    }
+
+    .tk-wrap {
+        overflow-x: auto;
+    }
+
+    table.tk-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    table.tk-table th {
+        text-align: left;
+        padding: 10px 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #475f7b;
+        border-bottom: 1px solid #e5e9f0;
+        white-space: nowrap;
+    }
+
+    table.tk-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #eef1f6;
+        vertical-align: middle;
+    }
+
+    .tk-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .tk-badge.on {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .tk-badge.off {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
     /* Full IDs and tokens are shown in one piece; long values wrap inside the cell */
-    .tk-mono { font-family: Consolas, 'Courier New', monospace; font-size:12px; word-break:break-all; min-width:150px; }
-    .tk-token { min-width:260px; }
-    .tk-pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+    .tk-mono {
+        font-family: Consolas, 'Courier New', monospace;
+        font-size: 12px;
+        word-break: break-all;
+        min-width: 150px;
+    }
+
+    .tk-token {
+        min-width: 260px;
+    }
+
+    .tk-pager {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+    }
 </style>
 
 <h1 class="page-title">Access Token</h1>
@@ -32,7 +136,8 @@
     <div class="tk-bar">
         <div>
             <strong>Generate a new admin access token</strong>
-            <p class="empty-text" style="font-size:14px;">Give this token to a new admin so they can finish their sign up. Tokens expire, so share it quickly.</p>
+            <p class="empty-text" style="font-size:14px;">Give this token to a new admin so they can finish their sign
+                up. Tokens expire, so share it quickly.</p>
         </div>
         <button class="tk-btn" id="tkGenerateBtn">Generate New Token</button>
     </div>
@@ -51,9 +156,20 @@
     <div class="tk-wrap" style="margin-top:12px;">
         <table class="tk-table">
             <thead>
-                <tr><th>Token</th><th>Expires</th><th>Creator ID</th><th>Used by (client ID)</th><th>Status</th><th></th></tr>
+                <tr>
+                    <th>Token</th>
+                    <th>Expires</th>
+                    <th>Creator ID</th>
+                    <th>Used by (client ID)</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
             </thead>
-            <tbody id="tkBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+            <tbody id="tkBody">
+                <tr>
+                    <td colspan="6">Loading...</td>
+                </tr>
+            </tbody>
         </table>
     </div>
     <div class="tk-pager">
@@ -64,61 +180,61 @@
 </div>
 
 <script>
-(function () {
-    const API = 'http://127.0.0.1:8000/api/v1';
-    const LIMIT = 10;
-    let offset = 0;
+    (function () {
+        const API = 'api/v1';
+        const LIMIT = 10;
+        let offset = 0;
 
-    const $ = (id) => document.getElementById(id);
-    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
+        const $ = (id) => document.getElementById(id);
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
 
-    // Calls the API with the saved admin token
-    async function api(path, options = {}) {
-        const res = await fetch(API + path, {
-            ...options,
-            headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+        // Calls the API with the saved admin token
+        async function api(path, options = {}) {
+            const res = await fetch(API + path, {
+                ...options,
+                headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+            });
+            if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+            return data;
+        }
+
+        async function copyText(text, btn) {
+            try { await navigator.clipboard.writeText(text); const old = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = old, 1500); }
+            catch (e) { prompt('Copy this token:', text); }
+        }
+
+        // ---------- Generate a new token ----------
+        $('tkGenerateBtn').addEventListener('click', async () => {
+            const btn = $('tkGenerateBtn');
+            btn.disabled = true; btn.textContent = 'Generating...';
+            try {
+                const t = await api('/admin/generate-access-token', { method: 'POST' });
+                if (!t) return;
+                $('tkNewToken').textContent = t.token;
+                $('tkNewExpiry').textContent = 'Expires at: ' + fmt(t.expires_at);
+                $('tkNewBox').style.display = 'block';
+                offset = 0;
+                loadTokens();
+            } catch (e) { alert(e.message); }
+            btn.disabled = false; btn.textContent = 'Generate New Token';
         });
-        if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
-        return data;
-    }
 
-    async function copyText(text, btn) {
-        try { await navigator.clipboard.writeText(text); const old = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = old, 1500); }
-        catch (e) { prompt('Copy this token:', text); }
-    }
+        $('tkCopyBtn').addEventListener('click', () => copyText($('tkNewToken').textContent, $('tkCopyBtn')));
 
-    // ---------- Generate a new token ----------
-    $('tkGenerateBtn').addEventListener('click', async () => {
-        const btn = $('tkGenerateBtn');
-        btn.disabled = true; btn.textContent = 'Generating...';
-        try {
-            const t = await api('/admin/generate-access-token', { method: 'POST' });
-            if (!t) return;
-            $('tkNewToken').textContent = t.token;
-            $('tkNewExpiry').textContent = 'Expires at: ' + fmt(t.expires_at);
-            $('tkNewBox').style.display = 'block';
-            offset = 0;
-            loadTokens();
-        } catch (e) { alert(e.message); }
-        btn.disabled = false; btn.textContent = 'Generate New Token';
-    });
-
-    $('tkCopyBtn').addEventListener('click', () => copyText($('tkNewToken').textContent, $('tkCopyBtn')));
-
-    // ---------- Past tokens table ----------
-    async function loadTokens() {
-        const body = $('tkBody');
-        body.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
-        try {
-            const list = await api(`/admin/past-access-token?offset=${offset}&limit=${LIMIT}`);
-            if (!list) return;
-            if (!list.length) {
-                body.innerHTML = '<tr><td colspan="6">No tokens found.</td></tr>';
-            } else {
-                body.innerHTML = list.map(t => `
+        // ---------- Past tokens table ----------
+        async function loadTokens() {
+            const body = $('tkBody');
+            body.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+            try {
+                const list = await api(`/admin/past-access-token?offset=${offset}&limit=${LIMIT}`);
+                if (!list) return;
+                if (!list.length) {
+                    body.innerHTML = '<tr><td colspan="6">No tokens found.</td></tr>';
+                } else {
+                    body.innerHTML = list.map(t => `
                     <tr>
                         <td class="tk-mono tk-token">${esc(t.token)}</td>
                         <td>${esc(fmt(t.expires_at))}</td>
@@ -127,22 +243,22 @@
                         <td><span class="tk-badge ${t.is_active ? 'on' : 'off'}">${t.is_active ? 'Active' : 'Inactive'}</span></td>
                         <td><button class="tk-btn light" data-token="${esc(t.token)}">Copy</button></td>
                     </tr>`).join('');
+                }
+                $('tkPageText').textContent = 'Page ' + (offset / LIMIT + 1);
+                $('tkPrev').disabled = offset === 0;
+                $('tkNext').disabled = list.length < LIMIT;
+            } catch (e) {
+                body.innerHTML = '<tr><td colspan="6" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
             }
-            $('tkPageText').textContent = 'Page ' + (offset / LIMIT + 1);
-            $('tkPrev').disabled = offset === 0;
-            $('tkNext').disabled = list.length < LIMIT;
-        } catch (e) {
-            body.innerHTML = '<tr><td colspan="6" style="color:#d9534f;">' + esc(e.message) + '</td></tr>';
         }
-    }
 
-    $('tkBody').addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-token]');
-        if (btn) copyText(btn.dataset.token, btn);
-    });
-    $('tkPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadTokens(); });
-    $('tkNext').addEventListener('click', () => { offset += LIMIT; loadTokens(); });
+        $('tkBody').addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-token]');
+            if (btn) copyText(btn.dataset.token, btn);
+        });
+        $('tkPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadTokens(); });
+        $('tkNext').addEventListener('click', () => { offset += LIMIT; loadTokens(); });
 
-    loadTokens();
-})();
+        loadTokens();
+    })();
 </script>
