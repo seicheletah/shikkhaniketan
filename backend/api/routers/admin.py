@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from backend.core.database import SessionDep
 from backend.core.security import get_password_hash, AdminDep
 from backend.core.config import settings
-from backend.utils import send_otp
+from backend.utils import send_otp, share_token
 from backend.models import (
     AdminUser,
     AdminUserCreate,
@@ -19,6 +19,7 @@ from backend.models import (
     AdminUserVerifyEmail,
     AdminUserVerifyToken,
     AdminAcessTokenResponse,
+    AdminAcessTokenShare,
     AdminActionHistory,
     AdminAction,
     AdminActionResource,
@@ -209,6 +210,29 @@ def generate_admin_access_token(db_session: SessionDep, current_user: AdminDep):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error has occurred",
         )
+
+
+@api_router.post("/share-access-token", response_model=GenericMessage)
+def share_admin_access_token(
+    data: AdminAcessTokenShare,
+    db_session: SessionDep,
+    current_user: AdminDep,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Share an admin access token via email.
+    """
+    token = db_session.exec(
+        select(AdminAccessToken)
+        .where(AdminAccessToken.token == data.token)
+        .where(AdminAccessToken.creator_user_id == current_user.id)
+    ).first()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="access token not found"
+        )
+    background_tasks.add_task(share_token, data.email_id, data.token)
+    return {"detail": "success"}
 
 
 @api_router.get("/past-access-token", response_model=list[AdminAcessTokenResponse])

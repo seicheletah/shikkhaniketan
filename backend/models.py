@@ -217,6 +217,12 @@ class AdminAcessTokenResponse(SQLModel):
     is_active: bool
 
 
+# admin access token share model
+class AdminAcessTokenShare(SQLModel):
+    token: str
+    email_id: EmailStr
+
+
 # update admin user model
 class AdminUserUpdate(UserUpdate):
     first_name: str | None = None
