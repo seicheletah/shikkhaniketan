@@ -239,6 +239,39 @@ def get_self(db_session: SessionDep, current_user: AdminDep):
     return admin_user
 
 
+@api_router.patch("/me", response_model=AdminUserResponse)
+def update_self(
+    userdata: AdminUserUpdate, db_session: SessionDep, current_user: AdminDep
+):
+    """
+    Update own admin user details.
+    """
+    if userdata.hashed_password:
+        userdata.hashed_password = get_password_hash(userdata.hashed_password)
+    current_user.sqlmodel_update(userdata.model_dump(exclude_unset=True))
+    try:
+        db_session.add(current_user)
+        db_session.commit()
+        db_session.refresh(current_user)
+        return current_user
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+
+
+@api_router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_self(db_session: SessionDep, current_user: AdminDep):
+    """
+    Delete own admin user.
+    """
+    db_session.delete(current_user)
+    db_session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @api_router.get("/actions", response_model=list[AdminActionHistoryResponse])
 def get_action_history(
     current_user: AdminDep,
