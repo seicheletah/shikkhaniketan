@@ -45,7 +45,8 @@ from backend.models import (
 )
 from sqlmodel import select, col
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, date, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 api_router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -842,6 +843,8 @@ def delete_review(
 def get_purchases(
     current_user: AdminDep,
     db_session: SessionDep,
+    from_date: date | None = None,
+    to_date: date | None = None,
     offset: int | None = None,
     limit: int = 50,
 ):
@@ -849,6 +852,18 @@ def get_purchases(
     Get all purchase details.
     """
     statement = select(Purchase).order_by(col(Purchase.id).desc())
+    if from_date and to_date:
+        ist = ZoneInfo("Asia/Kolkata")
+        converted_from_date = datetime.combine(
+            from_date, time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        converted_to_date = datetime.combine(
+            to_date + timedelta(days=1), time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        statement = statement.where(
+            Purchase.created_at >= converted_from_date,
+            Purchase.created_at <= converted_to_date,
+        )
     if offset:
         statement = statement.offset(offset)
     if limit:
@@ -858,11 +873,29 @@ def get_purchases(
 
 
 @api_router.get("/purchases/export")
-def export_purchases(current_user: AdminDep, db_session: SessionDep):
+def export_purchases(
+    current_user: AdminDep,
+    db_session: SessionDep,
+    from_date: date | None = None,
+    to_date: date | None = None,
+):
     """
     Get excel sheet for purchases data.
     """
-    purchase = db_session.exec(select(Purchase)).all()
+    statement = select(Purchase)
+    if from_date and to_date:
+        ist = ZoneInfo("Asia/Kolkata")
+        converted_from_date = datetime.combine(
+            from_date, time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        converted_to_date = datetime.combine(
+            to_date + timedelta(days=1), time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        statement = statement.where(
+            Purchase.created_at >= converted_from_date,
+            Purchase.created_at <= converted_to_date,
+        )
+    purchase = db_session.exec(statement).all()
     purchase_data = [purchase.model_dump() for purchase in purchase]
     dataframe = pandas.DataFrame(purchase_data)
     for col in dataframe.columns:
