@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from backend.core.database import SessionDep
 from backend.core.security import get_password_hash, AdminDep
 from backend.core.config import settings
-from backend.utils import send_otp
+from backend.utils import send_otp, share_token
 from backend.models import (
     AdminUser,
     AdminUserCreate,
@@ -19,6 +19,7 @@ from backend.models import (
     AdminUserVerifyEmail,
     AdminUserVerifyToken,
     AdminAcessTokenResponse,
+    AdminAcessTokenShare,
     AdminActionHistory,
     AdminAction,
     AdminActionResource,
@@ -44,7 +45,8 @@ from backend.models import (
 )
 from sqlmodel import select, col
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, date, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 api_router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -211,6 +213,29 @@ def generate_admin_access_token(db_session: SessionDep, current_user: AdminDep):
         )
 
 
+@api_router.post("/share-access-token", response_model=GenericMessage)
+def share_admin_access_token(
+    data: AdminAcessTokenShare,
+    db_session: SessionDep,
+    current_user: AdminDep,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Share an admin access token via email.
+    """
+    token = db_session.exec(
+        select(AdminAccessToken)
+        .where(AdminAccessToken.token == data.token)
+        .where(AdminAccessToken.creator_user_id == current_user.id)
+    ).first()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="access token not found"
+        )
+    background_tasks.add_task(share_token, data.email_id, data.token)
+    return {"detail": "success"}
+
+
 @api_router.get("/past-access-token", response_model=list[AdminAcessTokenResponse])
 def get_past_access_tokens(
     current_user: AdminDep,
@@ -237,6 +262,39 @@ def get_self(db_session: SessionDep, current_user: AdminDep):
     """
     admin_user = db_session.get(AdminUser, current_user.id)
     return admin_user
+
+
+@api_router.patch("/me", response_model=AdminUserResponse)
+def update_self(
+    userdata: AdminUserUpdate, db_session: SessionDep, current_user: AdminDep
+):
+    """
+    Update own admin user details.
+    """
+    if userdata.hashed_password:
+        userdata.hashed_password = get_password_hash(userdata.hashed_password)
+    current_user.sqlmodel_update(userdata.model_dump(exclude_unset=True))
+    try:
+        db_session.add(current_user)
+        db_session.commit()
+        db_session.refresh(current_user)
+        return current_user
+    except SQLAlchemyError:
+        db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error has occurred",
+        )
+
+
+@api_router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_self(db_session: SessionDep, current_user: AdminDep):
+    """
+    Delete own admin user.
+    """
+    db_session.delete(current_user)
+    db_session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @api_router.get("/actions", response_model=list[AdminActionHistoryResponse])
@@ -785,6 +843,8 @@ def delete_review(
 def get_purchases(
     current_user: AdminDep,
     db_session: SessionDep,
+    from_date: date | None = None,
+    to_date: date | None = None,
     offset: int | None = None,
     limit: int = 50,
 ):
@@ -792,6 +852,18 @@ def get_purchases(
     Get all purchase details.
     """
     statement = select(Purchase).order_by(col(Purchase.id).desc())
+    if from_date and to_date:
+        ist = ZoneInfo("Asia/Kolkata")
+        converted_from_date = datetime.combine(
+            from_date, time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        converted_to_date = datetime.combine(
+            to_date + timedelta(days=1), time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        statement = statement.where(
+            Purchase.created_at >= converted_from_date,
+            Purchase.created_at <= converted_to_date,
+        )
     if offset:
         statement = statement.offset(offset)
     if limit:
@@ -801,11 +873,29 @@ def get_purchases(
 
 
 @api_router.get("/purchases/export")
-def export_purchases(current_user: AdminDep, db_session: SessionDep):
+def export_purchases(
+    current_user: AdminDep,
+    db_session: SessionDep,
+    from_date: date | None = None,
+    to_date: date | None = None,
+):
     """
     Get excel sheet for purchases data.
     """
-    purchase = db_session.exec(select(Purchase)).all()
+    statement = select(Purchase)
+    if from_date and to_date:
+        ist = ZoneInfo("Asia/Kolkata")
+        converted_from_date = datetime.combine(
+            from_date, time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        converted_to_date = datetime.combine(
+            to_date + timedelta(days=1), time.min, tzinfo=ist
+        ).astimezone(timezone.utc)
+        statement = statement.where(
+            Purchase.created_at >= converted_from_date,
+            Purchase.created_at <= converted_to_date,
+        )
+    purchase = db_session.exec(statement).all()
     purchase_data = [purchase.model_dump() for purchase in purchase]
     dataframe = pandas.DataFrame(purchase_data)
     for col in dataframe.columns:

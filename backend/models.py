@@ -217,6 +217,12 @@ class AdminAcessTokenResponse(SQLModel):
     is_active: bool
 
 
+# admin access token share model
+class AdminAcessTokenShare(SQLModel):
+    token: str
+    email_id: EmailStr
+
+
 # update admin user model
 class AdminUserUpdate(UserUpdate):
     first_name: str | None = None
@@ -694,7 +700,13 @@ class Course(CourseBase, table=True):
     student: list[Student] = Relationship(
         back_populates="course", link_model=Enrollment
     )
-    media: list[Media] = Relationship(back_populates="course")
+    media: list[Media] = Relationship(
+        back_populates="course",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
     review: list[Review] = Relationship(back_populates="course")
 
 

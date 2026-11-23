@@ -283,12 +283,33 @@ def send_otp(receiver_email: str, code: str):
                 {
                     "From": {
                         "Email": settings.MAILJET_SENDER_EMAIL,
-                        "Name": "Shikkhaniketan",
+                        "Name": settings.PROJECT_NAME,
                     },
                     "To": [{"Email": receiver_email}],
                     "Subject": "OTP verification",
                     "TextPart": f"Welcome! Your verification code is: {code}",
                     "HTMLPart": f"<h3>Welcome!</h3><p>Your verification code is: <strong>{code}</strong></p><p>This code will expire in {settings.OTP_EXPIRE_MINUTES} minutes.</p>",
+                }
+            ]
+        }
+        mailjet.send.create(data=data)
+
+# share admin access token
+def share_token(receiver_email: str, token: str):
+    with Client(
+        auth=(settings.MAILJET_API_KEY, settings.MAILJET_SECRET_KEY), version="v3.1"
+    ) as mailjet:
+        data = {
+            "Messages": [
+                {
+                    "From": {
+                        "Email": settings.MAILJET_SENDER_EMAIL,
+                        "Name": settings.PROJECT_NAME,
+                    },
+                    "To": [{"Email": receiver_email}],
+                    "Subject": "Admin Access Token",
+                    "TextPart": f"Welcome! Your admin access token is: {token}",
+                    "HTMLPart": f"<h3>Welcome!</h3><p>Your admin access token is: <strong>{token}</strong></p><p>This token will expire in {settings.ACCESS_TOKEN_EXPIRE_MINUTES} minutes. Please keep this token secure and use it when creating an admin account.</p>",
                 }
             ]
         }
