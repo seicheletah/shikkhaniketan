@@ -1,318 +1,1137 @@
 <!-- ==========================================================
-     ADMIN SETTINGS PAGE (loaded inside admin.html with fetch)
-     APIs: GET    /admin/me                 -> own admin details
-           PATCH  /admin/users/{id}         { email_id, hashed_password }
-           DELETE /admin/users/{id}         -> delete own account
+     ADMIN SETTINGS PAGE (loaded inside admin.html via fetch)
+     APIs: GET    /api/v1/admin/me
+           PATCH  /api/v1/admin/me
+           DELETE /api/v1/admin/me
      ========================================================== -->
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <style>
-    .se-box {
-        background: #fff;
-        border: 1px solid #e5e9f0;
-        border-radius: 12px;
-        padding: 24px;
-        max-width: 560px;
+    #admin-settings-wrapper {
+        --as-g700: #064d41;
+        --as-g600: #096858;
+        --as-g500: #0f8a74;
+        --as-g100: #e3f3ee;
+        --as-g50:  #f3faf8;
+        --as-muted: #6d9c91;
+        --as-ink:   #1e3a34;
+        --as-line:  #dcebe6;
+        --as-danger: #c0392b;
+        --as-danger-hover: #a02d22;
+
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 8px 4px 28px;
+        color: var(--as-ink);
     }
 
-    .se-box h2 {
-        font-size: 18px;
-        margin-bottom: 12px;
-        color: #0f172a;
+    #admin-settings-wrapper *,
+    #admin-settings-wrapper *::before,
+    #admin-settings-wrapper *::after {
+        box-sizing: border-box;
     }
 
-    .se-row {
+    /* ---------- Page Header ---------- */
+    #admin-settings-wrapper .as-head {
+        margin-bottom: 18px;
+    }
+
+    #admin-settings-wrapper .as-title {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--as-g600);
+    }
+
+    #admin-settings-wrapper .as-subtitle {
+        margin: 4px 0 0;
+        font-size: 0.92rem;
+        color: var(--as-muted);
+    }
+
+    /* ---------- Main Profile Card ---------- */
+    #admin-settings-wrapper .as-card {
+        position: relative;
+        overflow: hidden;
+        padding: 0 32px 30px;
+        background: #ffffff;
+        border: 1px solid var(--as-line);
+        border-radius: 22px;
+        box-shadow: 0 10px 30px rgba(9, 104, 88, 0.10);
+    }
+
+    #admin-settings-wrapper .as-banner {
+        height: 116px;
+        margin: 0 -32px;
+        background:
+            radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.22), transparent 45%),
+            linear-gradient(135deg, var(--as-g600), var(--as-g500));
+    }
+
+    /* ---------- Overlapping Avatar + User ID Pill ---------- */
+    #admin-settings-wrapper .as-profile-top {
         display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 11px 0;
-        border-bottom: 1px solid #eef1f6;
-        font-size: 14px;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        margin-top: -62px;
+        margin-bottom: 26px;
+        text-align: center;
     }
 
-    .se-label {
-        color: #475f7b;
+    #admin-settings-wrapper .as-avatar-ring {
+        padding: 5px;
+        background: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 8px 22px rgba(9, 104, 88, 0.22);
+    }
+
+    #admin-settings-wrapper .as-avatar {
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        background: var(--as-g100);
+        color: var(--as-g600);
+        display: grid;
+        place-items: center;
+    }
+
+    #admin-settings-wrapper .as-id-pill {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        max-width: 100%;
+        padding: 7px 14px;
+        background: var(--as-g50);
+        border: 1px solid var(--as-line);
+        border-radius: 999px;
+        font-size: 0.8rem;
+        color: var(--as-g600);
+    }
+
+    #admin-settings-wrapper .as-id-label {
         font-weight: 600;
-        flex-shrink: 0;
     }
 
-    .se-value {
-        text-align: right;
+    #admin-settings-wrapper .as-id-value {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: var(--as-ink);
         word-break: break-all;
-        color: #0f172a;
     }
 
-    .se-mono {
-        font-family: Consolas, 'Courier New', monospace;
-        font-size: 12px;
+    #admin-settings-wrapper .as-copy-id {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: var(--as-g100);
+        color: var(--as-g600);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .se-badge {
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 12px;
+    #admin-settings-wrapper .as-copy-id:hover {
+        background: var(--as-g600);
+        color: #ffffff;
+    }
+
+    /* ---------- Detail Tiles Grid ---------- */
+    #admin-settings-wrapper .as-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    #admin-settings-wrapper .as-tile {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        background: var(--as-g50);
+        border: 1.5px solid var(--as-line);
+        border-radius: 14px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #admin-settings-wrapper .as-tile:hover {
+        border-color: var(--as-g500);
+        box-shadow: 0 6px 16px rgba(9, 104, 88, 0.09);
+    }
+
+    #admin-settings-wrapper .as-icon {
+        flex: 0 0 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        background: var(--as-g100);
+        color: var(--as-g600);
+        border-radius: 12px;
+    }
+
+    #admin-settings-wrapper .as-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    #admin-settings-wrapper .as-text label {
+        font-size: 0.76rem;
+        font-weight: 500;
+        color: var(--as-muted);
+    }
+
+    #admin-settings-wrapper .as-value {
+        font-size: 0.98rem;
+        font-weight: 600;
+        color: var(--as-ink);
+        overflow-wrap: anywhere;
+    }
+
+    /* Status Badges */
+    #admin-settings-wrapper .as-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        width: fit-content;
+        padding: 3px 11px;
+        border-radius: 999px;
+        font-size: 0.78rem;
         font-weight: 700;
     }
 
-    .se-badge.yes {
+    #admin-settings-wrapper .as-badge.yes {
         background: #dcfce7;
         color: #166534;
     }
 
-    .se-badge.no {
+    #admin-settings-wrapper .as-badge.no {
         background: #fee2e2;
         color: #991b1b;
     }
 
-    .se-buttons {
+    /* ---------- Card Footer Action ---------- */
+    #admin-settings-wrapper .as-actions {
         display: flex;
-        gap: 12px;
-        margin-top: 20px;
+        justify-content: flex-end;
+        margin-top: 26px;
+        padding-top: 20px;
+        border-top: 1px solid var(--as-line);
+    }
+
+    /* ---------- Buttons ---------- */
+    #admin-settings-wrapper .as-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 12px 22px;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.93rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    #admin-settings-wrapper .as-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    #admin-settings-wrapper .as-btn-primary {
+        background: linear-gradient(135deg, var(--as-g600), var(--as-g500));
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(9, 104, 88, 0.25);
+    }
+
+    #admin-settings-wrapper .as-btn-primary:hover {
+        background: var(--as-g700);
+        transform: translateY(-1px);
+    }
+
+    #admin-settings-wrapper .as-btn-light {
+        background: #ffffff;
+        color: var(--as-g600);
+        border: 1.5px solid var(--as-line);
+    }
+
+    #admin-settings-wrapper .as-btn-light:hover {
+        background: var(--as-g50);
+    }
+
+    #admin-settings-wrapper .as-btn-danger {
+        background: var(--as-danger);
+        color: #ffffff;
+        box-shadow: 0 6px 14px rgba(192, 57, 43, 0.22);
+    }
+
+    #admin-settings-wrapper .as-btn-danger:hover {
+        background: var(--as-danger-hover);
+        transform: translateY(-1px);
+    }
+
+    /* ---------- Danger Zone Card ---------- */
+    #admin-settings-wrapper .as-danger-zone {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+        padding: 22px 28px;
+        background: #ffffff;
+        border: 1.5px solid #f1c6c1;
+        border-radius: 18px;
+        box-shadow: 0 6px 18px rgba(192, 57, 43, 0.05);
+    }
+
+    #admin-settings-wrapper .as-danger-zone h2 {
+        margin: 0 0 4px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--as-danger);
+    }
+
+    #admin-settings-wrapper .as-danger-zone p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--as-muted);
+        max-width: 500px;
+        line-height: 1.5;
+    }
+
+    /* ---------- Modals (Update Profile & Delete Account) ---------- */
+    #admin-settings-wrapper .as-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.5);
+    }
+
+    #admin-settings-wrapper .as-modal-backdrop.is-open {
+        display: flex;
+    }
+
+    #admin-settings-wrapper .as-modal {
+        width: 100%;
+        max-width: 440px;
+        padding: 26px;
+        background: #ffffff;
+        border: 1px solid var(--as-line);
+        border-radius: 20px;
+        box-shadow: 0 22px 55px rgba(15, 23, 42, 0.22);
+    }
+
+    #admin-settings-wrapper .as-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    #admin-settings-wrapper .as-modal-head h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--as-ink);
+    }
+
+    #admin-settings-wrapper .as-modal-close {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--as-muted);
+        cursor: pointer;
+    }
+
+    #admin-settings-wrapper .as-modal-close:hover {
+        background: var(--as-g50);
+        color: var(--as-ink);
+    }
+
+    #admin-settings-wrapper .as-modal-desc {
+        margin: 0 0 18px;
+        font-size: 0.88rem;
+        color: var(--as-muted);
+        line-height: 1.5;
+    }
+
+    #admin-settings-wrapper .as-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    #admin-settings-wrapper .as-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    #admin-settings-wrapper .as-field label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--as-muted);
+    }
+
+    #admin-settings-wrapper .as-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    #admin-settings-wrapper .as-input {
+        width: 100%;
+        padding: 11px 14px;
+        background: var(--as-g50);
+        border: 1.5px solid var(--as-line);
+        border-radius: 12px;
+        font-size: 0.94rem;
+        color: var(--as-ink);
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #admin-settings-wrapper .as-input:focus {
+        border-color: var(--as-g500);
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(15, 138, 116, 0.15);
+    }
+
+    #admin-settings-wrapper .as-pass-toggle {
+        position: absolute;
+        right: 10px;
+        border: none;
+        background: transparent;
+        color: var(--as-muted);
+        cursor: pointer;
+        padding: 4px;
+        display: grid;
+        place-items: center;
+    }
+
+    #admin-settings-wrapper .as-modal-msg {
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        font-weight: 500;
+    }
+
+    #admin-settings-wrapper .as-modal-msg[hidden] {
+        display: none;
+    }
+
+    #admin-settings-wrapper .as-modal-msg.error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    #admin-settings-wrapper .as-modal-msg.success {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    #admin-settings-wrapper .as-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 8px;
         flex-wrap: wrap;
     }
 
-    .se-btn {
-        border: 0;
-        border-radius: 8px;
-        padding: 10px 20px;
+    /* Delete modal centered warning style */
+    #admin-settings-wrapper .as-delete-modal {
+        text-align: center;
+        max-width: 420px;
+    }
+
+    #admin-settings-wrapper .as-delete-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        display: grid;
+        place-items: center;
+        background: #fdecea;
+        color: var(--as-danger);
+        border-radius: 50%;
+    }
+
+    #admin-settings-wrapper .as-delete-modal h3 {
+        margin: 0 0 8px;
+        font-size: 1.2rem;
+        color: var(--as-ink);
+    }
+
+    #admin-settings-wrapper .as-delete-modal p {
+        margin: 0 0 18px;
+        font-size: 0.9rem;
+        color: #4a635d;
+        line-height: 1.5;
+    }
+
+    #admin-settings-wrapper .as-delete-modal .as-modal-actions {
+        justify-content: center;
+    }
+
+    /* ---------- Toast Notification ---------- */
+    #admin-settings-wrapper .as-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        z-index: 3200;
+        transform: translate(-50%, 20px);
+        padding: 12px 22px;
+        max-width: 90%;
+        background: var(--as-g600);
+        color: #ffffff;
+        border-radius: 12px;
+        font-size: 0.9rem;
         font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        background: #0f766e;
-        color: #fff;
+        opacity: 0;
+        pointer-events: none;
+        box-shadow: 0 10px 25px rgba(9, 104, 88, 0.25);
+        transition: opacity 0.25s ease, transform 0.25s ease;
     }
 
-    .se-btn:hover {
-        background: #0b5a54;
+    #admin-settings-wrapper .as-toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
     }
 
-    .se-btn.del {
-        background: #dc2626;
-    }
+    /* ---------- Mobile Responsive ---------- */
+    @media (max-width: 640px) {
+        #admin-settings-wrapper {
+            padding: 4px 0 24px;
+        }
 
-    .se-btn.del:hover {
-        background: #b91c1c;
-    }
+        #admin-settings-wrapper .as-title {
+            font-size: 1.45rem;
+        }
 
-    .se-btn.light {
-        background: #e2e8f0;
-        color: #0f172a;
-    }
+        #admin-settings-wrapper .as-card {
+            padding: 0 16px 22px;
+            border-radius: 18px;
+        }
 
-    .se-btn.light:hover {
-        background: #cbd5e1;
-    }
+        #admin-settings-wrapper .as-banner {
+            margin: 0 -16px;
+            height: 94px;
+        }
 
-    .se-btn:disabled {
-        opacity: .55;
-        cursor: not-allowed;
-    }
+        #admin-settings-wrapper .as-profile-top {
+            margin-top: -52px;
+        }
 
-    .se-box label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        margin: 14px 0 6px;
-    }
+        #admin-settings-wrapper .as-avatar {
+            width: 96px;
+            height: 96px;
+        }
 
-    .se-box input {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        font-size: 14px;
-        outline: none;
-    }
+        #admin-settings-wrapper .as-grid {
+            grid-template-columns: 1fr;
+        }
 
-    .se-box input:focus {
-        border-color: #0f766e;
-    }
+        #admin-settings-wrapper .as-actions .as-btn,
+        #admin-settings-wrapper .as-danger-zone .as-btn {
+            width: 100%;
+        }
 
-    .se-msg {
-        margin-top: 14px;
-        font-size: 13px;
-        display: none;
-        padding: 9px 12px;
-        border-radius: 8px;
-    }
+        #admin-settings-wrapper .as-danger-zone {
+            padding: 18px 16px;
+        }
 
-    .se-msg.ok {
-        display: block;
-        background: #ecfdf5;
-        color: #166534;
-        border: 1px solid #bbf7d0;
-    }
+        #admin-settings-wrapper .as-input {
+            font-size: 16px;
+        }
 
-    .se-msg.err {
-        display: block;
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
+        #admin-settings-wrapper .as-modal-actions .as-btn {
+            flex: 1;
+        }
     }
 </style>
 
-<h1 class="page-title">Settings</h1>
+<div id="admin-settings-wrapper">
 
-<!-- ========== VIEW 1: MY DETAILS (GET /admin/me) ========== -->
-<div class="se-box" id="seDetailsView">
-    <h2>My Details</h2>
-    <div id="seDetails">
-        <p class="empty-text">Loading...</p>
+    <!-- Page Title -->
+    <header class="as-head">
+        <h1 class="as-title">Admin Settings</h1>
+        <p class="as-subtitle">Manage your administrator account details and security.</p>
+    </header>
+
+    <!-- Main Profile Card -->
+    <section class="as-card">
+        <div class="as-banner" aria-hidden="true"></div>
+
+        <div class="as-profile-top">
+            <div class="as-avatar-ring">
+                <div class="as-avatar" aria-hidden="true">
+                    <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                        <path d="M7.5 17.5a5 5 0 0 1 9 0"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="as-id-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                    <line x1="7" y1="9" x2="17" y2="9"></line>
+                    <line x1="7" y1="13" x2="13" y2="13"></line>
+                </svg>
+                <span class="as-id-label">User ID</span>
+                <span class="as-id-value" id="asDispId">Loading...</span>
+                <button type="button" class="as-copy-id" id="asCopyIdBtn" title="Copy User ID" aria-label="Copy User ID">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Detail Tiles -->
+        <div class="as-grid">
+            <div class="as-tile">
+                <span class="as-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <div class="as-text">
+                    <label>Name</label>
+                    <span class="as-value" id="asDispName">-</span>
+                </div>
+            </div>
+
+            <div class="as-tile">
+                <span class="as-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
+                </span>
+                <div class="as-text">
+                    <label>Email</label>
+                    <span class="as-value" id="asDispEmail">-</span>
+                </div>
+            </div>
+
+            <div class="as-tile">
+                <span class="as-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </span>
+                <div class="as-text">
+                    <label>Role</label>
+                    <span class="as-value" id="asDispRole">Admin</span>
+                </div>
+            </div>
+
+            <div class="as-tile">
+                <span class="as-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </span>
+                <div class="as-text">
+                    <label>Verification &amp; Access</label>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:2px;">
+                        <span class="as-badge yes" id="asDispVerified">Email Verified: Yes</span>
+                        <span class="as-badge yes" id="asDispAccess">Admin Access: Yes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Profile Button -->
+        <div class="as-actions">
+            <button type="button" class="as-btn as-btn-primary" id="asOpenUpdateBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Update Profile
+            </button>
+        </div>
+    </section>
+
+    <!-- Danger Zone Card -->
+    <section class="as-danger-zone">
+        <div>
+            <h2>Delete Admin Account</h2>
+            <p>This permanently deletes your admin account and revokes all administrative privileges. This action cannot be undone.</p>
+        </div>
+
+        <button type="button" class="as-btn as-btn-danger" id="asOpenDeleteBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Delete Account
+        </button>
+    </section>
+
+    <!-- ================= UPDATE PROFILE MODAL ================= -->
+    <div class="as-modal-backdrop" id="asUpdateModal" aria-hidden="true">
+        <div class="as-modal" role="dialog" aria-modal="true" aria-labelledby="asUpdateTitle">
+            <div class="as-modal-head">
+                <h3 id="asUpdateTitle">Update Admin Profile</h3>
+                <button type="button" class="as-modal-close" id="asCloseUpdateBtn" aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="as-modal-desc">Update your admin display name, email address, or password.</p>
+
+            <form id="asUpdateForm" class="as-form">
+                <div class="as-field">
+                    <label for="asInputName">Name</label>
+                    <input type="text" id="asInputName" class="as-input" placeholder="Enter your name" required>
+                </div>
+
+                <div class="as-field">
+                    <label for="asInputEmail">Email</label>
+                    <input type="email" id="asInputEmail" class="as-input" placeholder="admin@example.com" required>
+                </div>
+
+                <div class="as-field">
+                    <label for="asInputPassword">New Password <span style="font-weight:400;">(leave blank to keep current)</span></label>
+                    <div class="as-input-wrap">
+                        <input type="password" id="asInputPassword" class="as-input" placeholder="••••••••" style="padding-right:38px;">
+                        <button type="button" class="as-pass-toggle" id="asTogglePassBtn" aria-label="Show or hide password">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="as-modal-msg" id="asUpdateMsg" hidden></div>
+
+                <div class="as-modal-actions">
+                    <button type="button" class="as-btn as-btn-light" id="asCancelUpdateBtn">Cancel</button>
+                    <button type="submit" class="as-btn as-btn-primary" id="asSaveUpdateBtn">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="se-buttons">
-        <button class="se-btn" id="seUpdateBtn" disabled>Update Profile</button>
-        <button class="se-btn del" id="seDeleteBtn" disabled>Delete Account</button>
+    <!-- ================= DELETE ACCOUNT MODAL ================= -->
+    <div class="as-modal-backdrop" id="asDeleteModal" aria-hidden="true">
+        <div class="as-modal as-delete-modal" role="dialog" aria-modal="true" aria-labelledby="asDeleteTitle">
+            <div class="as-delete-icon" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+
+            <h3 id="asDeleteTitle">Delete this admin account?</h3>
+            <p>
+                You are about to permanently delete <strong id="asDeleteEmailLabel">your admin account</strong>.
+                You will be logged out immediately and this action cannot be undone.
+            </p>
+
+            <div class="as-modal-msg" id="asDeleteMsg" hidden style="margin-bottom:14px; text-align:left;"></div>
+
+            <div class="as-modal-actions">
+                <button type="button" class="as-btn as-btn-light" id="asCancelDeleteBtn">No, keep account</button>
+                <button type="button" class="as-btn as-btn-danger" id="asConfirmDeleteBtn">Yes, delete account</button>
+            </div>
+        </div>
     </div>
-    <div class="se-msg" id="seDelMsg"></div>
-</div>
 
-<!-- ========== VIEW 2: UPDATE PROFILE (PATCH /admin/users/{id}) ========== -->
-<div class="se-box" id="seUpdateView" hidden>
-    <h2>Update Profile</h2>
-
-    <label for="seEmail">Email</label>
-    <input type="email" id="seEmail" autocomplete="off">
-
-    <label for="sePassword">New password</label>
-    <input type="password" id="sePassword" autocomplete="new-password"
-        placeholder="Leave empty to keep the old password">
-
-    <label for="sePassword2">Confirm new password</label>
-    <input type="password" id="sePassword2" autocomplete="new-password" placeholder="Type the new password again">
-
-    <div class="se-buttons">
-        <button class="se-btn" id="seSave">Save</button>
-        <button class="se-btn light" id="seCancel">Cancel</button>
-    </div>
-    <div class="se-msg" id="seSaveMsg"></div>
+    <div class="as-toast" id="asToast"></div>
 </div>
 
 <script>
     (function () {
+        const root = document.getElementById('admin-settings-wrapper');
+        if (!root) return;
+
         const API = 'api/v1';
-        let me = null;   // own admin details
+        const token = localStorage.getItem('access_token');
+
+        if (!token) {
+            window.location.replace('admin_signup.html');
+            return;
+        }
 
         const $ = (id) => document.getElementById(id);
-        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-        async function api(path, options = {}) {
+        let adminProfile = {
+            id: '',
+            name: '',
+            email: '',
+            role: 'Admin',
+            isVerified: true,
+            isAdmin: true
+        };
+
+        // ---------- Helpers ----------
+        let toastTimer = null;
+        function showToast(msg, isError = false) {
+            const toast = $('asToast');
+            toast.textContent = msg;
+            toast.style.background = isError ? '#c0392b' : '#096858';
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function setModalMsg(el, text, type) {
+            el.textContent = text;
+            el.className = 'as-modal-msg ' + type;
+            el.hidden = false;
+        }
+
+        function clearModalMsg(el) {
+            el.hidden = true;
+            el.textContent = '';
+        }
+
+        function parseError(data, fallback) {
+            if (data && typeof data.detail === 'string') return data.detail;
+            if (Array.isArray(data?.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+            return fallback;
+        }
+
+        function handleUnauthorized() {
+            if (typeof logoutUser === 'function') {
+                logoutUser();
+            } else {
+                ['access_token', 'token_type', 'userRole', 'role'].forEach(k => localStorage.removeItem(k));
+                window.location.replace('index.html');
+            }
+        }
+
+        async function request(path, options = {}) {
             const res = await fetch(API + path, {
                 ...options,
                 headers: {
                     'Accept': 'application/json',
-                    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-                    'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                    ...(options.headers || {})
                 }
             });
-            if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
-            const data = await res.json().catch(() => ({}));   // DELETE answers 204 (no body)
-            if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+            if (res.status === 401) {
+                handleUnauthorized();
+                return null;
+            }
+            if (res.status === 204) return {};
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const err = new Error(parseError(data, 'Request failed (' + res.status + ')'));
+                err.status = res.status;
+                err.detail = data.detail;
+                throw err;
+            }
             return data;
         }
 
-        function setMsg(el, type, text) {
-            el.className = 'se-msg' + (type ? ' ' + type : '');
-            el.textContent = text || '';
-        }
+        function renderProfile() {
+            $('asDispId').textContent = adminProfile.id || '-';
+            $('asDispName').textContent = adminProfile.name || '-';
+            $('asDispEmail').textContent = adminProfile.email || '-';
+            $('asDispRole').textContent = adminProfile.role
+                ? adminProfile.role.charAt(0).toUpperCase() + adminProfile.role.slice(1)
+                : 'Admin';
 
-        const yesNo = (v) => `<span class="se-badge ${v ? 'yes' : 'no'}">${v ? 'Yes' : 'No'}</span>`;
+            const verEl = $('asDispVerified');
+            verEl.textContent = 'Email Verified: ' + (adminProfile.isVerified ? 'Yes' : 'No');
+            verEl.className = 'as-badge ' + (adminProfile.isVerified ? 'yes' : 'no');
 
-        // Switch between the details view and the update view (same place on the page)
-        function showView(name) {
-            $('seDetailsView').hidden = name !== 'details';
-            $('seUpdateView').hidden = name !== 'update';
-        }
+            const accEl = $('asDispAccess');
+            accEl.textContent = 'Admin Access: ' + (adminProfile.isAdmin ? 'Yes' : 'No');
+            accEl.className = 'as-badge ' + (adminProfile.isAdmin ? 'yes' : 'no');
 
-        // ---------- My details ----------
-        function showDetails() {
-            const full = ((me.first_name || '') + ' ' + (me.last_name || '')).trim() || '-';
-            $('seDetails').innerHTML = `
-            <div class="se-row"><span class="se-label">Name</span><span class="se-value">${esc(full)}</span></div>
-            <div class="se-row"><span class="se-label">Email</span><span class="se-value">${esc(me.email_id)}</span></div>
-            <div class="se-row"><span class="se-label">Role</span><span class="se-value" style="text-transform:capitalize;">${esc(me.role)}</span></div>
-            <div class="se-row"><span class="se-label">Email verified</span><span class="se-value">${yesNo(me.is_verified)}</span></div>
-            <div class="se-row"><span class="se-label">Admin access</span><span class="se-value">${yesNo(me.admin_access)}</span></div>
-            <div class="se-row"><span class="se-label">User ID</span><span class="se-value se-mono">${esc(me.id)}</span></div>`;
-            $('seUpdateBtn').disabled = false;
-            $('seDeleteBtn').disabled = false;
-        }
-
-        async function loadMe() {
-            try {
-                me = await api('/admin/me');
-                if (me) showDetails();
-            } catch (e) {
-                $('seDetails').innerHTML = '<p style="color:#d9534f;">' + esc(e.message) + '</p>';
+            const topName = document.getElementById('adminUserName');
+            if (topName && adminProfile.name) {
+                topName.textContent = adminProfile.name;
             }
         }
 
-        // ---------- Update Profile button: open the update form ----------
-        $('seUpdateBtn').addEventListener('click', () => {
-            $('seEmail').value = me.email_id || '';
-            $('sePassword').value = '';
-            $('sePassword2').value = '';
-            setMsg($('seSaveMsg'), '', '');
-            showView('update');
-        });
-
-        $('seCancel').addEventListener('click', () => showView('details'));
-
-        // ---------- Save (PATCH /admin/users/{id}) ----------
-        $('seSave').addEventListener('click', async () => {
-            const msg = $('seSaveMsg');
-            const email = $('seEmail').value.trim();
-            const pass = $('sePassword').value;
-            const pass2 = $('sePassword2').value;
-
-            if (!email) { setMsg(msg, 'err', 'Email cannot be empty.'); return; }
-            if (pass !== pass2) { setMsg(msg, 'err', 'The two passwords do not match.'); return; }
-
-            const emailChanged = email !== me.email_id;
-            if (!emailChanged && !pass) { setMsg(msg, 'err', 'Nothing was changed.'); return; }
-
-            const body = { email_id: email };
-            if (pass) body.hashed_password = pass;   // only sent when a new password is typed
-
-            const btn = $('seSave');
-            btn.disabled = true; btn.textContent = 'Saving...';
-            setMsg(msg, '', '');
+        // ---------- 1. Load Admin Profile (GET) ----------
+        async function loadAdminProfile() {
             try {
-                const updated = await api('/admin/users/' + me.id, { method: 'PATCH', body: JSON.stringify(body) });
-                if (!updated) return;
-
-                // The login uses the email, so after an email change the admin logs in again
-                if (emailChanged) {
-                    alert('Saved. Please log in again with your new email.');
-                    if (typeof logoutUser === 'function') logoutUser();
-                    return;
+                let data;
+                try {
+                    data = await request('/admin/me');
+                } catch (e) {
+                    if (e.status === 404) data = await request('/admins/me');
+                    else throw e;
                 }
+                if (!data) return;
 
-                me = { ...me, ...updated };
-                showDetails();
-                showView('details');
-            } catch (e) {
-                setMsg(msg, 'err', e.message);
+                const userObj = data.user || {};
+                const fullName = data.name
+                    || [data.first_name, data.last_name].filter(Boolean).join(' ')
+                    || userObj.name
+                    || 'Admin';
+
+                adminProfile = {
+                    id: data.id || data.user_id || userObj.id || '',
+                    name: fullName,
+                    email: data.email_id || data.email || userObj.email_id || userObj.email || '',
+                    role: data.role || userObj.role || 'Admin',
+                    isVerified: Boolean(data.is_verified ?? data.email_verified ?? userObj.is_verified ?? true),
+                    isAdmin: Boolean(data.is_admin ?? data.admin_access ?? data.is_active ?? true)
+                };
+
+                renderProfile();
+            } catch (err) {
+                console.error('Failed to load admin profile:', err);
+                showToast(err.message || 'Could not load admin details.', true);
             }
-            btn.disabled = false; btn.textContent = 'Save';
-        });
+        }
 
-        // ---------- Delete Account (DELETE /admin/users/{id}) ----------
-        $('seDeleteBtn').addEventListener('click', async () => {
-            if (!confirm('Delete your account permanently? This cannot be undone.')) return;
-
-            const btn = $('seDeleteBtn');
-            btn.disabled = true; btn.textContent = 'Deleting...';
-            setMsg($('seDelMsg'), '', '');
+        // Copy User ID button
+        $('asCopyIdBtn').addEventListener('click', async () => {
+            if (!adminProfile.id) return;
             try {
-                await api('/admin/users/' + me.id, { method: 'DELETE' });
-                if (typeof logoutUser === 'function') logoutUser();
-                else window.location.replace('login.html');
-            } catch (e) {
-                setMsg($('seDelMsg'), 'err', e.message);
-                btn.disabled = false; btn.textContent = 'Delete Account';
+                await navigator.clipboard.writeText(adminProfile.id);
+                showToast('User ID copied to clipboard.');
+            } catch {
+                prompt('Copy User ID:', adminProfile.id);
             }
         });
 
-        loadMe();
+        // ---------- 2. Update Admin Profile (PATCH) ----------
+        const updateModal = $('asUpdateModal');
+        const updateForm = $('asUpdateForm');
+        const updateMsg = $('asUpdateMsg');
+        const saveUpdateBtn = $('asSaveUpdateBtn');
+        const passInput = $('asInputPassword');
+
+        function openUpdateModal() {
+            clearModalMsg(updateMsg);
+            $('asInputName').value = adminProfile.name || '';
+            $('asInputEmail').value = adminProfile.email || '';
+            passInput.value = '';
+            passInput.type = 'password';
+            updateModal.classList.add('is-open');
+            updateModal.setAttribute('aria-hidden', 'false');
+            $('asInputName').focus();
+        }
+
+        function closeUpdateModal() {
+            if (saveUpdateBtn.disabled) return;
+            updateModal.classList.remove('is-open');
+            updateModal.setAttribute('aria-hidden', 'true');
+        }
+
+        $('asOpenUpdateBtn').addEventListener('click', openUpdateModal);
+        $('asCloseUpdateBtn').addEventListener('click', closeUpdateModal);
+        $('asCancelUpdateBtn').addEventListener('click', closeUpdateModal);
+        updateModal.addEventListener('click', (e) => {
+            if (e.target === updateModal) closeUpdateModal();
+        });
+
+        $('asTogglePassBtn').addEventListener('click', () => {
+            passInput.type = passInput.type === 'password' ? 'text' : 'password';
+        });
+
+        async function sendUpdate(payload) {
+            const endpoints = [
+                { method: 'PATCH', path: '/admin/me' },
+                { method: 'PUT',   path: '/admin/me' },
+                { method: 'PATCH', path: '/admins/me' }
+            ];
+
+            let lastErr = null;
+            for (const ep of endpoints) {
+                try {
+                    return await request(ep.path, {
+                        method: ep.method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    lastErr = err;
+                    // Adapt field names automatically if FastAPI validation (422) expects email or password
+                    if (err.status === 422 && Array.isArray(err.detail)) {
+                        const adapted = { ...payload };
+                        if (err.detail.some(d => d.loc?.includes('email')) && adapted.email_id) {
+                            adapted.email = adapted.email_id;
+                            delete adapted.email_id;
+                        }
+                        if (err.detail.some(d => d.loc?.includes('password')) && adapted.hashed_password) {
+                            adapted.password = adapted.hashed_password;
+                            delete adapted.hashed_password;
+                        }
+                        return await request(ep.path, {
+                            method: ep.method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(adapted)
+                        });
+                    }
+                    if (err.status !== 404 && err.status !== 405) throw err;
+                }
+            }
+            throw lastErr;
+        }
+
+        updateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearModalMsg(updateMsg);
+
+            const name = $('asInputName').value.trim();
+            const email = $('asInputEmail').value.trim();
+            const newPassword = passInput.value;
+
+            if (!name || !email) {
+                setModalMsg(updateMsg, 'Name and email are required.', 'error');
+                return;
+            }
+
+            const payload = {
+                name: name,
+                email_id: email
+            };
+            if (newPassword) {
+                payload.hashed_password = newPassword;
+            }
+
+            saveUpdateBtn.disabled = true;
+            saveUpdateBtn.textContent = 'Saving...';
+
+            try {
+                const updated = await sendUpdate(payload);
+                if (updated === null) return;
+
+                adminProfile.name = updated.name || name;
+                adminProfile.email = updated.email_id || updated.email || email;
+                renderProfile();
+
+                setModalMsg(updateMsg, 'Admin profile updated successfully!', 'success');
+                showToast('Profile updated successfully.');
+
+                setTimeout(() => {
+                    saveUpdateBtn.disabled = false;
+                    saveUpdateBtn.textContent = 'Save Changes';
+                    closeUpdateModal();
+                }, 900);
+            } catch (err) {
+                setModalMsg(updateMsg, err.message || 'Failed to update admin profile.', 'error');
+                saveUpdateBtn.disabled = false;
+                saveUpdateBtn.textContent = 'Save Changes';
+            }
+        });
+
+        // ---------- 3. Delete Admin Account (DELETE) ----------
+        const deleteModal = $('asDeleteModal');
+        const deleteMsg = $('asDeleteMsg');
+        const confirmDeleteBtn = $('asConfirmDeleteBtn');
+
+        function openDeleteModal() {
+            clearModalMsg(deleteMsg);
+            $('asDeleteEmailLabel').textContent = adminProfile.email
+                ? `"${adminProfile.email}"`
+                : 'your admin account';
+            deleteModal.classList.add('is-open');
+            deleteModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeDeleteModal() {
+            if (confirmDeleteBtn.disabled) return;
+            deleteModal.classList.remove('is-open');
+            deleteModal.setAttribute('aria-hidden', 'true');
+        }
+
+        $('asOpenDeleteBtn').addEventListener('click', openDeleteModal);
+        $('asCancelDeleteBtn').addEventListener('click', closeDeleteModal);
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) closeDeleteModal();
+        });
+
+        async function sendDelete() {
+            const endpoints = ['/admin/me', '/admins/me'];
+            if (adminProfile.id) {
+                endpoints.push(`/admin/${encodeURIComponent(adminProfile.id)}`);
+            }
+
+            let lastErr = null;
+            for (const path of endpoints) {
+                try {
+                    return await request(path, { method: 'DELETE' });
+                } catch (err) {
+                    lastErr = err;
+                    if (err.status !== 404 && err.status !== 405) throw err;
+                }
+            }
+            throw lastErr;
+        }
+
+        confirmDeleteBtn.addEventListener('click', async () => {
+            clearModalMsg(deleteMsg);
+            confirmDeleteBtn.disabled = true;
+            confirmDeleteBtn.textContent = 'Deleting...';
+
+            try {
+                const res = await sendDelete();
+                if (res === null) return;
+
+                ['access_token', 'token_type', 'userRole', 'role', 'pending_course', 'selected_course_id']
+                    .forEach(k => localStorage.removeItem(k));
+
+                window.location.replace('index.html');
+            } catch (err) {
+                setModalMsg(deleteMsg, err.message || 'Failed to delete admin account.', 'error');
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.textContent = 'Yes, delete account';
+            }
+        });
+
+        // Escape key closes open modals
+        if (window.__asKeyHandler) {
+            document.removeEventListener('keydown', window.__asKeyHandler);
+        }
+        window.__asKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                if (updateModal.classList.contains('is-open')) closeUpdateModal();
+                if (deleteModal.classList.contains('is-open')) closeDeleteModal();
+            }
+        };
+        document.addEventListener('keydown', window.__asKeyHandler);
+
+        // Start
+        loadAdminProfile();
     })();
 </script>

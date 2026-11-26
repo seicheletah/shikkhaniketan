@@ -567,6 +567,7 @@
         $('crSearch').addEventListener('input', render);
         $('crPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); load(); });
         $('crNext').addEventListener('click', () => { offset += LIMIT; load(); });
+        
 
         load();
     })();

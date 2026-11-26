@@ -57,17 +57,17 @@
 
             <!-- TOPBAR: welcome text on the left, profile picture on the right -->
             <header class="topbar">
-                <div class="welcome-text">
-                    Welcome to Teacher Dashboard,
-                    <span class="user-name" id="teacherUserName">Teacher</span>
-                </div>
+    <div class="dashboard-badge">
+        <span class="badge-dot"></span>
+        <span class="dashboard-title">Teacher Dashboard</span>
+    </div>
 
-                <!-- teacher.js replaces the placeholder with the uploaded photo -->
-                <div class="user-profile">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e3f3ee'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23096858'/%3E%3Cpath d='M40 200C40 140 70 124 100 124S160 140 160 200Z' fill='%23096858'/%3E%3C/svg%3E"
-                         alt="User Profile" class="profile-img">
-                </div>
-            </header>
+    <div class="user-profile">
+        <span class="user-name" id="teacherUserName">Teacher</span>
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e3f3ee'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23096858'/%3E%3Cpath d='M40 200C40 140 70 124 100 124S160 140 160 200Z' fill='%23096858'/%3E%3C/svg%3E"
+             alt="User Profile" class="profile-img">
+    </div>
+</header>
 
             <!-- Scrollable content area (all teacher pages are loaded here with fetch()) -->
             <main class="content-area" id="main-content">

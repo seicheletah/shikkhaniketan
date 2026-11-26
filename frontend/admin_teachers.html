@@ -7,6 +7,48 @@
      ========================================================== -->
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <style>
+    @media (max-width: 640px) {
+    .tc-box {
+        padding: 14px;
+    }
+
+    .tc-search {
+        min-width: 0;
+        width: 100%;
+        font-size: 16px;
+    }
+
+    .tc-modal {
+        padding: 12px 10px;
+    }
+
+    .tc-card {
+        padding: 18px 14px;
+    }
+
+    .tc-two {
+        grid-template-columns: 1fr;
+    }
+
+    .tc-card input,
+    .tc-card select,
+    .tc-card textarea {
+        font-size: 16px;
+    }
+
+    .tc-actions {
+        flex-direction: column-reverse;
+    }
+
+    .tc-actions .tc-btn {
+        width: 100%;
+    }
+
+    .tc-pager {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
     .tc-box {
         background: #fff;
         border: 1px solid #e5e9f0;

@@ -214,3 +214,55 @@ button[type="submit"]:disabled {
 button[type="submit"]:active {
     transform: scale(0.99);
 }
+@media (max-width: 860px) {
+    header {
+        padding: 16px 20px;
+    }
+
+    .container {
+        flex-direction: column;
+        margin: 8px auto 32px;
+        padding: 0 16px;
+        gap: 24px;
+    }
+
+    .left-section {
+        padding-right: 0;
+        text-align: center;
+        width: 100%;
+    }
+
+    .left-section h1 {
+        font-size: 30px;
+        margin-bottom: 16px;
+    }
+
+    .illustration-container img {
+        max-width: 240px;
+    }
+
+    .right-section {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .left-section h1 {
+        font-size: 25px;
+    }
+
+    .illustration-container img {
+        max-width: 200px;
+    }
+
+    .form-card {
+        max-width: 100%;
+        padding: 24px 18px;
+        border-radius: 14px;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 16px;
+    }
+}

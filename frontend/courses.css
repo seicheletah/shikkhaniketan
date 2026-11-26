@@ -394,3 +394,40 @@
     padding: 16px;
   }
 }
+@media (max-width: 600px) {
+    .courses-page .course-search-box input,
+    .courses-page .sort-box select {
+        font-size: 16px;
+    }
+
+    .courses-page .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+        gap: 16px;
+    }
+
+    .courses-page .enrolled-section {
+        margin-top: 28px;
+        padding-top: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .courses-page .tabs {
+        width: 100%;
+    }
+
+    .courses-page .tab-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .courses-page .sort-box {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .courses-page .sort-box select {
+        flex: 1;
+        max-width: 180px;
+    }
+}

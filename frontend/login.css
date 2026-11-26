@@ -226,3 +226,54 @@ header {
 .signup-text a:hover {
     text-decoration: underline;
 }
+
+@media (max-width: 860px) {
+    header {
+        padding: 16px 20px;
+    }
+
+    .container {
+        flex-direction: column;
+        margin: 8px auto 32px;
+        padding: 0 16px;
+        gap: 24px;
+    }
+
+    .left-section {
+        padding-right: 0;
+        text-align: center;
+        width: 100%;
+    }
+
+    .left-section .hero-title {
+        font-size: 30px;
+    }
+
+    .illustration-container img {
+        max-width: 240px;
+    }
+
+    .right-section {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .left-section .hero-title {
+        font-size: 25px;
+    }
+
+    .illustration-container img {
+        max-width: 200px;
+    }
+
+    .form-card {
+        max-width: 100%;
+        padding: 26px 18px;
+        border-radius: 14px;
+    }
+
+    .input-box input {
+        font-size: 16px;
+    }
+}

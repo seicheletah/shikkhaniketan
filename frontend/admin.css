@@ -339,3 +339,96 @@ body {
     /* Stat cards stack vertically */
     .stats-grid { grid-template-columns: 1fr; }
 }
+/* Keep mobile hamburger button behind the open sidebar & overlay */
+.mobile-toggle {
+    z-index: 950;
+}
+
+.sidebar-overlay {
+    z-index: 1000;
+}
+
+.sidebar {
+    z-index: 1001;
+}
+
+.app-container:has(.sidebar.open) .mobile-toggle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Modern Dashboard Title Pill */
+.dashboard-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 16px;
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+}
+
+.dashboard-badge .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--sidebar-bg, #182232);
+    flex-shrink: 0;
+}
+
+.dashboard-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--sidebar-bg, #182232);
+    white-space: nowrap;
+}
+
+.user-profile .user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark, #1e293b);
+}
+
+@media (max-width: 768px) {
+    .dashboard-badge {
+        padding: 6px 12px;
+    }
+
+    .dashboard-title {
+        font-size: 13.5px;
+    }
+}
+
+@media (max-width: 440px) {
+    .user-profile .user-name {
+        display: none;
+    }
+}
+/* Prevent right-edge clipping of AVG RATING on narrower screens */
+#main-content .table-wrapper,
+#main-content .table-container,
+#main-content .card:has(table) {
+    overflow-x: auto;
+}
+
+/* Fix PRICE column alignment and line-wrapping (5th column) */
+#main-content table th:nth-child(5),
+#main-content table td:nth-child(5) {
+    min-width: 115px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#main-content table td:nth-child(5) {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Keep the Paid/Free pill aligned cleanly with the price text */
+#main-content table td:nth-child(5) span,
+#main-content table td:nth-child(5) .badge {
+    display: inline-block;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}

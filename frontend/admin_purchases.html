@@ -3,17 +3,11 @@
      This file is loaded INSIDE admin.html (admin.js fetches it and puts it in the
      content area), so it has no <html>/<head>/<body> tags.
 
-     API used on this page:
-       1) GET /admin/purchases?offset=&limit=
-           -> every purchase (a student buying a course through Razorpay)
-       2) GET /admin/purchases/export
-           -> the "Export to Excel" button: the backend builds the file and this page downloads it
-
-     Every purchase returned by the API has these fields (all are shown below):
-       id, student_id, course_id, amount, currency, status,
-       razorpay_order_id, razorpay_payment_id, razorpay_signature, created_at
-
-     The purchase APIs only list and export purchases. There is no edit or delete, so this page is read-only.
+     APIs used on this page:
+       1) GET /admin/purchases?offset=&limit=&from_date=&to_date=
+           -> every purchase (filtered by optional start/end date)
+       2) GET /admin/purchases/export?from_date=&to_date=
+           -> the "Export to Excel" button: exports the same date-filtered data
      ========================================================== -->
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <style>
@@ -27,7 +21,8 @@
 
     .pu-bar {
         display: flex;
-        gap: 12px;
+        align-items: center;
+        gap: 10px;
         margin-bottom: 16px;
         flex-wrap: wrap;
     }
@@ -52,6 +47,11 @@
         border-radius: 8px;
         font-size: 14px;
         background: #fff;
+        outline: none;
+    }
+
+    .pu-select:focus {
+        border-color: #0f766e;
     }
 
     .pu-wrap {
@@ -118,20 +118,57 @@
 
     /* failed / refunded */
     .pu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
         border: 0;
         border-radius: 8px;
-        padding: 9px 16px;
+        padding: 10px 16px;
         font-weight: 600;
         font-size: 13px;
         cursor: pointer;
         background: #e2e8f0;
         color: #0f172a;
+        white-space: nowrap;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .pu-btn:hover {
+        background: #cbd5e1;
+    }
+
+    .pu-btn.date-trigger {
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+    }
+
+    .pu-btn.date-trigger:hover {
+        border-color: #0f766e;
+        background: #f0fdfa;
+    }
+
+    .pu-btn.date-trigger.has-dates {
+        background: #ecfdf5;
+        color: #0f766e;
+        border-color: #0f766e;
+    }
+
+    .pu-btn.clear-dates {
+        padding: 10px 11px;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .pu-btn.clear-dates:hover {
+        background: #fee2e2;
     }
 
     .pu-btn.export {
         background: #0f766e;
         color: #fff;
-        white-space: nowrap;
     }
 
     .pu-btn.export:hover {
@@ -150,38 +187,213 @@
         gap: 12px;
         margin-top: 16px;
     }
+
+    /* ---------- Date Range Modal ---------- */
+    .pu-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 2500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.45);
+    }
+
+    .pu-modal-backdrop.is-open {
+        display: flex;
+    }
+
+    .pu-modal {
+        width: 100%;
+        max-width: 400px;
+        background: #ffffff;
+        border: 1px solid #e5e9f0;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+    }
+
+    .pu-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .pu-modal-head h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .pu-modal-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    .pu-modal-close:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .pu-modal-desc {
+        margin: 0 0 18px;
+        font-size: 13.5px;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    .pu-modal-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .pu-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .pu-field label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .pu-field input[type="date"] {
+        width: 100%;
+        padding: 10px 13px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #0f172a;
+        background: #ffffff;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pu-field input[type="date"]:focus {
+        border-color: #0f766e;
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .pu-modal-err {
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .pu-modal-err[hidden] {
+        display: none;
+    }
+
+    .pu-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 6px;
+    }
+
+    @media (max-width: 640px) {
+        .pu-box {
+            padding: 14px;
+        }
+
+        .pu-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .pu-input,
+        .pu-select,
+        .pu-btn.date-trigger,
+        .pu-btn.clear-dates,
+        .pu-btn.export {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .pu-field input[type="date"] {
+            font-size: 16px;
+        }
+
+        .pu-modal-actions .pu-btn {
+            flex: 1;
+        }
+
+        .pu-pager {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    }
 </style>
 
 <h1 class="page-title">Purchase Management</h1>
 
 <div class="pu-box">
 
-    <!-- Search + status filter (both work on the purchases already loaded on this page) -->
+    <!-- Search + status filter + date range button + export button -->
     <div class="pu-bar">
         <input class="pu-input" id="puSearch" type="text"
             placeholder="Search this page by any ID (purchase, student, course, Razorpay order or payment)...">
+
         <select class="pu-select" id="puStatus">
             <option value="">All statuses</option>
-            <!-- The status options are added by the script from the data that was loaded -->
         </select>
 
-        <!-- EXPORT BUTTON: asks the backend for the Excel file (API 2) and downloads it -->
-        <button class="pu-btn export" id="puExportBtn">Export to Excel</button>
+        <!-- DATE RANGE BUTTON: opens popup to pick start and end dates -->
+        <button type="button" class="pu-btn date-trigger" id="puDateBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span id="puDateBtnLabel">Date Range</span>
+        </button>
+
+        <!-- Quick reset button shown only when a date filter is active -->
+        <button type="button" class="pu-btn clear-dates" id="puClearDateQuickBtn" title="Clear date filter" hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <!-- EXPORT BUTTON: asks the backend for the Excel file (with active date filter) and downloads it -->
+        <button type="button" class="pu-btn export" id="puExportBtn">Export to Excel</button>
     </div>
 
     <div class="pu-wrap">
         <table class="pu-table">
             <thead>
                 <tr>
-                    <th>Purchase ID</th> <!-- id -->
-                    <th>Student ID</th> <!-- student_id -->
-                    <th>Course ID</th> <!-- course_id -->
-                    <th>Amount</th> <!-- amount (paise / 100 = rupees) + currency -->
-                    <th>Status</th> <!-- status -->
-                    <th>Razorpay Order ID</th> <!-- razorpay_order_id -->
-                    <th>Razorpay Payment ID</th> <!-- razorpay_payment_id -->
-                    <th>Razorpay Signature</th> <!-- razorpay_signature -->
-                    <th>Created</th> <!-- created_at -->
+                    <th>Purchase ID</th>
+                    <th>Student ID</th>
+                    <th>Course ID</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Razorpay Order ID</th>
+                    <th>Razorpay Payment ID</th>
+                    <th>Razorpay Signature</th>
+                    <th>Created</th>
                 </tr>
             </thead>
             <tbody id="puBody">
@@ -194,49 +406,127 @@
 
     <!-- Page buttons (50 purchases per page) -->
     <div class="pu-pager">
-        <button class="pu-btn" id="puPrev">Previous</button>
+        <button type="button" class="pu-btn" id="puPrev">Previous</button>
         <span id="puPageText" class="empty-text"></span>
-        <button class="pu-btn" id="puNext">Next</button>
+        <button type="button" class="pu-btn" id="puNext">Next</button>
+    </div>
+</div>
+
+<!-- ================= DATE RANGE MODAL ================= -->
+<div class="pu-modal-backdrop" id="puDateModal" aria-hidden="true">
+    <div class="pu-modal" role="dialog" aria-modal="true" aria-labelledby="puDateModalTitle">
+        <div class="pu-modal-head">
+            <h3 id="puDateModalTitle">Filter Purchases by Date</h3>
+            <button type="button" class="pu-modal-close" id="puCloseDateModalBtn" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <p class="pu-modal-desc">
+            Select a start date and/or end date. Both the table and Excel export will use this range.
+        </p>
+
+        <form id="puDateForm" class="pu-modal-form">
+            <div class="pu-field">
+                <label for="puFromDate">Start Date (From)</label>
+                <input type="date" id="puFromDate">
+            </div>
+
+            <div class="pu-field">
+                <label for="puToDate">End Date (To)</label>
+                <input type="date" id="puToDate">
+            </div>
+
+            <div class="pu-modal-err" id="puDateErr" hidden></div>
+
+            <div class="pu-modal-actions">
+                <button type="button" class="pu-btn" id="puResetDatesBtn">Clear</button>
+                <button type="submit" class="pu-btn export" id="puApplyDatesBtn">Apply Filter</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-    /* The whole script is wrapped in a function so its variable names never clash
-       when admin.js loads this page again (it re-runs the script every time). */
     (function () {
 
         // ---------- Settings ----------
         const API = 'api/v1';
-        const LIMIT = 50;           // purchases per page (API default is 50)
+        const LIMIT = 50;
 
         // ---------- State ----------
-        let offset = 0;             // how many purchases to skip (page number x LIMIT)
-        let items = [];             // purchases of the current page
+        let offset = 0;
+        let items = [];
+        let fromDate = '';   // YYYY-MM-DD
+        let toDate = '';     // YYYY-MM-DD
+        let detectedParamNames = null; // cached { fromKey, toKey } from OpenAPI if available
 
         // ---------- Small helpers ----------
         const $ = (id) => document.getElementById(id);
 
-        // Makes text safe before putting it in HTML
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-        // Turns an ISO date from the API into the admin's local date and time
         const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
 
-        // Razorpay sends the amount in the smallest unit (paise): 200000 paise = 2000 rupees.
-        // So we divide by 100 before showing it. (If the amount is not a number, it is shown as it is.)
         function money(amount) {
             const n = Number(amount);
             if (amount === null || amount === undefined || Number.isNaN(n)) return amount ?? '';
             return (n / 100).toLocaleString(undefined, { maximumFractionDigits: 2 });
         }
 
-        // Picks the badge colour from the status text (green = good, yellow = waiting, red = problem)
         function badgeClass(status) {
             const s = String(status || '').toLowerCase();
             if (['paid', 'captured', 'success', 'successful', 'completed', 'authorized'].includes(s)) return 'ok';
             if (['created', 'pending', 'attempted'].includes(s)) return 'wait';
             if (['failed', 'refunded', 'cancelled', 'canceled'].includes(s)) return 'bad';
             return '';
+        }
+
+        // Detects exact query parameter names (e.g. from_date/to_date vs from/to) from FastAPI OpenAPI schema
+        async function resolveDateParamNames() {
+            if (detectedParamNames) return detectedParamNames;
+            try {
+                const res = await fetch('/openapi.json');
+                if (res.ok) {
+                    const spec = await res.json();
+                    const pathObj = spec.paths?.['/api/v1/admin/purchases'] || spec.paths?.['/admin/purchases'];
+                    const params = pathObj?.get?.parameters || [];
+                    const names = params.map(p => p.name);
+                    const fromKey = names.find(n => ['from_date', 'from', 'start_date'].includes(n));
+                    const toKey = names.find(n => ['to_date', 'to', 'end_date'].includes(n));
+                    if (fromKey || toKey) {
+                        detectedParamNames = { fromKey: fromKey || 'from_date', toKey: toKey || 'to_date' };
+                        return detectedParamNames;
+                    }
+                }
+            } catch (_) {
+                // Ignore if OpenAPI schema is disabled
+            }
+            return null;
+        }
+
+        // Appends active from/to dates to URLSearchParams
+        async function appendDateParams(params) {
+            if (!fromDate && !toDate) return;
+            const resolved = await resolveDateParamNames();
+            if (resolved) {
+                if (fromDate) params.set(resolved.fromKey, fromDate);
+                if (toDate) params.set(resolved.toKey, toDate);
+            } else {
+                // Fallback when /openapi.json is unavailable: FastAPI binds matching params and ignores extras
+                if (fromDate) {
+                    params.set('from_date', fromDate);
+                    params.set('from', fromDate);
+                }
+                if (toDate) {
+                    params.set('to_date', toDate);
+                    params.set('to', toDate);
+                }
+            }
         }
 
         // Calls the backend with the admin's saved login token
@@ -248,7 +538,6 @@
                 }
             });
 
-            // 401 = token expired or invalid -> log the admin out (function comes from admin.js)
             if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
 
             const data = await res.json().catch(() => ({}));
@@ -259,7 +548,6 @@
             return data;
         }
 
-        // Fills the status drop-down with the statuses found in the loaded purchases
         function fillStatusOptions() {
             const select = $('puStatus');
             const current = select.value;
@@ -297,13 +585,18 @@
         async function load() {
             $('puBody').innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
             try {
-                const list = await api(`/admin/purchases?offset=${offset}&limit=${LIMIT}`);
+                const params = new URLSearchParams({
+                    offset: String(offset),
+                    limit: String(LIMIT)
+                });
+                await appendDateParams(params);
+
+                const list = await api(`/admin/purchases?${params.toString()}`);
                 if (!list) return;
                 items = Array.isArray(list) ? list : [];
                 fillStatusOptions();
                 render();
 
-                // Page buttons: Previous is off on page 1, Next is off when a page is not full
                 $('puPageText').textContent = 'Page ' + (offset / LIMIT + 1);
                 $('puPrev').disabled = offset === 0;
                 $('puNext').disabled = items.length < LIMIT;
@@ -312,24 +605,122 @@
             }
         }
 
-        // ---------- Export to Excel (API 2) ----------
-        // A normal link can not be used here, because the API needs the login token in a header.
-        // So the script asks for the file itself, receives it as a "blob" (raw file data),
-        // and then makes the browser save it, exactly like a download.
+        // ---------- Date Range Modal Controls ----------
+        const dateModal = $('puDateModal');
+        const dateBtn = $('puDateBtn');
+        const dateBtnLabel = $('puDateBtnLabel');
+        const clearQuickBtn = $('puClearDateQuickBtn');
+        const fromInput = $('puFromDate');
+        const toInput = $('puToDate');
+        const dateErr = $('puDateErr');
+
+        function updateDateButtonUI() {
+            if (fromDate && toDate) {
+                dateBtnLabel.textContent = `${fromDate} → ${toDate}`;
+                dateBtn.classList.add('has-dates');
+                clearQuickBtn.hidden = false;
+            } else if (fromDate) {
+                dateBtnLabel.textContent = `From ${fromDate}`;
+                dateBtn.classList.add('has-dates');
+                clearQuickBtn.hidden = false;
+            } else if (toDate) {
+                dateBtnLabel.textContent = `Until ${toDate}`;
+                dateBtn.classList.add('has-dates');
+                clearQuickBtn.hidden = false;
+            } else {
+                dateBtnLabel.textContent = 'Date Range';
+                dateBtn.classList.remove('has-dates');
+                clearQuickBtn.hidden = true;
+            }
+        }
+
+        function openDateModal() {
+            dateErr.hidden = true;
+            dateErr.textContent = '';
+            fromInput.value = fromDate;
+            toInput.value = toDate;
+            dateModal.classList.add('is-open');
+            dateModal.setAttribute('aria-hidden', 'false');
+            fromInput.focus();
+        }
+
+        function closeDateModal() {
+            dateModal.classList.remove('is-open');
+            dateModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function clearAllDates() {
+            fromDate = '';
+            toDate = '';
+            fromInput.value = '';
+            toInput.value = '';
+            updateDateButtonUI();
+            offset = 0;
+            load();
+        }
+
+        dateBtn.addEventListener('click', openDateModal);
+        $('puCloseDateModalBtn').addEventListener('click', closeDateModal);
+
+        dateModal.addEventListener('click', (e) => {
+            if (e.target === dateModal) closeDateModal();
+        });
+
+        if (window.__puDateKeyHandler) {
+            document.removeEventListener('keydown', window.__puDateKeyHandler);
+        }
+        window.__puDateKeyHandler = (e) => {
+            if (e.key === 'Escape' && dateModal.classList.contains('is-open')) closeDateModal();
+        };
+        document.addEventListener('keydown', window.__puDateKeyHandler);
+
+        $('puDateForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            dateErr.hidden = true;
+
+            const startVal = fromInput.value;
+            const endVal = toInput.value;
+
+            if (startVal && endVal && startVal > endVal) {
+                dateErr.textContent = 'Start date cannot be after end date.';
+                dateErr.hidden = false;
+                return;
+            }
+
+            fromDate = startVal;
+            toDate = endVal;
+            updateDateButtonUI();
+            closeDateModal();
+
+            offset = 0;
+            load();
+        });
+
+        $('puResetDatesBtn').addEventListener('click', () => {
+            closeDateModal();
+            clearAllDates();
+        });
+
+        clearQuickBtn.addEventListener('click', clearAllDates);
+
+        // ---------- Export to Excel (with active date filter) ----------
         $('puExportBtn').addEventListener('click', async () => {
             const btn = $('puExportBtn');
             btn.disabled = true;
             btn.textContent = 'Preparing file...';
 
             try {
-                const res = await fetch(API + '/admin/purchases/export', {
+                const params = new URLSearchParams();
+                await appendDateParams(params);
+                const queryStr = params.toString();
+                const exportUrl = `${API}/admin/purchases/export${queryStr ? '?' + queryStr : ''}`;
+
+                const res = await fetch(exportUrl, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
                 });
 
-                // 401 = token expired -> log the admin out (function comes from admin.js)
                 if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return; }
 
-                // On an error the backend sends JSON text, not a file: show its message
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(typeof err.detail === 'string' ? err.detail : 'Export failed (' + res.status + ')');
@@ -337,18 +728,17 @@
 
                 const blob = await res.blob();
 
-                // File name: use the one the backend suggests (Content-Disposition header).
-                // If there is none, pick a name from the file type.
                 let filename = '';
                 const disposition = res.headers.get('Content-Disposition') || '';
                 const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
                 if (match) filename = decodeURIComponent(match[1]);
                 if (!filename) {
                     const type = (res.headers.get('Content-Type') || '').toLowerCase();
-                    filename = type.includes('csv') ? 'purchases.csv' : 'purchases.xlsx';
+                    const ext = type.includes('csv') ? 'csv' : 'xlsx';
+                    const suffix = (fromDate || toDate) ? `_${fromDate || 'start'}_to_${toDate || 'end'}` : '';
+                    filename = `purchases${suffix}.${ext}`;
                 }
 
-                // Save the file: a temporary invisible link is created and clicked by the script
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;

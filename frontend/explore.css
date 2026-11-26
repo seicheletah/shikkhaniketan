@@ -165,3 +165,65 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   .explore-top { flex-wrap: wrap; gap: 12px; }
   .explore-top .search-box { flex: 1 1 100%; max-width: none; }
 }
+
+@media (max-width: 700px) {
+    .search-section {
+        padding: 12px 14px;
+    }
+
+    .explore-brand {
+        font-size: 20px;
+        gap: 8px;
+    }
+
+    .explore-brand img {
+        width: 32px;
+        height: 32px;
+    }
+
+    .search-box input {
+        padding: 10px 16px 10px 40px;
+        font-size: 16px;
+    }
+
+    .full-page-container {
+        padding: 16px 14px 36px;
+        gap: 16px;
+    }
+
+    .filter-sidebar {
+        padding: 14px;
+    }
+
+    .filter-search input {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .filter-block {
+        padding: 10px 0;
+    }
+
+    .tag-list {
+        max-height: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tabs {
+        width: 100%;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 8px 12px;
+    }
+
+    .course-grid {
+        gap: 16px;
+    }
+
+    .load-more-btn {
+        width: 100%;
+    }
+}

@@ -2,6 +2,7 @@
      ADMIN ACCESS TOKEN PAGE (loaded inside admin.html with fetch)
      APIs: POST /admin/generate-access-token
            GET  /admin/past-access-token?offset=&limit=
+           POST /admin/share-access-token
      ========================================================== -->
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <style>
@@ -17,23 +18,37 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .tk-btn-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
     .tk-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         background: #0f766e;
         color: #fff;
-        border: 0;
+        border: 1.5px solid #0f766e;
         border-radius: 8px;
         padding: 10px 18px;
         font-weight: 600;
         font-size: 14px;
         cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s ease, border-color 0.2s ease;
     }
 
     .tk-btn:hover {
         background: #0b5a54;
+        border-color: #0b5a54;
     }
 
     .tk-btn:disabled {
@@ -41,9 +56,25 @@
         cursor: not-allowed;
     }
 
+    .tk-btn.outline {
+        background: #ffffff;
+        color: #0f766e;
+        border: 1.5px solid #0f766e;
+    }
+
+    .tk-btn.outline:hover {
+        background: #ecfdf5;
+    }
+
     .tk-btn.light {
         background: #e2e8f0;
+        border-color: #e2e8f0;
         color: #0f172a;
+    }
+
+    .tk-btn.light:hover {
+        background: #cbd5e1;
+        border-color: #cbd5e1;
     }
 
     .tk-new {
@@ -128,6 +159,161 @@
         gap: 12px;
         margin-top: 16px;
     }
+
+    /* ---------- Share Access Token Modal ---------- */
+    .tk-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 2500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.45);
+    }
+
+    .tk-modal-backdrop.is-open {
+        display: flex;
+    }
+
+    .tk-modal {
+        width: 100%;
+        max-width: 420px;
+        background: #ffffff;
+        border: 1px solid #e5e9f0;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+    }
+
+    .tk-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .tk-modal-head h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .tk-modal-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    .tk-modal-close:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .tk-modal-desc {
+        margin: 0 0 18px;
+        font-size: 13.5px;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    .tk-modal-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .tk-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .tk-field label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .tk-field input {
+        width: 100%;
+        padding: 10px 13px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #0f172a;
+        background: #ffffff;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tk-field input:focus {
+        border-color: #0f766e;
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .tk-modal-msg {
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .tk-modal-msg.error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .tk-modal-msg.success {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .tk-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 6px;
+    }
+
+    @media (max-width: 640px) {
+        .tk-box {
+            padding: 14px;
+        }
+
+        .tk-btn-group {
+            width: 100%;
+        }
+
+        .tk-btn-group .tk-btn,
+        #tkCopyBtn {
+            flex: 1;
+            width: 100%;
+        }
+
+        .tk-pager {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tk-field input {
+            font-size: 16px;
+        }
+
+        .tk-modal-actions .tk-btn {
+            flex: 1;
+        }
+    }
 </style>
 
 <h1 class="page-title">Access Token</h1>
@@ -139,7 +325,18 @@
             <p class="empty-text" style="font-size:14px;">Give this token to a new admin so they can finish their sign
                 up. Tokens expire, so share it quickly.</p>
         </div>
-        <button class="tk-btn" id="tkGenerateBtn">Generate New Token</button>
+
+        <div class="tk-btn-group">
+            <button type="button" class="tk-btn outline" id="tkShareOpenBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                Share Token
+            </button>
+            <button type="button" class="tk-btn" id="tkGenerateBtn">Generate New Token</button>
+        </div>
     </div>
 
     <!-- Shows the token that was just generated -->
@@ -147,7 +344,7 @@
         <strong>New token (copy it now):</strong>
         <code id="tkNewToken"></code>
         <div id="tkNewExpiry" class="empty-text" style="font-size:13px;"></div>
-        <button class="tk-btn light" id="tkCopyBtn" style="margin-top:8px;">Copy token</button>
+        <button type="button" class="tk-btn light" id="tkCopyBtn" style="margin-top:8px;">Copy token</button>
     </div>
 </div>
 
@@ -173,9 +370,48 @@
         </table>
     </div>
     <div class="tk-pager">
-        <button class="tk-btn light" id="tkPrev">Previous</button>
+        <button type="button" class="tk-btn light" id="tkPrev">Previous</button>
         <span id="tkPageText" class="empty-text"></span>
-        <button class="tk-btn light" id="tkNext">Next</button>
+        <button type="button" class="tk-btn light" id="tkNext">Next</button>
+    </div>
+</div>
+
+<!-- Share Access Token Modal -->
+<div class="tk-modal-backdrop" id="tkShareModal" aria-hidden="true">
+    <div class="tk-modal" role="dialog" aria-modal="true" aria-labelledby="tkShareModalTitle">
+        <div class="tk-modal-head">
+            <h3 id="tkShareModalTitle">Share Access Token</h3>
+            <button type="button" class="tk-modal-close" id="tkShareCloseBtn" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <p class="tk-modal-desc">
+            Send an active admin access token directly to the recipient's email address.
+        </p>
+
+        <form id="tkShareForm" class="tk-modal-form">
+            <div class="tk-field">
+                <label for="tkShareEmail">Recipient Email</label>
+                <input type="email" id="tkShareEmail" placeholder="newadmin@example.com" required>
+            </div>
+
+            <div class="tk-field">
+                <label for="tkShareTokenInput">Access Token</label>
+                <input type="text" id="tkShareTokenInput" placeholder="Enter active access token" required>
+            </div>
+
+            <div class="tk-modal-msg" id="tkShareMsg" hidden></div>
+
+            <div class="tk-modal-actions">
+                <button type="button" class="tk-btn light" id="tkShareCancelBtn">Cancel</button>
+                <button type="submit" class="tk-btn" id="tkShareSubmitBtn">Send Email</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -184,6 +420,7 @@
         const API = 'api/v1';
         const LIMIT = 10;
         let offset = 0;
+        let latestActiveToken = '';
 
         const $ = (id) => document.getElementById(id);
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -193,17 +430,35 @@
         async function api(path, options = {}) {
             const res = await fetch(API + path, {
                 ...options,
-                headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
+                    ...(options.headers || {})
+                }
             });
             if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
+            if (!res.ok) {
+                const msg = typeof data.detail === 'string'
+                    ? data.detail
+                    : (Array.isArray(data.detail) && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')');
+                const err = new Error(msg);
+                err.status = res.status;
+                err.detail = data.detail;
+                throw err;
+            }
             return data;
         }
 
         async function copyText(text, btn) {
-            try { await navigator.clipboard.writeText(text); const old = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = old, 1500); }
-            catch (e) { prompt('Copy this token:', text); }
+            try {
+                await navigator.clipboard.writeText(text);
+                const old = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = old, 1500);
+            } catch (e) {
+                prompt('Copy this token:', text);
+            }
         }
 
         // ---------- Generate a new token ----------
@@ -213,6 +468,7 @@
             try {
                 const t = await api('/admin/generate-access-token', { method: 'POST' });
                 if (!t) return;
+                latestActiveToken = t.token || '';
                 $('tkNewToken').textContent = t.token;
                 $('tkNewExpiry').textContent = 'Expires at: ' + fmt(t.expires_at);
                 $('tkNewBox').style.display = 'block';
@@ -224,6 +480,115 @@
 
         $('tkCopyBtn').addEventListener('click', () => copyText($('tkNewToken').textContent, $('tkCopyBtn')));
 
+        // ---------- Share access token modal ----------
+        const shareModal = $('tkShareModal');
+        const shareForm = $('tkShareForm');
+        const shareEmailInput = $('tkShareEmail');
+        const shareTokenInput = $('tkShareTokenInput');
+        const shareMsg = $('tkShareMsg');
+        const shareSubmitBtn = $('tkShareSubmitBtn');
+
+        function setShareMsg(text, type) {
+            shareMsg.textContent = text;
+            shareMsg.className = 'tk-modal-msg ' + type;
+            shareMsg.hidden = false;
+        }
+
+        function clearShareMsg() {
+            shareMsg.hidden = true;
+            shareMsg.textContent = '';
+        }
+
+        function openShareModal() {
+            clearShareMsg();
+            shareEmailInput.value = '';
+            shareTokenInput.value = $('tkNewToken').textContent.trim() || latestActiveToken;
+            shareModal.classList.add('is-open');
+            shareModal.setAttribute('aria-hidden', 'false');
+            shareEmailInput.focus();
+        }
+
+        function closeShareModal() {
+            if (shareSubmitBtn.disabled) return;
+            shareModal.classList.remove('is-open');
+            shareModal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Sends share request and automatically adapts if backend expects query params or email_id/access_token keys
+        async function sendShareRequest(email, token) {
+            try {
+                return await api('/admin/share-access-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, token: token })
+                });
+            } catch (err) {
+                if (err.status === 422 && Array.isArray(err.detail)) {
+                    const usesQuery = err.detail.some(d => Array.isArray(d.loc) && d.loc[0] === 'query');
+                    const emailKey = err.detail.some(d => Array.isArray(d.loc) && d.loc.includes('email_id')) ? 'email_id' : 'email';
+                    const tokenKey = err.detail.some(d => Array.isArray(d.loc) && d.loc.includes('access_token')) ? 'access_token' : 'token';
+
+                    if (usesQuery) {
+                        const qs = new URLSearchParams({ [emailKey]: email, [tokenKey]: token });
+                        return await api('/admin/share-access-token?' + qs.toString(), { method: 'POST' });
+                    }
+                    return await api('/admin/share-access-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ [emailKey]: email, [tokenKey]: token })
+                    });
+                }
+                throw err;
+            }
+        }
+
+        $('tkShareOpenBtn').addEventListener('click', openShareModal);
+        $('tkShareCloseBtn').addEventListener('click', closeShareModal);
+        $('tkShareCancelBtn').addEventListener('click', closeShareModal);
+
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) closeShareModal();
+        });
+
+        if (window.__tkShareKeyHandler) {
+            document.removeEventListener('keydown', window.__tkShareKeyHandler);
+        }
+        window.__tkShareKeyHandler = (e) => {
+            if (e.key === 'Escape' && shareModal.classList.contains('is-open')) closeShareModal();
+        };
+        document.addEventListener('keydown', window.__tkShareKeyHandler);
+
+        shareForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearShareMsg();
+
+            const email = shareEmailInput.value.trim();
+            const token = shareTokenInput.value.trim();
+
+            if (!email || !token) {
+                setShareMsg('Please enter both the recipient email and access token.', 'error');
+                return;
+            }
+
+            shareSubmitBtn.disabled = true;
+            shareSubmitBtn.textContent = 'Sending...';
+
+            try {
+                const res = await sendShareRequest(email, token);
+                if (res === null) return;
+                setShareMsg('Access token shared to ' + email + '.', 'success');
+                setTimeout(() => {
+                    shareSubmitBtn.disabled = false;
+                    shareSubmitBtn.textContent = 'Send Email';
+                    closeShareModal();
+                }, 1100);
+            } catch (err) {
+                setShareMsg(err.message || 'Failed to share access token.', 'error');
+                shareSubmitBtn.disabled = false;
+                shareSubmitBtn.textContent = 'Send Email';
+            }
+        });
+
         // ---------- Past tokens table ----------
         async function loadTokens() {
             const body = $('tkBody');
@@ -231,6 +596,10 @@
             try {
                 const list = await api(`/admin/past-access-token?offset=${offset}&limit=${LIMIT}`);
                 if (!list) return;
+
+                const activeItem = list.find(t => t.is_active);
+                if (activeItem) latestActiveToken = activeItem.token;
+
                 if (!list.length) {
                     body.innerHTML = '<tr><td colspan="6">No tokens found.</td></tr>';
                 } else {
@@ -241,7 +610,7 @@
                         <td class="tk-mono">${esc(t.creator_user_id)}</td>
                         <td class="tk-mono">${t.client_user_id ? esc(t.client_user_id) : '-'}</td>
                         <td><span class="tk-badge ${t.is_active ? 'on' : 'off'}">${t.is_active ? 'Active' : 'Inactive'}</span></td>
-                        <td><button class="tk-btn light" data-token="${esc(t.token)}">Copy</button></td>
+                        <td><button type="button" class="tk-btn light" data-token="${esc(t.token)}">Copy</button></td>
                     </tr>`).join('');
                 }
                 $('tkPageText').textContent = 'Page ' + (offset / LIMIT + 1);

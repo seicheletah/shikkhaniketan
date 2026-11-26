@@ -309,4 +309,97 @@ body {
     .welcome-text {
         font-size: 14px;
     }
+    .mobile-toggle {
+        top: 15px;
+        left: 12px;
+    }
+
+    .topbar {
+        height: 62px;
+        padding: 0 14px 0 58px;
+    }
+
+    .profile-img {
+        width: 36px;
+        height: 36px;
+    }
+
+    .content-area {
+        padding: 16px 12px;
+    }
+}
+
+/* Update body & .app-container height for dynamic mobile viewports */
+body,
+.app-container {
+    height: 100vh;
+    height: 100dvh;
+}
+
+/* Add inside @media (max-width: 768px) */
+/* Keep mobile hamburger button behind the open sidebar & overlay */
+.mobile-toggle {
+    z-index: 950;
+}
+
+.sidebar-overlay {
+    z-index: 1000;
+}
+
+.sidebar {
+    z-index: 1001;
+}
+
+.app-container:has(.sidebar.open) .mobile-toggle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Modern Dashboard Title Pill */
+.dashboard-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 16px;
+    background-color: var(--bg-light);
+    border: 1px solid rgba(9, 104, 88, 0.18);
+    border-radius: 999px;
+}
+
+.dashboard-badge .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--sidebar-bg);
+    flex-shrink: 0;
+}
+
+.dashboard-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--sidebar-bg);
+    white-space: nowrap;
+}
+
+.user-profile .user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+    .dashboard-badge {
+        padding: 6px 12px;
+    }
+
+    .dashboard-title {
+        font-size: 13.5px;
+    }
+}
+
+@media (max-width: 440px) {
+    .user-profile .user-name {
+        display: none;
+    }
 }

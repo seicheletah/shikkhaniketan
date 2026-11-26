@@ -463,3 +463,70 @@
     justify-self: end;
   }
 }
+
+@media (max-width: 640px) {
+  .transactions-page .tx-hero {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .transactions-page .tx-hero-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .transactions-page .tx-title {
+    font-size: 22px;
+  }
+
+  .transactions-page .tx-stat {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 14px;
+  }
+
+  .transactions-page .tx-stat-value {
+    font-size: 20px;
+  }
+
+  .transactions-page .tx-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "num   thumb  thumb"
+      "info  info   info"
+      "price price  action";
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .transactions-page .tx-thumb-wrap {
+    width: 100%;
+    height: 130px;
+  }
+
+  .transactions-page .tx-price-block {
+    text-align: left;
+  }
+
+  .transactions-page .tx-download-btn {
+    justify-self: end;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .transactions-page .tx-row {
+    grid-template-areas:
+      "num    thumb  thumb"
+      "info   info   info"
+      "price  price  price"
+      "action action action";
+  }
+
+  .transactions-page .tx-download-btn {
+    width: 100%;
+    justify-self: stretch;
+  }
+}

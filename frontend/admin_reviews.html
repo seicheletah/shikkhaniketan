@@ -134,6 +134,29 @@
         margin-bottom: 12px;
         display: none;
     }
+    @media (max-width: 640px) {
+    .rv-box {
+        padding: 14px;
+    }
+
+    .rv-bar {
+        flex-direction: column;
+    }
+
+    .rv-input,
+    #rvCourseId,
+    .rv-btn {
+        width: 100%;
+        max-width: 100% !important;
+        min-width: 0;
+        font-size: 16px;
+    }
+
+    .rv-pager {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
 </style>
 
 <h1 class="page-title">Review Management</h1>
