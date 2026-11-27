@@ -696,9 +696,16 @@ class Course(CourseBase, table=True):
     )
 
     teacher: Teacher = Relationship(back_populates="course")
-    purchase: Purchase = Relationship(back_populates="course")
+    purchase: Purchase = Relationship(
+        back_populates="course",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True,
+        },
+    )
     student: list[Student] = Relationship(
-        back_populates="course", link_model=Enrollment
+        back_populates="course",
+        link_model=Enrollment,
     )
     media: list[Media] = Relationship(
         back_populates="course",
