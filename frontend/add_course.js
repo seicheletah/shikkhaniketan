@@ -1,25 +1,16 @@
 /* ==========================================================
-   add_course.js  (full file - replace your old one)
-
-   Runs every time add_course.html is loaded INTO the teacher
-   dashboard. What it does:
-   1. Builds the searchable "Course Tags" multi-select
-   2. Validates the form
-   3. Calls the API in this order:
-        POST /courses/                                 -> create course
-        POST /courses/{id}/media/thumbnail/upload      -> upload url, upload to S3
-        POST /courses/{id}/media/{mediaId}/status      -> thumbnail ready
-        POST /courses/{id}/media/resource/upload       -> upload url, upload to S3
-        POST /courses/{id}/media/{mediaId}/status      -> resource ready
-   4. Goes back to the teacher courses page (inside the dashboard)
-
-   NOTE: sidebar, top bar, Settings and logout are now handled by
-   teacher.js, so all of that code was removed from here.
+   add_course.js
    ========================================================== */
 (function () {
 
     const root = document.getElementById('ac-wrapper');
-    if (!root) return; // page was replaced already
+    if (!root) return;
+
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.style.overflowY = 'auto';
+        mainContent.style.webkitOverflowScrolling = 'touch';
+    }
 
     const API_BASE = 'api/v1';
     const token = localStorage.getItem('access_token');
@@ -37,9 +28,6 @@
 
     const $ = id => document.getElementById(id);
 
-    // ---------------------------------------------------------
-    // TAGS (values accepted by the API) + label helper
-    // ---------------------------------------------------------
     const SKILLHUB_TAGS = [
         "diploma","polytechnic_diploma","ba","bsc","bcom","btech","be","bca","bba","barch","bfa","bed",
         "mbbs","bds","bams","bhms","bpharma","bsc_nursing","llb","ba_llb","bba_llb","ma","msc","mcom",
@@ -87,9 +75,6 @@
         return tag.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     }
 
-    // ---------------------------------------------------------
-    // ELEMENTS
-    // ---------------------------------------------------------
     const addCourseForm = $("addCourseForm");
     const courseNameInput = $("courseName");
     const courseDetailsInput = $("courseDetails");
@@ -103,7 +88,6 @@
     const fileText = $("fileText");
     const submitBtn = $("acSubmitBtn");
 
-    // Back to the teacher courses page (inside the dashboard)
     function goToCourses() {
         if (typeof window.loadDashboardPage === "function") {
             window.loadDashboardPage("teacher_courses.html");
@@ -114,9 +98,6 @@
 
     $("acCancelBtn").addEventListener("click", goToCourses);
 
-    // ---------------------------------------------------------
-    // PRICE FIELD: disabled when the course is Free
-    // ---------------------------------------------------------
     function togglePriceField() {
         const paid = courseTypeInput.value === "paid";
         priceInput.disabled = !paid;
@@ -124,9 +105,6 @@
     }
     courseTypeInput.addEventListener("change", togglePriceField);
 
-    // ---------------------------------------------------------
-    // FILE NAME LABELS inside the upload boxes
-    // ---------------------------------------------------------
     thumbnailInput.addEventListener("change", () => {
         thumbnailText.textContent = thumbnailInput.files.length
             ? thumbnailInput.files[0].name : "Click to Upload Thumbnail";
@@ -137,9 +115,6 @@
             ? fileInput.files[0].name : "Click to Upload Video / PDF";
     });
 
-    // ---------------------------------------------------------
-    // COURSE TAGS DROPDOWN (searchable multi-select)
-    // ---------------------------------------------------------
     const selectedTags = new Set();
 
     const tagDropdown = $("tagDropdown");
@@ -184,8 +159,6 @@
         if (tagDropdown.classList.contains("open")) tagSearch.focus();
     });
 
-    // Click outside -> close the panel.
-    // The old listener (from a previous visit of this page) is removed first.
     if (window.__acOutsideClick) document.removeEventListener("click", window.__acOutsideClick);
     window.__acOutsideClick = e => {
         if (!tagDropdown.contains(e.target)) tagDropdown.classList.remove("open");
@@ -209,15 +182,9 @@
         renderTagOptions();
     });
 
-    // ---------------------------------------------------------
-    // FILE HELPERS
-    // ---------------------------------------------------------
     const ext = file => file.name.split(".").pop().toLowerCase();
     const nameOnly = file => file.name.replace(/\.[^/.]+$/, "");
 
-    // ---------------------------------------------------------
-    // PROGRESS POPUP (styles are in teacher_pages.css)
-    // ---------------------------------------------------------
     const progressEl = document.createElement("div");
     progressEl.className = "tp-progress-overlay";
     progressEl.innerHTML = `
@@ -243,9 +210,6 @@
         progressEl.style.display = "none";
     }
 
-    // ---------------------------------------------------------
-    // API ERROR -> readable text (handles FastAPI 422 format)
-    // ---------------------------------------------------------
     function getApiErrorMessage(data, fallback) {
         if (!data) return fallback;
         if (typeof data.detail === "string") return data.detail;
@@ -265,9 +229,6 @@
         try { return await res.json(); } catch { return {}; }
     }
 
-    // ---------------------------------------------------------
-    // UPLOAD A FILE TO S3 (PUT to the presigned url) with progress
-    // ---------------------------------------------------------
     function uploadToS3(url, file, onProgress) {
         return new Promise((resolve, reject) => {
             if (!url) return reject(new Error(`Upload URL was not returned for ${file.name}`));
@@ -295,9 +256,6 @@
         });
     }
 
-    // ---------------------------------------------------------
-    // MARK MEDIA AS READY
-    // ---------------------------------------------------------
     async function markReady(courseId, mediaId) {
         if (!mediaId) throw new Error("Media ID was not returned by server.");
 
@@ -312,9 +270,6 @@
         }
     }
 
-    // ---------------------------------------------------------
-    // STEP 1 - CREATE COURSE
-    // ---------------------------------------------------------
     async function createCourse() {
         const isPaid = courseTypeInput.value === "paid";
 
@@ -327,8 +282,6 @@
             course_price: isPaid ? Number(priceInput.value) : 0,
             course_price_currency: "INR",
             course_tags: [...selectedTags]
-            // total_enrollment, total_comment, total_rating, avg_rating are NOT sent:
-            // the server manages those counters itself.
         };
 
         const res = await fetch(`${API_BASE}/courses/`, {
@@ -342,9 +295,6 @@
         return data;
     }
 
-    // ---------------------------------------------------------
-    // STEP 2 - UPLOAD THUMBNAIL (progress 20% -> 50%)
-    // ---------------------------------------------------------
     async function uploadThumbnail(courseId, file) {
         const res = await fetch(`${API_BASE}/courses/${courseId}/media/thumbnail/upload`, {
             method: "POST",
@@ -369,9 +319,6 @@
         await markReady(courseId, data.media_id);
     }
 
-    // ---------------------------------------------------------
-    // STEP 3 - UPLOAD VIDEO / PDF (progress 55% -> 90%)
-    // ---------------------------------------------------------
     async function uploadResource(courseId, file) {
         const mediaType = resourceTypeInput.value === "video" ? "video/mp4" : "application/pdf";
 
@@ -398,9 +345,6 @@
         await markReady(courseId, data.media_id);
     }
 
-    // ---------------------------------------------------------
-    // FORM VALIDATION (throws an Error with a friendly message)
-    // ---------------------------------------------------------
     function validateForm() {
         if (!courseNameInput.value.trim()) throw new Error("Please enter Course Name.");
         if (!courseDetailsInput.value.trim()) throw new Error("Please enter Course Details.");
@@ -430,9 +374,6 @@
         }
     }
 
-    // ---------------------------------------------------------
-    // SUBMIT HANDLER
-    // ---------------------------------------------------------
     addCourseForm.addEventListener("submit", async e => {
         e.preventDefault();
 
@@ -471,9 +412,6 @@
         }
     });
 
-    // ---------------------------------------------------------
-    // INIT
-    // ---------------------------------------------------------
     renderTagOptions();
     renderSelectedTags();
     togglePriceField();

@@ -8,11 +8,10 @@
                  -> every review of every course
        2) GET    /admin/reviews/courses/{id}?offset=&limit=
                  -> only the reviews of ONE course (the "Filter by course" box)
-       3) DELETE /admin/reviews/students/{student_id}/courses/{course_id}
+       3) GET    /admin/students/{user_id}
+                 -> fetches the student's phone_no required by the delete review endpoint
+       4) DELETE /admin/reviews/students/{phone_no}/courses/{course_id}
                  -> deletes the review that one student wrote for one course (answers 204, no body)
-
-     Every review returned by the API has these fields (all are shown below):
-       comment, rate, first_name, last_name, course_id, user_id, created_at
      ========================================================== -->
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <style>
@@ -134,29 +133,30 @@
         margin-bottom: 12px;
         display: none;
     }
+
     @media (max-width: 640px) {
-    .rv-box {
-        padding: 14px;
-    }
+        .rv-box {
+            padding: 14px;
+        }
 
-    .rv-bar {
-        flex-direction: column;
-    }
+        .rv-bar {
+            flex-direction: column;
+        }
 
-    .rv-input,
-    #rvCourseId,
-    .rv-btn {
-        width: 100%;
-        max-width: 100% !important;
-        min-width: 0;
-        font-size: 16px;
-    }
+        .rv-input,
+        #rvCourseId,
+        .rv-btn {
+            width: 100%;
+            max-width: 100% !important;
+            min-width: 0;
+            font-size: 16px;
+        }
 
-    .rv-pager {
-        flex-wrap: wrap;
-        gap: 8px;
+        .rv-pager {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
     }
-}
 </style>
 
 <h1 class="page-title">Review Management</h1>
@@ -165,11 +165,9 @@
 
     <!-- Search + course filter -->
     <div class="rv-bar">
-        <!-- Searches only the reviews already loaded on this page (name, comment, IDs) -->
         <input class="rv-input" id="rvSearch" type="text"
             placeholder="Search this page by name, comment, course ID or user ID...">
 
-        <!-- Loads only the reviews of one course (API 2) -->
         <input class="rv-input" id="rvCourseId" type="text" placeholder="Filter by course: paste the full course ID"
             style="max-width:360px;">
         <button class="rv-btn" id="rvFilterBtn">Filter by course</button>
@@ -183,13 +181,13 @@
         <table class="rv-table">
             <thead>
                 <tr>
-                    <th>Student</th> <!-- first_name + last_name -->
-                    <th>Rating</th> <!-- rate -->
-                    <th>Comment</th> <!-- comment -->
-                    <th>Created</th> <!-- created_at -->
-                    <th>Course ID</th> <!-- course_id -->
-                    <th>User ID</th> <!-- user_id (the student who wrote it) -->
-                    <th>Actions</th> <!-- delete button -->
+                    <th>Student</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Created</th>
+                    <th>Course ID</th>
+                    <th>User ID</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="rvBody">
@@ -209,35 +207,30 @@
 </div>
 
 <script>
-    /* The whole script is wrapped in a function so its variable names never clash
-       when admin.js loads this page again (it re-runs the script every time). */
     (function () {
 
         // ---------- Settings ----------
         const API = 'api/v1';
-        const LIMIT = 50;           // reviews per page (API default is 50)
+        const LIMIT = 50;
 
         // ---------- State ----------
-        let offset = 0;             // how many reviews to skip (page number x LIMIT)
-        let items = [];             // reviews of the current page
-        let courseFilter = '';      // empty = all reviews, otherwise the course ID being filtered
+        let offset = 0;
+        let items = [];
+        let courseFilter = '';
+        const phoneCache = new Map(); // caches user_id -> student phone_no
 
         // ---------- Small helpers ----------
         const $ = (id) => document.getElementById(id);
 
-        // Makes text safe before putting it in HTML (so a comment can never inject code)
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-        // Turns an ISO date from the API into the admin's local date and time
         const fmt = (d) => d ? new Date(d).toLocaleString() : '-';
 
-        // Rating number -> stars, e.g. 4 -> ★★★★☆ (the number is shown next to it)
         function stars(rate) {
             const n = Math.max(0, Math.min(5, Math.round(Number(rate) || 0)));
             return '★'.repeat(n) + '☆'.repeat(5 - n);
         }
 
-        // Calls the backend with the admin's saved login token
         async function api(path, options = {}) {
             const res = await fetch(API + path, {
                 ...options,
@@ -247,10 +240,9 @@
                 }
             });
 
-            // 401 = token expired or invalid -> log the admin out (function comes from admin.js)
             if (res.status === 401 && typeof logoutUser === 'function') { logoutUser(); return null; }
 
-            const data = await res.json().catch(() => ({}));   // DELETE answers 204 with no body
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 throw new Error(typeof data.detail === 'string' ? data.detail
                     : (data.detail && data.detail[0] ? data.detail[0].msg : 'Request failed (' + res.status + ')'));
@@ -258,14 +250,31 @@
             return data;
         }
 
+        // Resolves student phone_no from the review payload or GET /admin/students/{user_id}
+        async function getStudentPhone(userId, directPhone) {
+            if (directPhone) return directPhone;
+            if (phoneCache.has(userId)) return phoneCache.get(userId);
+
+            const student = await api(`/admin/students/${encodeURIComponent(userId)}`);
+            if (!student) return null;
+
+            const phone = String(student.phone_no || '').trim();
+            if (!phone) {
+                throw new Error('Student phone number not found for this user.');
+            }
+            phoneCache.set(userId, phone);
+            return phone;
+        }
+
         // ---------- Draw the table ----------
         function render() {
-            // Client-side search over the reviews that are already loaded
             const q = $('rvSearch').value.trim().toLowerCase();
             const rows = items.filter(r => !q || [r.first_name, r.last_name, r.comment, r.course_id, r.user_id]
                 .some(v => String(v || '').toLowerCase().includes(q)));
 
-            $('rvBody').innerHTML = rows.length ? rows.map(r => `
+            $('rvBody').innerHTML = rows.length ? rows.map(r => {
+                const directPhone = r.phone_no || r.student_phone_no || (r.student_id && r.student_id !== r.user_id ? r.student_id : '');
+                return `
             <tr>
                 <td>${esc((r.first_name || '') + ' ' + (r.last_name || ''))}</td>
                 <td><span class="rv-stars">${stars(r.rate)}</span> ${esc(r.rate)}</td>
@@ -274,17 +283,19 @@
                 <td class="rv-mono">${esc(r.course_id)}</td>
                 <td class="rv-mono">${esc(r.user_id)}</td>
                 <td>
-                    <!-- data-* attributes carry the two IDs the DELETE API needs -->
-                    <button class="rv-btn del" data-student="${esc(r.user_id)}" data-course="${esc(r.course_id)}">Delete</button>
+                    <button class="rv-btn del"
+                        data-user="${esc(r.user_id)}"
+                        data-phone="${esc(directPhone)}"
+                        data-course="${esc(r.course_id)}">Delete</button>
                 </td>
-            </tr>`).join('') : '<tr><td colspan="7">No reviews found.</td></tr>';
+            </tr>`;
+            }).join('') : '<tr><td colspan="7">No reviews found.</td></tr>';
         }
 
         // ---------- Load one page of reviews ----------
         async function load() {
             $('rvBody').innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
 
-            // Pick API 2 (one course) or API 1 (all reviews)
             const path = courseFilter
                 ? `/admin/reviews/courses/${encodeURIComponent(courseFilter)}?offset=${offset}&limit=${LIMIT}`
                 : `/admin/reviews?offset=${offset}&limit=${LIMIT}`;
@@ -295,12 +306,10 @@
                 items = Array.isArray(list) ? list : [];
                 render();
 
-                // Page buttons: Previous is off on page 1, Next is off when a page is not full
                 $('rvPageText').textContent = 'Page ' + (offset / LIMIT + 1);
                 $('rvPrev').disabled = offset === 0;
                 $('rvNext').disabled = items.length < LIMIT;
 
-                // Info line above the table
                 const info = $('rvInfo');
                 info.style.display = courseFilter ? 'block' : 'none';
                 info.textContent = courseFilter ? 'Showing only the reviews of course: ' + courseFilter : '';
@@ -314,11 +323,10 @@
             const id = $('rvCourseId').value.trim();
             if (!id) { alert('Paste the full course ID first.'); return; }
             courseFilter = id;
-            offset = 0;          // start again from page 1
+            offset = 0;
             load();
         });
 
-        // "Show all" clears the filter and goes back to API 1
         $('rvResetBtn').addEventListener('click', () => {
             courseFilter = '';
             $('rvCourseId').value = '';
@@ -326,26 +334,36 @@
             load();
         });
 
-        // ---------- Delete a review (API 3) ----------
+        // ---------- Delete a review (sends student phone_no as student_id) ----------
         $('rvBody').addEventListener('click', async (e) => {
-            const btn = e.target.closest('button[data-student]');
+            const btn = e.target.closest('button[data-user]');
             if (!btn) return;
 
-            const studentId = btn.dataset.student;
+            const userId = btn.dataset.user;
             const courseId = btn.dataset.course;
+            const directPhone = btn.dataset.phone;
 
             if (!confirm('Delete this review? This cannot be undone.')) return;
 
             btn.disabled = true;
-            try {
-                await api(`/admin/reviews/students/${encodeURIComponent(studentId)}/courses/${encodeURIComponent(courseId)}`, { method: 'DELETE' });
+            btn.textContent = 'Deleting...';
 
-                // Remove the deleted review from the list on screen (no reload needed)
-                items = items.filter(r => !(String(r.user_id) === studentId && String(r.course_id) === courseId));
+            try {
+                const studentPhone = await getStudentPhone(userId, directPhone);
+                if (!studentPhone) return;
+
+                const res = await api(
+                    `/admin/reviews/students/${encodeURIComponent(studentPhone)}/courses/${encodeURIComponent(courseId)}`,
+                    { method: 'DELETE' }
+                );
+                if (res === null) return;
+
+                items = items.filter(r => !(String(r.user_id) === userId && String(r.course_id) === courseId));
                 render();
             } catch (err) {
                 alert(err.message);
                 btn.disabled = false;
+                btn.textContent = 'Delete';
             }
         });
 
@@ -354,7 +372,6 @@
         $('rvPrev').addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); load(); });
         $('rvNext').addEventListener('click', () => { offset += LIMIT; load(); });
 
-        // First load when the page opens
         load();
     })();
 </script>

@@ -1,69 +1,31 @@
 <!DOCTYPE html>
-<!--
-==========================================================================
- course_details.html  -  Course details page (Udemy-style layout)
-==========================================================================
- THIS FILE WORKS IN TWO PLACES
-   1. Inside the student dashboard (loaded with fetch(), as before).
-   2. As a normal page: course_details.html?id=<course id>
-      (opened from the home page, the explore page or the teacher dashboard).
-
- LAYOUT
-   Desktop (wide screen):
-     +--------------------------------------+-----------------------+
-     | HEAD: title, description, rating     |  PURCHASE CARD        |
-     +--------------------------------------+  (sticky: stays on    |
-     | BODY: rating box + student reviews   |   screen while the    |
-     |                                      |   page scrolls)       |
-     +--------------------------------------+-----------------------+
-   Phone / narrow screen (single column, top to bottom):
-     HEAD -> PURCHASE CARD -> BODY
-
- RULES
-   1. All ids below (cd...) are used by course_details.js. If you rename
-      one here, rename it in the JS too.
-   2. The guard script at the bottom decides what Purchase does
-      (login, teacher rules, automatic purchase after login).
-==========================================================================
--->
-
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
-<!-- Makes the page scale correctly on phones when it is opened as a normal page -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Font Awesome icons (needed when this page is opened on its own; harmless inside the dashboard) -->
-<link rel="stylesheet" href="fontawesome/css/all.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<!-- Styles for this page only (every rule is scoped to .course-details-page) -->
-<link rel="stylesheet" href="course_details.css">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SkillHub - Course Details</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="course_details.css?v=4">
+</head>
+<body>
 
 <div class="course-details-page">
-
-    <!-- Main grid. The three children below are placed by CSS "grid areas". -->
     <div class="cd-layout">
 
-        <!-- ================= HEAD: title + description + rating line ================= -->
+        <!-- ================= HEAD: Title, Description & Rating Summary ================= -->
         <header class="cd-head">
-
             <h1 class="cd-title" id="cdTitle">Loading Course...</h1>
-
-            <!-- Course description (filled by JS from course_details) -->
             <p class="cd-description" id="cdDetails">Course description will load here...</p>
-
-            <!-- Small rating line: stars + "4.5 average · 12 reviews" -->
             <div class="cd-rating-line">
                 <span class="cd-stars" id="cdTopStars"></span>
                 <span id="cdTopRatingText">No ratings yet</span>
             </div>
-
         </header>
 
-        <!-- ================= PURCHASE CARD (sticky on desktop) ================= -->
+        <!-- ================= PURCHASE CARD ================= -->
         <aside class="cd-card">
-
-            <!-- Thumbnail (16:9). JS loads the image from the backend.
-                 While loading, a soft shimmer is shown; if it fails, a placeholder icon is shown. -->
             <div class="cd-thumb loading" id="cdThumb">
                 <img id="cdThumbImg" alt="Course thumbnail" hidden>
                 <div class="cd-thumb-placeholder" id="cdThumbPlaceholder">
@@ -72,117 +34,53 @@
             </div>
 
             <div class="cd-card-body">
-
-                <!-- Price breakdown (same data as before) -->
                 <div class="price-breakdown">
-
                     <div class="price-row">
                         <span>Course Price</span>
                         <strong id="cdPrice">₹0</strong>
                     </div>
-
-                    <div class="price-row">
-                        <span>GST (18%)</span>
-                        <strong id="cdGst">₹0</strong>
-                    </div>
-
                     <hr class="cd-divider">
-
                     <div class="price-row total">
                         <span>Total</span>
                         <strong id="cdTotal">₹0</strong>
                     </div>
-
                 </div>
 
-                <!-- Purchase button (starts the Razorpay flow in JS) -->
-                <button class="btn-purchase" id="cdPurchaseBtn">Purchase</button>
-
-                <!-- "This course includes" list -->
-                <div class="cd-includes">
-                    <h4>This course includes</h4>
-                    <ul class="course-highlights">
-                        <li><i class="fa-solid fa-circle-play"></i> HD Learning Content</li>
-                        <li><i class="fa-solid fa-infinity"></i> Lifetime Access</li>
-                        <li><i class="fa-solid fa-certificate"></i> Certificate Included</li>
-                    </ul>
-                </div>
-
+                <button class="btn-purchase" id="cdPurchaseBtn" type="button">Purchase</button>
             </div>
-
         </aside>
 
-        <!-- ================= BODY: rating box + reviews ================= -->
+        <!-- ================= BODY: Rating Breakdown & Student Reviews ================= -->
         <main class="cd-body">
-
-            <!-- ---------- RATING BOX ---------- -->
             <section class="cd-section">
                 <h2 class="cd-section-title">Student ratings</h2>
-
                 <div class="cd-rating-box">
-
-                    <!-- Left: big average number + stars + total -->
                     <div class="cd-rating-main">
                         <div class="cd-avg-number" id="cdAvgNumber">0.0</div>
                         <div class="cd-stars cd-stars-lg" id="cdAvgStars"></div>
                         <span class="cd-total-reviews" id="cdTotalReviews">0 reviews</span>
                     </div>
-
-                    <!-- Right: bars showing how many students gave 5, 4, 3, 2, 1 stars.
-                         JS builds the five rows inside this container. -->
                     <div class="cd-bars" id="cdBars"></div>
-
                 </div>
             </section>
 
-            <!-- ---------- REVIEWS ---------- -->
             <section class="cd-section">
                 <h2 class="cd-section-title">Student reviews</h2>
-
-                <!-- Reviews can only be written after buying the course -->
                 <p class="cd-review-note">
                     <i class="fa-solid fa-circle-info"></i>
-                    Only students who purchased this course can write a review.
-                    After purchase, open the course and use the review form.
+                    <span>Only students who purchased this course can write a review. After purchase, open the course and use the review form.</span>
                 </p>
-
-                <!-- Review cards are inserted here by JS -->
                 <div id="cdReviewList">
                     <p class="cd-empty">Loading reviews...</p>
                 </div>
             </section>
-
         </main>
 
     </div>
-
 </div>
 
-<!-- ==========================================================================
-     GUARD SCRIPT  (runs before course_details.js)
-
-     INSIDE THE STUDENT DASHBOARD
-       Purchase works exactly as before (the student is already logged in).
-
-     AS A NORMAL PAGE
-       - builds a top bar (logo + Log In / Sign Up, or "My Dashboard" if logged in)
-       - visitor clicks Purchase       -> course is remembered, login page opens
-       - after login (student.js)      -> this page opens again with
-                                          ?autopurchase=1 and Purchase is clicked
-                                          automatically
-       - logged-in student             -> Purchase works directly (no login)
-       - student who already owns it   -> sent to the student dashboard,
-                                          which shows the course view
-       - teacher opening OWN course    -> (?view=teacher) Purchase is hidden
-       - teacher clicking Purchase on a course found on the home / explore
-         page                          -> must log in as a student
-       - after a successful payment    -> the course view opens inside the
-                                          student dashboard
-     ========================================================================== -->
 <script>
     (function () {
-
-        // ---- Settings ----
         var API_BASE = 'api/v1';
         var TOKEN_KEY = 'access_token';
         var ROLE_KEY = 'userRole';
@@ -190,35 +88,29 @@
         var LOGIN_PAGE = 'login.html';
         var STUDENT_PAGE = 'student.html';
 
-        // The dashboard has an element with id "main-content"; a normal page does not
-        var inDashboard = !!document.getElementById('main-content');
+        var mainContent = document.getElementById('main-content');
+        var inDashboard = !!mainContent;
 
         var params = new URLSearchParams(window.location.search);
         var urlCourseId = params.get('id');
-        var teacherView = params.get('view') === 'teacher';       // teacher opened his own course
-        var autoPurchase = params.get('autopurchase') === '1';    // come back from login
+        var teacherView = params.get('view') === 'teacher';
+        var autoPurchase = params.get('autopurchase') === '1';
 
-        // course_details.js reads the course id from this localStorage key
         if (!inDashboard && urlCourseId) {
             localStorage.setItem('selected_course_id', urlCourseId);
         }
 
-        // ---- Who is looking at the page? ----
         function role() { return localStorage.getItem(ROLE_KEY); }
         function isLoggedIn() { return !!localStorage.getItem(TOKEN_KEY); }
         function isStudent() { return isLoggedIn() && role() === 'student'; }
         function isTeacher() { return isLoggedIn() && role() === 'teacher'; }
 
-        // Page that belongs to the logged-in user (used by the "My Dashboard" link)
         function dashboardPage() {
             if (role() === 'teacher') return 'teacher.html';
             if (role() === 'admin') return 'admin.html';
             return STUDENT_PAGE;
         }
 
-        // Remembers the course for 30 minutes. `extra` can add flags:
-        //   purchase: true  -> after login, come back and buy it
-        //   enrolled: true  -> the course is bought, show the course view
         function savePendingCourse(extra) {
             var id = localStorage.getItem('selected_course_id');
             if (!id) return;
@@ -227,8 +119,6 @@
             localStorage.setItem(PENDING_KEY, JSON.stringify(data));
         }
 
-        // Asks the backend if the logged-in student already owns the course
-        // (the enrolled courses are part of the /students/me answer).
         function checkEnrolled(courseId) {
             return fetch(API_BASE + '/students/me', {
                 headers: { Authorization: 'Bearer ' + localStorage.getItem(TOKEN_KEY) }
@@ -240,10 +130,11 @@
                 .catch(function () { return false; });
         }
 
-        // ---- Normal page: after payment the original code asks the dashboard
-        //      to open "course_view.html". There is no dashboard here, so we
-        //      send the student to the dashboard, which opens the course view.
-        if (!inDashboard) {
+        // Ensure dashboard scroll container never clips bottom on mobile
+        if (inDashboard) {
+            mainContent.style.overflowY = 'auto';
+            mainContent.style.webkitOverflowScrolling = 'touch';
+        } else {
             window.loadDashboardPage = function (page) {
                 if (String(page).indexOf('course_view') !== -1) {
                     savePendingCourse({ enrolled: true });
@@ -254,34 +145,28 @@
             };
         }
 
-        // ---- Click guard (capture phase = runs BEFORE course_details.js) ----
-        // The dashboard loads this page again and again. The old guard is removed
-        // first, so only ONE guard is ever active.
+        // Capture-phase click guard for Purchase / Start Learning
         if (window.__cdGuardHandler) {
             document.removeEventListener('click', window.__cdGuardHandler, true);
         }
 
         window.__cdGuardHandler = function (e) {
-
             if (!e.target.closest('#cdPurchaseBtn')) return;
 
-            // A teacher looking at his own course can never purchase it
             if (teacherView && isTeacher()) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 return;
             }
 
-            // Not logged in -> remember the course and open the login page
             if (!isLoggedIn()) {
                 e.preventDefault();
-                e.stopImmediatePropagation();   // the original purchase code must not run
+                e.stopImmediatePropagation();
                 savePendingCourse({ purchase: true });
                 window.location.href = LOGIN_PAGE;
                 return;
             }
 
-            // Logged in, but not as a student (teacher / admin) -> student login needed
             if (!isStudent()) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -300,17 +185,15 @@
                     window.location.href = LOGIN_PAGE;
                 }
             }
-            // Logged-in student -> nothing here, the original purchase code runs
         };
 
         document.addEventListener('click', window.__cdGuardHandler, true);
 
-        // ---- Teacher opened his own course: hide the Purchase button ----
+        // Teacher viewing their own course
         if (teacherView && isTeacher()) {
             var purchaseBtn = document.getElementById('cdPurchaseBtn');
             if (purchaseBtn) {
                 purchaseBtn.style.display = 'none';
-
                 var note = document.createElement('p');
                 note.textContent = 'This is your own course. Teachers cannot purchase courses.';
                 note.style.cssText = 'margin:0 0 6px;padding:12px;border-radius:10px;background:#e6f4f2;' +
@@ -319,35 +202,39 @@
             }
         }
 
-        // ---- Normal page only ----
+        // Standalone public mode (opened from index.html or explore.html)
         if (!inDashboard) {
-
-            document.title = 'SkillHub - Course Details';
-
-            // ---- Top bar (styles + HTML) ----
             var style = document.createElement('style');
             style.textContent =
-                'body{margin:0;background:#eef7f4;font-family:"Segoe UI",Arial,sans-serif;}' +
-                '.cd-public-bar{position:sticky;top:0;z-index:100;height:70px;display:flex;align-items:center;' +
-                'justify-content:space-between;padding:0 5%;background:#fff;box-shadow:0 2px 10px rgba(9,104,88,.10);}' +
-                '.cd-public-brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:#17384d;' +
-                'font-size:24px;font-weight:800;letter-spacing:-.6px;}' +
-                '.cd-public-brand img{width:40px;height:40px;object-fit:contain;}' +
-                '.cd-public-auth{display:flex;align-items:center;gap:18px;}' +
-                '.cd-public-login{text-decoration:none;color:#17384d;font-weight:600;font-size:15px;}' +
-                '.cd-public-signup{text-decoration:none;background:#159b91;color:#fff;padding:10px 22px;' +
-                'border-radius:22px;font-weight:600;font-size:14px;}' +
+                'html{margin:0;padding:0;width:100%;height:auto;overflow-y:auto;background:#eef7f4;}' +
+                'body{margin:0;padding:0;width:100%;min-height:100dvh;height:auto;overflow-x:hidden;overflow-x:clip;background:#eef7f4;font-family:"Segoe UI",Arial,sans-serif;}' +
+                '.cd-public-bar,.cd-public-bar *{box-sizing:border-box;}' +
+                '.cd-public-bar{position:sticky;top:0;left:0;right:0;z-index:100;width:100%;height:66px;display:flex;align-items:center;' +
+                'justify-content:space-between;gap:10px;padding:0 5%;background:#fff;box-shadow:0 2px 10px rgba(9,104,88,.10);}' +
+                '.cd-public-brand{display:inline-flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:#17384d;' +
+                'font-size:23px;font-weight:800;letter-spacing:-.5px;white-space:nowrap;}' +
+                '.cd-public-brand img{width:36px;height:36px;flex-shrink:0;object-fit:contain;}' +
+                '.cd-public-auth{display:flex;align-items:center;gap:14px;flex-shrink:0;}' +
+                '.cd-public-login{text-decoration:none;color:#17384d;font-weight:600;font-size:15px;white-space:nowrap;}' +
+                '.cd-public-signup{text-decoration:none;background:#159b91;color:#fff;padding:9px 18px;' +
+                'border-radius:22px;font-weight:600;font-size:14px;white-space:nowrap;}' +
                 '.cd-public-signup:hover{background:#0f766e;}' +
-                '.course-details-page{max-width:1200px;margin:0 auto;padding:28px 24px 60px;}' +
-                '@media(max-width:500px){.cd-public-bar{padding:0 16px;}.cd-public-brand{font-size:20px;}' +
-                '.course-details-page{padding:18px 14px 40px;}}';
+                '.course-details-page{max-width:1200px;margin:0 auto;padding:24px 20px 80px;}' +
+                '@media(max-width:560px){' +
+                '.cd-public-bar{height:58px;padding:0 12px;gap:6px;}' +
+                '.cd-public-brand{font-size:18px;gap:7px;}' +
+                '.cd-public-brand img{width:30px;height:30px;}' +
+                '.cd-public-auth{gap:8px;}' +
+                '.cd-public-login{font-size:13.5px;}' +
+                '.cd-public-signup{padding:7px 13px;font-size:12.5px;}' +
+                '.course-details-page{padding:16px 14px calc(110px + env(safe-area-inset-bottom,0px));}' +
+                '}';
             document.head.appendChild(style);
 
-            // Right side of the bar: dashboard link for a logged-in user, otherwise Log In / Sign Up
             var rightSide = isLoggedIn()
                 ? '<a href="' + dashboardPage() + '" class="cd-public-signup">My Dashboard</a>'
                 : '<a href="login.html" class="cd-public-login">Log In</a>' +
-                '<a href="sign_up.html" class="cd-public-signup">Sign Up</a>';
+                  '<a href="sign_up.html" class="cd-public-signup">Sign Up</a>';
 
             var bar = document.createElement('header');
             bar.className = 'cd-public-bar';
@@ -357,18 +244,13 @@
                 '<div class="cd-public-auth">' + rightSide + '</div>';
             document.body.prepend(bar);
 
-            // ---- Logged-in student ----
             if (isStudent()) {
-
                 var pageRoot = document.querySelector('.course-details-page');
                 var courseId = localStorage.getItem('selected_course_id');
 
-                // Hide the page while we check, so an owned course never flashes on screen
                 if (pageRoot) pageRoot.style.visibility = 'hidden';
 
                 checkEnrolled(courseId).then(function (enrolled) {
-
-                    // Already purchased -> the student dashboard shows the course view
                     if (enrolled) {
                         savePendingCourse({ enrolled: true });
                         window.location.replace(STUDENT_PAGE);
@@ -376,17 +258,12 @@
                     }
 
                     if (pageRoot) pageRoot.style.visibility = '';
-
-                    // Come back from login: click Purchase automatically
                     if (autoPurchase) runAutoPurchase(courseId);
                 });
             }
         }
 
-        // Waits until the course data is loaded, then clicks Purchase once
         function runAutoPurchase(courseId) {
-
-            // Remove "autopurchase" from the address so a refresh does not buy again
             window.history.replaceState(
                 null, '', window.location.pathname + '?id=' + encodeURIComponent(courseId)
             );
@@ -394,7 +271,6 @@
             var tries = 0;
             var timer = setInterval(function () {
                 tries++;
-
                 var title = document.getElementById('cdTitle');
                 var button = document.getElementById('cdPurchaseBtn');
                 var text = title ? title.textContent : '';
@@ -405,12 +281,13 @@
                     clearInterval(timer);
                     if (!failed) button.click();
                 } else if (tries > 50) {
-                    clearInterval(timer);   // gave up after about 10 seconds
+                    clearInterval(timer);
                 }
             }, 200);
         }
-
     })();
 </script>
 
-<script src="course_details.js"></script>
+<script src="course_details.js?v=4"></script>
+</body>
+</html>

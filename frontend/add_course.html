@@ -2,12 +2,70 @@
 ==========================================================================
  add_course.html  -  Create New Course (HTML fragment)
  Opens INSIDE the teacher dashboard (teacher.html) via fetch().
- The sidebar / topbar / Settings section were removed from this file:
- the dashboard already provides them.
 ==========================================================================
 -->
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
 <link rel="stylesheet" href="teacher_pages.css">
+
+<style>
+    #ac-wrapper,
+    #ac-wrapper *,
+    #ac-wrapper *::before,
+    #ac-wrapper *::after {
+        box-sizing: border-box;
+    }
+
+    #ac-wrapper {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    @media (max-width: 960px) {
+        #main-content {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #ac-wrapper {
+            padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        #ac-wrapper .tp-card {
+            padding: 18px 14px;
+        }
+
+        #ac-wrapper .tp-grid-3 {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 14px;
+        }
+
+        #ac-wrapper .tp-input,
+        #ac-wrapper .tp-tags-toggle,
+        #ac-wrapper .tp-tags-search {
+            font-size: 16px;
+        }
+
+        #ac-wrapper .tp-tags-panel {
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        #ac-wrapper .tp-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #ac-wrapper .tp-actions .tp-btn {
+            flex: 1 1 130px;
+            justify-content: center;
+        }
+    }
+</style>
 
 <div class="tp-page" id="ac-wrapper">
 
@@ -123,4 +181,4 @@
     </section>
 </div>
 
-<script src="add_course.js"></script>
+<script src="add_course.js?v=2"></script>

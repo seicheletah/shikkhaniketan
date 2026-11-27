@@ -1,45 +1,23 @@
 /* ==========================================================
    course_details.js
-   Shows one course (Udemy-style page):
-     - title, description, price (with GST)
-     - thumbnail image loaded from the backend (AWS S3 via API)
-     - average rating, rating bars (5..1 stars), total reviews
-     - list of student reviews
-   The Purchase button starts a Razorpay payment (unchanged logic).
-
-   There is NO back button on this page any more.
-
-   API used (exactly as in the backend docs):
-     GET /courses/{id}                          -> course data
-     GET /courses/{id}/media/thumbnail/access   -> thumbnail (see loadThumbnail)
-     GET /courses/{id}/rating  -> { total_reviews, average_rating, course_id }
-     GET /courses/{id}/review  -> [{ comment, rate, first_name, last_name, course_id }]
    ========================================================== */
 (() => {
   const API = "api/v1";
   const token = localStorage.getItem("access_token");
 
-  // Inside the dashboard the URL has no id, so we read it from localStorage
-  // (courses.js stores it there when a card is clicked).
   const params = new URLSearchParams(window.location.search);
   const courseId =
     localStorage.getItem("selected_course_id") || params.get("id") || params.get("course");
 
-  /* ------------------------------------------------------
-       DOM ELEMENTS
-       ------------------------------------------------------ */
   const titleEl = document.getElementById("cdTitle");
   const detailsEl = document.getElementById("cdDetails");
   const priceEl = document.getElementById("cdPrice");
-  const gstEl = document.getElementById("cdGst");
   const totalEl = document.getElementById("cdTotal");
   const purchaseBtn = document.getElementById("cdPurchaseBtn");
 
-  // Thumbnail
   const thumbBox = document.getElementById("cdThumb");
   const thumbImg = document.getElementById("cdThumbImg");
 
-  // Rating UI
   const avgNumberEl = document.getElementById("cdAvgNumber");
   const avgStarsEl = document.getElementById("cdAvgStars");
   const totalReviewsEl = document.getElementById("cdTotalReviews");
@@ -51,31 +29,20 @@
   let courseName = "";
   let coursePaid = true;
 
-  // Without an id we cannot load anything
   if (!courseId) {
     titleEl.textContent = "Course not found!";
     return;
   }
 
-  /* ------------------------------------------------------
-       SMALL HELPERS
-       ------------------------------------------------------ */
-
-  /** Headers for GET requests (token is optional on this page). */
   function getHeaders() {
     const headers = { Accept: "application/json" };
     if (token) headers.Authorization = `Bearer ${token}`;
     return headers;
   }
 
-  /**
-   * Draws 5 stars inside `container`, e.g. rating 3 -> ★★★☆☆ (filled = gold).
-   * `rating` can be a decimal (4.4); it is rounded to the nearest whole star.
-   */
   function renderStars(container, rating) {
     container.innerHTML = "";
     const rounded = Math.round(Number(rating) || 0);
-
     for (let i = 1; i <= 5; i++) {
       const star = document.createElement("span");
       star.textContent = "★";
@@ -84,25 +51,19 @@
     }
   }
 
-  /** Builds "First Last" from the API fields, with a safe fallback. */
   function getFullName(review) {
     const full = `${review.first_name || ""} ${review.last_name || ""}`.trim();
     return full || "Student";
   }
 
-  /** "Soumya Shuvra De" -> "SD" (used inside the round avatar). */
   function getInitials(name) {
-    const parts = String(name || "Student")
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+    const parts = String(name || "Student").trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return "S";
     const first = parts[0][0] || "";
     const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
     return (first + last).toUpperCase();
   }
 
-  /** The backend may send the paid flag as true / 1 / "1" / "true". */
   function isPaid(course) {
     return (
       course.course_paid === true ||
@@ -112,64 +73,45 @@
     );
   }
 
-  /* ------------------------------------------------------
-       LOAD THUMBNAIL
-       GET /courses/{id}/media/thumbnail/access
-       Docs: returns application/json -> { course_id, stream_url }
-       stream_url is the S3 address of the picture.
+  function extractErrorMessage(data, fallback) {
+    if (data && typeof data.detail === "string") return data.detail;
+    if (data && Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
+      return data.detail[0].msg;
+    }
+    return fallback;
+  }
 
-       IMPORTANT: a 404 here means the backend has NO thumbnail that is
-       marked "ready" for this course. In that case the placeholder icon
-       stays visible (that is the correct behaviour). The exact status and
-       reply are printed in the browser Console as "Thumbnail: ..." so you
-       can see what the backend said.
-       ------------------------------------------------------ */
-
-  /** Marks the thumbnail as finished loading (hides the shimmer). */
   function finishThumb(ok) {
     thumbBox.classList.remove("loading");
     if (ok) thumbBox.classList.add("loaded");
   }
 
-  /** Puts an image address into the <img> and shows it once it has loaded. */
   function showThumb(src) {
     thumbImg.onload = () => {
       thumbImg.hidden = false;
       finishThumb(true);
     };
-    thumbImg.onerror = () => {
-      console.log("Thumbnail: the image address could not be loaded:", src);
-      finishThumb(false); // keep the placeholder
-    };
+    thumbImg.onerror = () => finishThumb(false);
     thumbImg.src = src;
   }
 
   async function loadThumbnail() {
     const url = `${API}/courses/${courseId}/media/thumbnail/access`;
-
     try {
       const res = await fetch(url, { headers: getHeaders() });
-
-      // 404 / 401 / 403 / 422 ... -> keep the placeholder, print the reason
       if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        console.log(`Thumbnail: server answered ${res.status} for ${url}`, text);
         finishThumb(false);
         return;
       }
 
       const type = res.headers.get("content-type") || "";
-
-      // Case 1: the backend sent the image itself
       if (type.startsWith("image/")) {
         const blob = await res.blob();
         showThumb(URL.createObjectURL(blob));
         return;
       }
 
-      // Case 2 (documented): JSON with the image address inside
       const data = await res.json().catch(() => null);
-
       let src =
         typeof data === "string"
           ? data
@@ -181,85 +123,61 @@
               data.access_url);
 
       if (!src) {
-        console.log("Thumbnail: reply had no usable URL:", data);
         finishThumb(false);
         return;
       }
 
-      // If the backend sent a relative path, make it absolute using the API server
       if (!/^(https?:|blob:|data:)/i.test(src)) {
-        src = new URL(src, new URL(API).origin).href;
+        src = new URL(src, new URL(API, window.location.href).origin).href;
       }
 
       showThumb(src);
     } catch (e) {
-      console.log("Thumbnail load error:", e);
       finishThumb(false);
     }
   }
 
-  /* ------------------------------------------------------
-       LOAD COURSE (title, description, price)
-       ------------------------------------------------------ */
   async function loadCourse() {
     try {
       const res = await fetch(`${API}/courses/${courseId}`, { headers: getHeaders() });
-
       if (!res.ok) {
         titleEl.textContent = "Course load failed";
         return;
       }
 
       const course = await res.json();
-
       courseName = course.course_name || "";
       coursePaid = isPaid(course);
 
       titleEl.textContent = courseName;
       detailsEl.textContent = course.course_details || "";
 
-      // Price calculation: price + 18% GST = total
       const price = coursePaid ? Number(course.course_price || 0) : 0;
-      const gst = price * 0.18;
-      const total = price + gst;
-
       priceEl.textContent = `₹${price}`;
-      gstEl.textContent = `₹${gst.toFixed(2)}`;
-      totalEl.textContent = `₹${total.toFixed(2)}`;
-
+      totalEl.textContent = `₹${price}`;
       purchaseBtn.textContent = coursePaid ? "Purchase" : "Start Learning";
 
-      // Thumbnail, ratings and reviews load after the course itself
       loadThumbnail();
       loadRating();
       loadReviews();
     } catch (e) {
-      console.log(e);
       titleEl.textContent = "Course load failed";
     }
   }
 
-  /* ------------------------------------------------------
-       LOAD RATING SUMMARY
-       GET /courses/{id}/rating -> { total_reviews, average_rating, course_id }
-       ------------------------------------------------------ */
   async function loadRating() {
     try {
       const res = await fetch(`${API}/courses/${courseId}/rating`, { headers: getHeaders() });
-
       if (!res.ok) return;
 
       const data = await res.json();
-
       const total = Number(data.total_reviews) || 0;
       const average = Number(data.average_rating) || 0;
 
-      // Big number + stars + total inside the rating box
       avgNumberEl.textContent = average.toFixed(1);
       renderStars(avgStarsEl, average);
       totalReviewsEl.textContent = `${total} ${total === 1 ? "review" : "reviews"}`;
 
-      // Small line under the course title (head section)
       renderStars(topStarsEl, average);
       topRatingTextEl.textContent = total
         ? `${average.toFixed(1)} average · ${total} ${total === 1 ? "review" : "reviews"}`
@@ -269,15 +187,8 @@
     }
   }
 
-  /* ------------------------------------------------------
-       RATING BARS (5 stars ... 1 star)
-       The API gives no per-star counts, so we count them from the
-       review list that is already loaded.
-       ------------------------------------------------------ */
   function renderBars(reviews) {
     barsEl.innerHTML = "";
-
-    // counts[5] = how many reviews gave 5 stars, and so on
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
     reviews.forEach((r) => {
@@ -286,7 +197,6 @@
     });
 
     const total = reviews.length;
-
     for (let star = 5; star >= 1; star--) {
       const percent = total ? (counts[star] / total) * 100 : 0;
 
@@ -314,25 +224,16 @@
     }
   }
 
-  /* ------------------------------------------------------
-       LOAD REVIEW LIST
-       GET /courses/{id}/review
-       -> [{ comment, rate, first_name, last_name, course_id }]
-       ------------------------------------------------------ */
   async function loadReviews() {
-    // Draw empty bars first so the box never looks broken
     renderBars([]);
-
     try {
       const res = await fetch(`${API}/courses/${courseId}/review`, { headers: getHeaders() });
-
       if (!res.ok) {
         reviewListEl.innerHTML = "<p class='cd-empty'>Could not load reviews.</p>";
         return;
       }
 
       const reviews = await res.json();
-
       reviewListEl.innerHTML = "";
 
       if (!Array.isArray(reviews) || !reviews.length) {
@@ -340,22 +241,18 @@
         return;
       }
 
-      // Fill the rating bars from the real reviews
       renderBars(reviews);
 
       reviews.forEach((r) => {
         const fullName = getFullName(r);
 
-        // Outer row
         const item = document.createElement("div");
         item.className = "review-item";
 
-        // Round avatar with initials
         const avatar = document.createElement("div");
         avatar.className = "cd-avatar";
         avatar.textContent = getInitials(fullName);
 
-        // Right side: name + stars + comment
         const body = document.createElement("div");
         body.className = "review-body";
 
@@ -371,7 +268,6 @@
 
         header.append(name, stars);
 
-        // textContent (not innerHTML) keeps user comments safe from HTML injection
         const comment = document.createElement("p");
         comment.textContent = r.comment || "";
 
@@ -380,21 +276,12 @@
         reviewListEl.appendChild(item);
       });
     } catch (e) {
-      console.log("Review load error:", e);
       reviewListEl.innerHTML = "<p class='cd-empty'>Could not load reviews.</p>";
     }
   }
 
-  /* ------------------------------------------------------
-       PURCHASE FLOW (unchanged)
-       The guard script in course_details.html runs BEFORE this code:
-       it handles visitors, teachers and the automatic purchase after login.
-       ------------------------------------------------------ */
-
-  /** Opens the course view page (after purchase or for free courses). */
   function goToCourseView() {
     localStorage.setItem("selected_course_id", courseId);
-
     if (typeof window.loadDashboardPage === "function") {
       window.loadDashboardPage("course_view.html");
     } else {
@@ -402,7 +289,6 @@
     }
   }
 
-  /** Disables / enables the purchase button and changes its text. */
   function setBusy(busy, text) {
     purchaseBtn.disabled = busy;
     purchaseBtn.style.opacity = busy ? "0.7" : "1";
@@ -410,14 +296,64 @@
     purchaseBtn.textContent = text || (coursePaid ? "Purchase" : "Start Learning");
   }
 
-  /** Loads the Razorpay checkout script only when it is needed. */
+  async function enrollFreeCourse() {
+    setBusy(true, "Enrolling...");
+
+    const endpoints = [
+      `${API}/courses/${courseId}/purchase`,
+      `${API}/courses/${courseId}/enroll`,
+    ];
+
+    let lastError = "Could not enroll in this free course.";
+
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          goToCourseView();
+          return;
+        }
+
+        const msg = extractErrorMessage(data, lastError);
+        if (/already|purchased|enrolled/i.test(msg)) {
+          goToCourseView();
+          return;
+        }
+
+        lastError = msg;
+        if (res.status !== 400 && res.status !== 404 && res.status !== 405) {
+          break;
+        }
+      } catch (err) {
+        lastError = "Network error while enrolling. Please try again.";
+        break;
+      }
+    }
+
+    alert(lastError);
+    setBusy(false);
+  }
+
   function loadRazorpayScript() {
     return new Promise((resolve, reject) => {
       if (window.Razorpay) {
         resolve();
         return;
       }
-
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve();
@@ -426,10 +362,8 @@
     });
   }
 
-  /** After paying, ask the backend to verify the payment signature. */
   async function verifyPayment(response) {
     setBusy(true, "Verifying payment...");
-
     try {
       const res = await fetch(`${API}/courses/verify-payment`, {
         method: "POST",
@@ -446,41 +380,32 @@
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
-        console.log("Verify error:", data);
         alert("Payment verification failed. If money was deducted, please contact support.");
         setBusy(false);
         return;
       }
 
-      // Payment verified -> open the course
       goToCourseView();
     } catch (err) {
-      console.log(err);
       alert("Could not verify payment. Please check your connection.");
       setBusy(false);
     }
   }
 
   purchaseBtn.addEventListener("click", async () => {
-    // Not logged in -> go to sign up
     if (!token) {
       window.location.href = "sign_up.html";
       return;
     }
 
-    // Free course -> no payment needed
     if (!coursePaid) {
-      goToCourseView();
+      await enrollFreeCourse();
       return;
     }
 
     setBusy(true, "Please wait...");
-
     try {
-      // 1) Ask the backend to create a Razorpay order
       const res = await fetch(`${API}/courses/${courseId}/purchase`, {
         method: "POST",
         headers: {
@@ -497,25 +422,23 @@
       }
 
       if (!res.ok) {
-        console.log("Purchase error:", order);
-
-        const msg = typeof order.detail === "string" ? order.detail : "Could not start payment.";
-
-        // Already purchased -> just open the course
+        const msg = extractErrorMessage(order, "Could not start payment.");
         if (/already|purchased|enrolled/i.test(msg)) {
           goToCourseView();
           return;
         }
-
         alert(msg);
         setBusy(false);
         return;
       }
 
-      // 2) Load the Razorpay script
+      if (!order.id || Number(order.amount) === 0) {
+        goToCourseView();
+        return;
+      }
+
       await loadRazorpayScript();
 
-      // 3) Open the Razorpay payment popup
       const options = {
         key: order.key_id,
         amount: order.amount,
@@ -524,13 +447,9 @@
         name: "SkillHub",
         description: courseName || "Course Purchase",
         theme: { color: "#127c71" },
-
-        // Called when the payment succeeds
         handler: function (response) {
           verifyPayment(response);
         },
-
-        // Called when the user closes the popup
         modal: {
           ondismiss: function () {
             setBusy(false);
@@ -539,26 +458,20 @@
       };
 
       const rzp = new window.Razorpay(options);
-
       rzp.on("payment.failed", function (resp) {
-        console.log("Payment failed:", resp.error);
         alert(
           "Payment failed: " +
-            (resp.error && resp.error.description ? resp.error.description : "Please try again."),
+            (resp.error && resp.error.description ? resp.error.description : "Please try again.")
         );
         setBusy(false);
       });
 
       rzp.open();
     } catch (err) {
-      console.log(err);
       alert("Something went wrong. Please try again.");
       setBusy(false);
     }
   });
 
-  /* ------------------------------------------------------
-       START
-       ------------------------------------------------------ */
   loadCourse();
 })();

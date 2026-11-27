@@ -3,13 +3,90 @@
  edit_course.html  -  Edit Course (HTML fragment)
  Opens INSIDE the teacher dashboard (teacher.html) via fetch().
  The course id is passed from teacher_courses.js through window.editCourseId.
- (Tailwind and edit_course.css are no longer needed: styles are in teacher_pages.css)
 ==========================================================================
 -->
-
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
-
 <link rel="stylesheet" href="teacher_pages.css">
+
+<style>
+    #ec-wrapper,
+    #ec-wrapper *,
+    #ec-wrapper *::before,
+    #ec-wrapper *::after {
+        box-sizing: border-box;
+    }
+
+    #ec-wrapper {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    @media (max-width: 960px) {
+        #main-content {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #ec-wrapper {
+            padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        #ec-wrapper .tp-card {
+            padding: 18px 14px;
+        }
+
+        #ec-wrapper .tp-grid-2 {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 14px;
+        }
+
+        #ec-wrapper .tp-input {
+            font-size: 16px;
+        }
+
+        #ec-wrapper .tp-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #ec-wrapper .tp-actions .tp-btn {
+            flex: 1 1 130px;
+            justify-content: center;
+        }
+
+        #ec-wrapper .tp-danger-zone {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+            padding: 18px 14px;
+        }
+
+        #ec-wrapper .tp-danger-zone .tp-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        #ec-wrapper .tp-modal {
+            width: calc(100% - 28px);
+            max-width: 420px;
+            padding: 20px 16px;
+        }
+
+        #ec-wrapper .tp-modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #ec-wrapper .tp-modal-actions .tp-btn {
+            flex: 1 1 120px;
+            justify-content: center;
+        }
+    }
+</style>
 
 <div class="tp-page" id="ec-wrapper">
 
@@ -40,7 +117,6 @@
 
                 <div class="tp-field">
                     <label class="tp-label" for="ecLanguage">Course Language</label>
-                    <!-- values are exactly what the API accepts -->
                     <select id="ecLanguage" class="tp-input">
                         <option value="english">English</option>
                         <option value="hindi">Hindi (हिंदी)</option>
@@ -116,4 +192,4 @@
     <div class="tp-toast" id="ecToast"></div>
 </div>
 
-<script src="edit_course.js"></script>
+<script src="edit_course.js?v=2"></script>

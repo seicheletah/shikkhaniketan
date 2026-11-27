@@ -664,4 +664,7 @@
         flex: 1;
         justify-content: center;
     }
+    .course-view-page {
+        padding: 14px 12px calc(96px + env(safe-area-inset-bottom, 0px));
+    }
 }

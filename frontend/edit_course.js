@@ -1,22 +1,15 @@
 /* ==========================================================
-   edit_course.js  (full file - replace your old one)
-
-   Runs every time edit_course.html is loaded INTO the teacher dashboard.
-   - course id comes from window.editCourseId (set by teacher_courses.js)
-   - loads the course:   GET    /courses/{id}
-   - saves changes:      PATCH  /teachers/me/courses/{id}
-   - deletes the course: DELETE /teachers/me/courses/{id}
-   - after save / delete / cancel it goes back to the courses page
-     inside the dashboard.
-
-   FIX: the old version sent the visible text of the language dropdown
-   (e.g. "Bengali (বাংলা)") to the API, which only accepts
-   english / bengali / hindi. Now a normal <select> with those exact
-   values is used.
+   edit_course.js
    ========================================================== */
 (function () {
   const root = document.getElementById("ec-wrapper");
-  if (!root) return; // page was replaced already
+  if (!root) return;
+
+  const mainContent = document.getElementById("main-content");
+  if (mainContent) {
+    mainContent.style.overflowY = "auto";
+    mainContent.style.webkitOverflowScrolling = "touch";
+  }
 
   const API = "api/v1";
   const token = localStorage.getItem("access_token");
@@ -26,7 +19,6 @@
     return;
   }
 
-  // Back to the courses page (inside the dashboard)
   function goToCourses() {
     if (typeof window.loadDashboardPage === "function") {
       window.loadDashboardPage("teacher_courses.html");
@@ -35,7 +27,6 @@
     }
   }
 
-  // The id was saved by the "Edit Course" button
   const courseId = window.editCourseId;
   if (!courseId) {
     alert("Course ID not found.");
@@ -70,7 +61,6 @@
     };
   }
 
-  // ---------------- TOAST ----------------
   let toastTimer = null;
 
   function showToast(message, bgColor = "#096858") {
@@ -81,7 +71,6 @@
     toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
   }
 
-  // FastAPI error -> readable text (detail can be a string or a list)
   function errorTextFrom(bodyText, fallback) {
     try {
       const data = JSON.parse(bodyText);
@@ -90,13 +79,11 @@
         return data.detail[0].msg;
       }
     } catch (e) {
-      // not JSON (e.g. "Internal Server Error"): use the fallback
+      // fallback
     }
     return fallback;
   }
 
-  // ---------------- PRICE FIELD ----------------
-  // Free course -> price is 0 and the field is disabled
   function togglePrice() {
     const paid = paidInput.value === "yes";
     priceInput.disabled = !paid;
@@ -104,7 +91,6 @@
   }
   paidInput.addEventListener("change", togglePrice);
 
-  // ---------------- LOAD COURSE ----------------
   async function loadCourse() {
     try {
       const response = await fetch(`${API}/courses/${courseId}`, {
@@ -144,7 +130,6 @@
     }
   }
 
-  // ---------------- SAVE (PATCH) ----------------
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -173,7 +158,7 @@
     const updateData = {
       course_name: courseName,
       course_details: detailsInput.value.trim(),
-      course_language: languageInput.value, // english | hindi | bengali
+      course_language: languageInput.value,
       course_paid: coursePaid,
       course_price: coursePrice,
       course_price_currency: "INR",
@@ -182,7 +167,6 @@
     saveBtn.disabled = true;
 
     try {
-      // Teacher-specific endpoint (NOT the admin one)
       const response = await fetch(`${API}/teachers/me/courses/${courseId}`, {
         method: "PATCH",
         headers: headers(),
@@ -214,16 +198,10 @@
     }
   });
 
-  // ---------------- CANCEL ----------------
   $("ecCancelBtn").addEventListener("click", () => {
     if (confirm("Are you sure you want to cancel?")) goToCourses();
   });
 
-  // ==========================================================
-  // DELETE COURSE   (DELETE /teachers/me/courses/{id} -> 204)
-  // 1. "Delete course" opens the pop-up (nothing is deleted yet)
-  // 2. "Yes, delete" sends the request
-  // ==========================================================
   function openModal() {
     modalName.textContent = loadedCourseName ? `"${loadedCourseName}"` : "this course";
     modal.classList.add("is-open");
@@ -231,7 +209,7 @@
   }
 
   function closeModal() {
-    if (modalConfirm.disabled) return; // do not close while deleting
+    if (modalConfirm.disabled) return;
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
   }
@@ -272,7 +250,6 @@
       showToast("Something went wrong while deleting the course.", "#b91c1c");
     }
 
-    // Give the buttons back, then close the pop-up
     modalConfirm.disabled = false;
     modalCancel.disabled = false;
     modalConfirm.textContent = "Yes, delete";
@@ -291,18 +268,15 @@
   modalCancel.addEventListener("click", closeModal);
   modalConfirm.addEventListener("click", deleteCourse);
 
-  // Click on the dark area closes the pop-up
   modal.addEventListener("click", (event) => {
     if (event.target === modal) closeModal();
   });
 
-  // Escape closes the pop-up (old listener from a previous visit is removed first)
   if (window.__ecKeyHandler) document.removeEventListener("keydown", window.__ecKeyHandler);
   window.__ecKeyHandler = (event) => {
     if (event.key === "Escape") closeModal();
   };
   document.addEventListener("keydown", window.__ecKeyHandler);
 
-  // ---------------- START ----------------
   loadCourse();
 })();
